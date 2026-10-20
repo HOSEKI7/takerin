@@ -3,12 +3,13 @@ import { getDb } from '#lib/server/db/index.js';
 import { env } from 'cloudflare:workers';
 import { sql } from 'drizzle-orm';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ platform }) => {
 	let dbStatus: 'connected' | 'disconnected' | 'error' = 'disconnected';
+	const d1 = platform?.env?.DB ?? env?.DB;
 
-	if (env?.DB) {
+	if (d1) {
 		try {
-			const db = getDb(env.DB);
+			const db = getDb(d1);
 			await db.run(sql`SELECT 1`);
 			dbStatus = 'connected';
 		} catch (error) {

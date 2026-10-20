@@ -3,6 +3,8 @@ import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index';
 import { healthCheck } from './schema';
 import { sql } from 'drizzle-orm';
+import fs from 'node:fs';
+import path from 'node:path';
 
 describe('D1 Database & Drizzle ORM (Miniflare)', () => {
 	let proxy: Awaited<ReturnType<typeof getPlatformProxy<Env>>>;
@@ -12,10 +14,20 @@ describe('D1 Database & Drizzle ORM (Miniflare)', () => {
 		proxy = await getPlatformProxy<Env>();
 		db = getDb(proxy.env.DB);
 
-		// Initialize health check table in D1 test database
-		await proxy.env.DB.exec(
-			'CREATE TABLE IF NOT EXISTS health_check (id TEXT PRIMARY KEY, service TEXT NOT NULL, status TEXT NOT NULL, created_at INTEGER NOT NULL);'
-		);
+		// Ensure clean test state
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS health_check;');
+
+		// Apply generated Drizzle migration directly to D1 test database
+		const migrationPath = path.resolve('drizzle/0000_lame_zuras.sql');
+		const migrationSql = fs.readFileSync(migrationPath, 'utf-8');
+		const statements = migrationSql
+			.split(';')
+			.map((s) => s.trim().replace(/\s+/g, ' '))
+			.filter(Boolean);
+
+		for (const stmt of statements) {
+			await proxy.env.DB.exec(stmt + ';');
+		}
 	});
 
 	afterAll(async () => {
