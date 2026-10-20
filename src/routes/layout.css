@@ -29,6 +29,9 @@
 	--font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 	--font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
+	/* Spacing unit from tokens.json */
+	--spacing-unit: 4px;
+
 	/* Border Radii */
 	--radius-sm: 2px;
 	--radius-lg: 10px;

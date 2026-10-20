@@ -26,7 +26,7 @@
 		primary:
 			'bg-lime-voltage text-forest-ink font-semibold hover:brightness-95 active:brightness-90 transition shadow-sm',
 		secondary:
-			'border border-forest-ink text-forest-ink bg-paper hover:bg-fog dark:bg-stone-900 dark:border-linen-mist dark:text-linen-mist dark:hover:bg-stone-800 transition',
+			'border border-forest-ink text-forest-ink bg-paper hover:bg-fog dark:bg-dark-surface dark:border-dark-border dark:text-linen-mist dark:hover:bg-dark-card transition',
 		dark: 'bg-forest-ink text-paper hover:bg-spruce dark:bg-lime-voltage dark:text-forest-ink transition',
 		ghost:
 			'text-forest-ink dark:text-lime-voltage underline underline-offset-4 hover:opacity-80 bg-transparent'
@@ -42,7 +42,7 @@
 <button
 	{type}
 	{disabled}
-	class="inline-flex cursor-pointer items-center justify-center gap-2 font-sans disabled:cursor-not-allowed disabled:opacity-50 {variantClasses[
+	class="inline-flex cursor-pointer items-center justify-center gap-2 font-sans transition disabled:cursor-not-allowed disabled:opacity-50 {variantClasses[
 		variant
 	]} {sizeClasses[size]} {className}"
 	{...restProps}

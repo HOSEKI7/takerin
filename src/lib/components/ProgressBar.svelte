@@ -33,7 +33,7 @@
 
 	const variantClasses: Record<Exclude<ProgressVariant, 'auto'>, string> = {
 		lime: 'bg-lime-voltage',
-		forest: 'bg-forest-ink dark:bg-lime-voltage',
+		forest: 'bg-forest-ink dark:bg-linen-mist',
 		danger: 'bg-alarm-red',
 		savings: 'bg-spruce dark:bg-lime-voltage'
 	};

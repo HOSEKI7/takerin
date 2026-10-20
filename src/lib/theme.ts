@@ -3,26 +3,16 @@ export type ResolvedTheme = 'light' | 'dark';
 
 export const THEME_STORAGE_KEY = 'theme';
 
-interface SetThemeOptions {
-	storage?: Storage;
-	document?: Document;
-	systemPrefersDark?: boolean;
-}
-
-export function getThemePreference(customStorage?: Storage): Theme {
-	const storage =
-		customStorage ?? (typeof window !== 'undefined' ? window.localStorage : undefined);
-	if (!storage) return 'system';
-
+export function getThemePreference(): Theme {
+	if (typeof window === 'undefined') return 'system';
 	try {
-		const saved = storage.getItem(THEME_STORAGE_KEY);
+		const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
 		if (saved === 'light' || saved === 'dark') {
 			return saved;
 		}
 	} catch {
 		// Ignore storage access errors
 	}
-
 	return 'system';
 }
 
@@ -36,38 +26,33 @@ export function toggleTheme(currentResolved: ResolvedTheme): ResolvedTheme {
 	return currentResolved === 'dark' ? 'light' : 'dark';
 }
 
-export function setTheme(theme: Theme, options?: SetThemeOptions): ResolvedTheme {
-	const storage =
-		options?.storage ?? (typeof window !== 'undefined' ? window.localStorage : undefined);
-	const doc = options?.document ?? (typeof document !== 'undefined' ? document : undefined);
-
+export function setTheme(theme: Theme): ResolvedTheme {
 	const systemPrefersDark =
-		options?.systemPrefersDark ??
-		(typeof window !== 'undefined' && window.matchMedia
+		typeof window !== 'undefined' && window.matchMedia
 			? window.matchMedia('(prefers-color-scheme: dark)').matches
-			: false);
+			: false;
 
 	const resolved = resolveTheme(theme, systemPrefersDark);
 
-	if (storage) {
+	if (typeof window !== 'undefined') {
 		try {
 			if (theme === 'system') {
-				storage.removeItem(THEME_STORAGE_KEY);
+				window.localStorage.removeItem(THEME_STORAGE_KEY);
 			} else {
-				storage.setItem(THEME_STORAGE_KEY, theme);
+				window.localStorage.setItem(THEME_STORAGE_KEY, theme);
 			}
 		} catch {
 			// Ignore storage access errors
 		}
 	}
 
-	if (doc?.documentElement) {
+	if (typeof document !== 'undefined' && document.documentElement) {
 		if (resolved === 'dark') {
-			doc.documentElement.classList.add('dark');
+			document.documentElement.classList.add('dark');
 		} else {
-			doc.documentElement.classList.remove('dark');
+			document.documentElement.classList.remove('dark');
 		}
-		doc.documentElement.style.colorScheme = resolved;
+		document.documentElement.style.colorScheme = resolved;
 	}
 
 	return resolved;

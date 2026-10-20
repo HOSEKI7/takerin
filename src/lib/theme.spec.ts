@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
 	getThemePreference,
 	resolveTheme,
@@ -7,15 +7,11 @@ import {
 	THEME_STORAGE_KEY
 } from './theme';
 
-describe('Theme Manager', () => {
-	beforeEach(() => {
-		// Clear mock storage
-		vi.restoreAllMocks();
-	});
-
-	it('returns "system" by default when no preference is saved in localStorage', () => {
-		const storage: Record<string, string> = {};
-		const mockStorage = {
+function createMockStorage(initialData: Record<string, string> = {}) {
+	const storage: Record<string, string> = { ...initialData };
+	return {
+		storage,
+		mock: {
 			getItem: vi.fn((key: string) => storage[key] ?? null),
 			setItem: vi.fn((key: string, val: string) => {
 				storage[key] = val;
@@ -23,29 +19,70 @@ describe('Theme Manager', () => {
 			removeItem: vi.fn((key: string) => {
 				delete storage[key];
 			})
+		}
+	};
+}
+
+describe('Theme Manager', () => {
+	let classList: Set<string>;
+	let mockDoc: {
+		documentElement: {
+			classList: {
+				add: ReturnType<typeof vi.fn>;
+				remove: ReturnType<typeof vi.fn>;
+				contains: ReturnType<typeof vi.fn>;
+			};
+			style: {
+				colorScheme: string;
+			};
+		};
+	};
+
+	beforeEach(() => {
+		vi.restoreAllMocks();
+		classList = new Set<string>();
+		mockDoc = {
+			documentElement: {
+				classList: {
+					add: vi.fn((cls: string) => classList.add(cls)),
+					remove: vi.fn((cls: string) => classList.delete(cls)),
+					contains: vi.fn((cls: string) => classList.has(cls))
+				},
+				style: {
+					colorScheme: ''
+				}
+			}
 		};
 
-		const preference = getThemePreference(mockStorage as unknown as Storage);
-		expect(preference).toBe('system');
+		vi.stubGlobal('document', mockDoc);
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('returns "system" by default when no preference is saved in localStorage', () => {
+		const { mock } = createMockStorage();
+		vi.stubGlobal('window', { localStorage: mock });
+
+		expect(getThemePreference()).toBe('system');
 	});
 
 	it('returns saved theme preference when valid ("light" or "dark")', () => {
-		const mockStorageLight = {
-			getItem: vi.fn(() => 'light')
-		};
-		expect(getThemePreference(mockStorageLight as unknown as Storage)).toBe('light');
+		const { mock: mockLight } = createMockStorage({ [THEME_STORAGE_KEY]: 'light' });
+		vi.stubGlobal('window', { localStorage: mockLight });
+		expect(getThemePreference()).toBe('light');
 
-		const mockStorageDark = {
-			getItem: vi.fn(() => 'dark')
-		};
-		expect(getThemePreference(mockStorageDark as unknown as Storage)).toBe('dark');
+		const { mock: mockDark } = createMockStorage({ [THEME_STORAGE_KEY]: 'dark' });
+		vi.stubGlobal('window', { localStorage: mockDark });
+		expect(getThemePreference()).toBe('dark');
 	});
 
 	it('falls back to "system" when invalid value is in localStorage', () => {
-		const mockStorageInvalid = {
-			getItem: vi.fn(() => 'unknown-mode')
-		};
-		expect(getThemePreference(mockStorageInvalid as unknown as Storage)).toBe('system');
+		const { mock } = createMockStorage({ [THEME_STORAGE_KEY]: 'invalid-theme' });
+		vi.stubGlobal('window', { localStorage: mock });
+
+		expect(getThemePreference()).toBe('system');
 	});
 
 	it('resolves theme correctly based on theme preference and system prefers-color-scheme', () => {
@@ -63,59 +100,28 @@ describe('Theme Manager', () => {
 	});
 
 	it('persists theme to storage and applies dark class to document element', () => {
-		const storage: Record<string, string> = {};
-		const mockStorage = {
-			getItem: vi.fn((key: string) => storage[key] ?? null),
-			setItem: vi.fn((key: string, val: string) => {
-				storage[key] = val;
-			}),
-			removeItem: vi.fn((key: string) => {
-				delete storage[key];
-			})
-		};
-
-		const classList = new Set<string>();
-		const mockDoc = {
-			documentElement: {
-				classList: {
-					add: vi.fn((cls: string) => classList.add(cls)),
-					remove: vi.fn((cls: string) => classList.delete(cls)),
-					contains: vi.fn((cls: string) => classList.has(cls))
-				},
-				style: {
-					colorScheme: ''
-				}
-			}
-		};
-
-		setTheme('dark', {
-			storage: mockStorage as unknown as Storage,
-			document: mockDoc as unknown as Document,
-			systemPrefersDark: false
+		const { mock } = createMockStorage();
+		vi.stubGlobal('window', {
+			localStorage: mock,
+			matchMedia: vi.fn().mockReturnValue({ matches: false })
 		});
 
-		expect(mockStorage.setItem).toHaveBeenCalledWith(THEME_STORAGE_KEY, 'dark');
+		setTheme('dark');
+
+		expect(mock.setItem).toHaveBeenCalledWith(THEME_STORAGE_KEY, 'dark');
 		expect(mockDoc.documentElement.classList.add).toHaveBeenCalledWith('dark');
 		expect(mockDoc.documentElement.style.colorScheme).toBe('dark');
 
-		setTheme('light', {
-			storage: mockStorage as unknown as Storage,
-			document: mockDoc as unknown as Document,
-			systemPrefersDark: false
-		});
+		setTheme('light');
 
-		expect(mockStorage.setItem).toHaveBeenCalledWith(THEME_STORAGE_KEY, 'light');
+		expect(mock.setItem).toHaveBeenCalledWith(THEME_STORAGE_KEY, 'light');
 		expect(mockDoc.documentElement.classList.remove).toHaveBeenCalledWith('dark');
 		expect(mockDoc.documentElement.style.colorScheme).toBe('light');
 
 		// Setting system when system is light
-		setTheme('system', {
-			storage: mockStorage as unknown as Storage,
-			document: mockDoc as unknown as Document,
-			systemPrefersDark: false
-		});
+		setTheme('system');
 
-		expect(mockStorage.removeItem).toHaveBeenCalledWith(THEME_STORAGE_KEY);
+		expect(mock.removeItem).toHaveBeenCalledWith(THEME_STORAGE_KEY);
 		expect(mockDoc.documentElement.classList.remove).toHaveBeenCalledWith('dark');
 		expect(mockDoc.documentElement.style.colorScheme).toBe('light');
 	});

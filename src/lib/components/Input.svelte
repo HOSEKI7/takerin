@@ -38,7 +38,7 @@
 		{type}
 		{disabled}
 		bind:value
-		class="w-full rounded-lg border px-4 py-3 text-base text-obsidian transition-colors placeholder:text-pebble focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-dark-surface dark:text-paper dark:placeholder:text-stone-500 {error
+		class="w-full rounded-lg border px-4 py-3 text-base text-obsidian transition-colors placeholder:text-pebble focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-dark-surface dark:text-paper dark:placeholder:text-pebble {error
 			? 'border-alarm-red focus:border-alarm-red focus:ring-alarm-red'
 			: 'border-pebble focus:border-forest-ink focus:ring-forest-ink dark:border-dark-border dark:focus:border-lime-voltage dark:focus:ring-lime-voltage'} {className}"
 		{...restProps}
