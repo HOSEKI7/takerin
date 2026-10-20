@@ -37,7 +37,7 @@
 			}
 
 			if (data) {
-				if ((data as { twoFactorRedirect?: boolean })?.twoFactorRedirect) {
+				if ('twoFactorRedirect' in data && data.twoFactorRedirect) {
 					goto(resolve('/auth/two-factor'));
 					return;
 				}

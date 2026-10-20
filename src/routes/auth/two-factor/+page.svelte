@@ -13,11 +13,10 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
-	type VerificationMode = 'otp' | 'totp' | 'backup';
+	type VerificationMode = 'otp' | 'backup';
 
 	let mode = $state<VerificationMode>('otp');
 	let otpCode = $state('');
-	let totpCode = $state('');
 	let backupCode = $state('');
 	let errorMessage = $state('');
 	let successInfo = $state('');
@@ -50,14 +49,14 @@
 					errorMessage =
 						'Sesi verifikasi dua langkah tidak ditemukan atau telah kedaluwarsa. Silakan masuk kembali.';
 				} else {
-					console.warn('Initial OTP send warning:', error.message);
+					errorMessage = formatAuthError(error);
 				}
 			} else {
 				successInfo = 'Kode OTP telah dikirimkan ke email Anda.';
 				startCountdown(30);
 			}
 		} catch (err: unknown) {
-			console.warn('Initial OTP send error:', err);
+			errorMessage = formatAuthError(err instanceof Error ? err.message : null);
 		}
 	}
 
@@ -87,84 +86,33 @@
 		errorMessage = '';
 		successInfo = '';
 
-		if (mode === 'otp') {
-			const validationError = validateOTPInput(otpCode);
-			if (validationError) {
-				errorMessage = validationError;
+		const isOtp = mode === 'otp';
+		const input = isOtp ? otpCode.trim() : backupCode.trim();
+		const validationError = isOtp ? validateOTPInput(input) : validateBackupCodeInput(input);
+
+		if (validationError) {
+			errorMessage = validationError;
+			return;
+		}
+
+		isLoading = true;
+		try {
+			const { data, error } = isOtp
+				? await authClient.twoFactor.verifyOtp({ code: input })
+				: await authClient.twoFactor.verifyBackupCode({ code: input });
+
+			if (error) {
+				errorMessage = formatAuthError(error);
+				isLoading = false;
 				return;
 			}
 
-			isLoading = true;
-			try {
-				const { data, error } = await authClient.twoFactor.verifyOtp({
-					code: otpCode.trim()
-				});
-
-				if (error) {
-					errorMessage = formatAuthError(error);
-					isLoading = false;
-					return;
-				}
-
-				if (data) {
-					goto(resolve('/dashboard'));
-				}
-			} catch (err: unknown) {
-				errorMessage = formatAuthError(err instanceof Error ? err.message : null);
-				isLoading = false;
+			if (data) {
+				goto(resolve('/dashboard'));
 			}
-		} else if (mode === 'totp') {
-			const validationError = validateOTPInput(totpCode);
-			if (validationError) {
-				errorMessage = validationError;
-				return;
-			}
-
-			isLoading = true;
-			try {
-				const { data, error } = await authClient.twoFactor.verifyTotp({
-					code: totpCode.trim()
-				});
-
-				if (error) {
-					errorMessage = formatAuthError(error);
-					isLoading = false;
-					return;
-				}
-
-				if (data) {
-					goto(resolve('/dashboard'));
-				}
-			} catch (err: unknown) {
-				errorMessage = formatAuthError(err instanceof Error ? err.message : null);
-				isLoading = false;
-			}
-		} else {
-			const validationError = validateBackupCodeInput(backupCode);
-			if (validationError) {
-				errorMessage = validationError;
-				return;
-			}
-
-			isLoading = true;
-			try {
-				const { data, error } = await authClient.twoFactor.verifyBackupCode({
-					code: backupCode.trim()
-				});
-
-				if (error) {
-					errorMessage = formatAuthError(error);
-					isLoading = false;
-					return;
-				}
-
-				if (data) {
-					goto(resolve('/dashboard'));
-				}
-			} catch (err: unknown) {
-				errorMessage = formatAuthError(err instanceof Error ? err.message : null);
-				isLoading = false;
-			}
+		} catch (err: unknown) {
+			errorMessage = formatAuthError(err instanceof Error ? err.message : null);
+			isLoading = false;
 		}
 	}
 
@@ -191,21 +139,15 @@
 
 	<main class="flex flex-1 items-center justify-center px-4 py-8 sm:px-6">
 		<div class="w-full max-w-md">
-			<Card variant="default" padding="lg" class="shadow-lg">
+			<Card variant="default" padding="lg">
 				<div class="mb-6">
 					<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
-						{mode === 'otp'
-							? 'Verifikasi Email OTP'
-							: mode === 'totp'
-								? 'Verifikasi Aplikasi Autentikator'
-								: 'Gunakan Kode Cadangan'}
+						{mode === 'otp' ? 'Verifikasi Email OTP' : 'Gunakan Kode Cadangan'}
 					</h1>
 					<p class="mt-1 text-sm text-slate dark:text-linen-mist/80">
 						{mode === 'otp'
 							? 'Masukkan 6 digit kode OTP yang kami kirimkan ke alamat email akun Anda.'
-							: mode === 'totp'
-								? 'Buka aplikasi autentikator Anda (Google Authenticator dll.) dan masukkan 6 digit kode saat ini.'
-								: 'Masukkan salah satu kode cadangan Anda untuk masuk ke akun Takerin.'}
+							: 'Masukkan salah satu kode cadangan Anda untuk masuk ke akun Takerin.'}
 					</p>
 				</div>
 
@@ -258,46 +200,8 @@
 									{isResending
 										? 'Mengirim...'
 										: resendCountdown > 0
-											? `Kirim ulang OTP (${resendCountdown}d)`
+											? `Kirim ulang OTP (${resendCountdown} detik)`
 											: 'Kirim Ulang Kode OTP'}
-								</button>
-
-								<button
-									type="button"
-									onclick={() => {
-										mode = 'totp';
-										errorMessage = '';
-										successInfo = '';
-									}}
-									class="cursor-pointer text-xs font-semibold text-slate hover:underline dark:text-linen-mist/80"
-								>
-									Pakai Aplikasi Autentikator
-								</button>
-							</div>
-						{:else if mode === 'totp'}
-							<Input
-								id="totp-code"
-								label="Kode Autentikator (6 digit)"
-								type="text"
-								placeholder="123456"
-								autocomplete="one-time-code"
-								maxlength={6}
-								required
-								bind:value={totpCode}
-								disabled={isLoading}
-							/>
-
-							<div class="flex items-center justify-between pt-1">
-								<button
-									type="button"
-									onclick={() => {
-										mode = 'otp';
-										errorMessage = '';
-										successInfo = '';
-									}}
-									class="cursor-pointer text-xs font-semibold text-forest-ink hover:underline dark:text-lime-voltage"
-								>
-									Pakai Email OTP
 								</button>
 
 								<button
@@ -315,7 +219,7 @@
 						{:else}
 							<Input
 								id="backup-code"
-								label="Kode Cadangan (Backup Code)"
+								label="Kode Cadangan"
 								type="text"
 								placeholder="Contoh: a1b2c3d4e5"
 								autocomplete="off"
@@ -345,9 +249,7 @@
 									? 'Memverifikasi...'
 									: mode === 'otp'
 										? 'Verifikasi OTP & Masuk'
-										: mode === 'totp'
-											? 'Verifikasi TOTP & Masuk'
-											: 'Masuk dengan Kode Cadangan'}
+										: 'Masuk dengan Kode Cadangan'}
 							</Button>
 						</div>
 					</form>

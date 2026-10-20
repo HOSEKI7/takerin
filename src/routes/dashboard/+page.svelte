@@ -17,7 +17,7 @@
 	let customTwoFactorEnabled = $state<boolean | null>(null);
 	let twoFactorEnabled = $derived(customTwoFactorEnabled ?? data.user?.twoFactorEnabled ?? false);
 
-	type ActionType = 'none' | 'enable' | 'disable' | 'regen';
+	type ActionType = 'none' | 'enable' | 'disable';
 	let activeAction = $state<ActionType>('none');
 	let actionPassword = $state('');
 
@@ -110,37 +110,6 @@
 		}
 	}
 
-	async function handleRegenerateBackupCodes(event: SubmitEvent) {
-		event.preventDefault();
-		feedbackMessage = '';
-		feedbackError = '';
-
-		if (!actionPassword) {
-			feedbackError = 'Password wajib diisi untuk membuat ulang kode cadangan.';
-			return;
-		}
-
-		isActionLoading = true;
-		try {
-			const res = await authClient.twoFactor.generateBackupCodes({
-				password: actionPassword
-			});
-
-			if (res.error) {
-				feedbackError = formatAuthError(res.error);
-			} else if (res.data) {
-				backupCodes = res.data.backupCodes || [];
-				resetActionState();
-				feedbackMessage =
-					'Kode cadangan baru berhasil dibuat. Kode cadangan lama kini tidak dapat digunakan lagi.';
-			}
-		} catch (err: unknown) {
-			feedbackError = formatAuthError(err instanceof Error ? err.message : null);
-		} finally {
-			isActionLoading = false;
-		}
-	}
-
 	async function handleCopyCodes() {
 		if (backupCodes.length === 0) return;
 		try {
@@ -189,7 +158,7 @@
 			<h1 class="text-3xl font-extrabold text-obsidian dark:text-paper">
 				Selamat datang, {data.user?.name ?? 'Pengguna'}!
 			</h1>
-			<p class="mt-2 text-base text-slate dark:text-linen-mist/80">
+			<p class="mt-2 text-base text-slate dark:text-stone-300">
 				Kelola alokasi pemasukan dan pantau pengeluaran harian Anda dengan tertib.
 			</p>
 		</div>
@@ -245,7 +214,7 @@
 
 			<Card variant="tinted" padding="lg">
 				<h2 class="text-lg font-bold text-forest-ink dark:text-linen-mist">Langkah Selanjutnya</h2>
-				<p class="mt-2 text-sm text-charcoal dark:text-linen-mist/80">
+				<p class="mt-2 text-sm text-charcoal dark:text-stone-300">
 					Persiapan Periode Bulan pertama Anda (penentuan Tanggal Gajian dan Sumber Pemasukan) akan
 					hadir pada tahap setup anggaran selanjutnya.
 				</p>
@@ -334,17 +303,6 @@
 									>
 										Nonaktifkan 2FA
 									</Button>
-									<Button
-										variant="secondary"
-										size="sm"
-										onclick={() => {
-											activeAction = 'regen';
-											actionPassword = '';
-											feedbackError = '';
-										}}
-									>
-										Buat Ulang Kode Cadangan
-									</Button>
 								{/if}
 							</div>
 
@@ -381,40 +339,6 @@
 									</div>
 								</form>
 							{/if}
-
-							{#if activeAction === 'regen'}
-								<form
-									onsubmit={handleRegenerateBackupCodes}
-									class="max-w-md space-y-3 rounded-lg border border-fog bg-paper p-4 dark:border-dark-border dark:bg-dark-surface"
-								>
-									<p class="text-xs font-medium text-slate dark:text-linen-mist/80">
-										Masukkan password untuk membuat kode cadangan baru:
-									</p>
-									<Input
-										id="regen-backup-password"
-										label="Password Akun"
-										type="password"
-										placeholder="Masukkan password akun Anda"
-										required
-										bind:value={actionPassword}
-										disabled={isActionLoading}
-									/>
-									<div class="flex items-center gap-2 pt-1">
-										<Button type="submit" variant="primary" size="sm" disabled={isActionLoading}>
-											{isActionLoading ? 'Membuat...' : 'Buat Kode Baru'}
-										</Button>
-										<Button
-											type="button"
-											variant="secondary"
-											size="sm"
-											onclick={resetActionState}
-											disabled={isActionLoading}
-										>
-											Batal
-										</Button>
-									</div>
-								</form>
-							{/if}
 						{/if}
 					</div>
 
@@ -425,7 +349,7 @@
 						>
 							<div class="flex items-center justify-between">
 								<h3 class="text-sm font-bold text-forest-ink dark:text-lime-voltage">
-									Kode Cadangan (Backup Codes)
+									Kode Cadangan
 								</h3>
 								<button
 									type="button"
@@ -442,7 +366,7 @@
 							<div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
 								{#each backupCodes as code (code)}
 									<div
-										class="rounded-lg bg-paper px-3 py-2 text-center font-mono text-xs font-bold text-obsidian shadow-sm dark:bg-dark-surface dark:text-paper"
+										class="rounded-lg border border-fog bg-paper px-3 py-2 text-center font-mono text-xs font-bold text-obsidian dark:border-dark-border dark:bg-dark-surface dark:text-paper"
 									>
 										{code}
 									</div>
@@ -452,7 +376,7 @@
 							{#if totpURI}
 								<div class="mt-4 border-t border-forest-ink/10 pt-3 dark:border-white/10">
 									<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
-										Tautan Setup Aplikasi Autentikator (Opsional):
+										Pengaturan Aplikasi Autentikator (Opsional):
 									</p>
 									<p
 										class="mt-1 font-mono text-[11px] break-all text-slate dark:text-linen-mist/80"
