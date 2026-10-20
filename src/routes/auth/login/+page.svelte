@@ -4,6 +4,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { authClient } from '#lib/auth-client.js';
+	import { validateLoginInput } from '#lib/validation/auth.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
@@ -16,8 +17,9 @@
 		event.preventDefault();
 		errorMessage = '';
 
-		if (!email.trim() || !password) {
-			errorMessage = 'Email dan password wajib diisi.';
+		const validationError = validateLoginInput({ email, password });
+		if (validationError) {
+			errorMessage = validationError;
 			return;
 		}
 

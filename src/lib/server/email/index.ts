@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { env } from 'cloudflare:workers';
+import { getRuntimeEnv } from '#lib/server/env.js';
 
 export interface EmailOptions {
 	to: string;
@@ -30,27 +30,22 @@ export interface EmailResult {
 	mocked?: boolean;
 }
 
-function getEnvVar(key: string): string | undefined {
-	try {
-		const val = (env as unknown as Record<string, string | undefined>)?.[key];
-		if (typeof val === 'string') return val;
-	} catch {
-		// Fallback when accessed outside Cloudflare request context
-	}
-	if (typeof process !== 'undefined') {
-		return process.env?.[key];
-	}
-	return undefined;
-}
-
 export function createEmailService(config: EmailServiceConfig = {}) {
-	const apiKey = config.apiKey ?? getEnvVar('RESEND_API_KEY');
+	function getClient() {
+		if (config.resendClient) {
+			return config.resendClient;
+		}
+		const apiKey = config.apiKey ?? getRuntimeEnv('RESEND_API_KEY');
+		return apiKey ? new Resend(apiKey) : null;
+	}
 
-	const from = config.fromEmail ?? getEnvVar('EMAIL_FROM') ?? 'Takerin <onboarding@resend.dev>';
-
-	const client = config.resendClient ?? (apiKey ? new Resend(apiKey) : null);
+	function getFrom() {
+		return config.fromEmail ?? getRuntimeEnv('EMAIL_FROM') ?? 'Takerin <onboarding@resend.dev>';
+	}
 
 	async function sendVerificationEmail({ to, url }: EmailOptions): Promise<EmailResult> {
+		const client = getClient();
+		const from = getFrom();
 		const subject = 'Verifikasi Email Akun Takerin Anda';
 		const text = `Halo,
 
@@ -119,6 +114,8 @@ Tautan ini berlaku selama 1 jam. Jika Anda tidak merasa mendaftar di Takerin, ab
 	}
 
 	async function sendResetPasswordEmail({ to, url }: EmailOptions): Promise<EmailResult> {
+		const client = getClient();
+		const from = getFrom();
 		const subject = 'Reset Password Akun Takerin Anda';
 		const text = `Halo,
 

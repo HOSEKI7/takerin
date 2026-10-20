@@ -4,6 +4,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { authClient } from '#lib/auth-client.js';
+	import { validateRegisterInput } from '#lib/validation/auth.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
@@ -19,23 +20,15 @@
 		event.preventDefault();
 		errorMessage = '';
 
-		if (!name.trim()) {
-			errorMessage = 'Nama lengkap wajib diisi.';
-			return;
-		}
+		const validationError = validateRegisterInput({
+			name,
+			email,
+			password,
+			confirmPassword
+		});
 
-		if (!email.trim()) {
-			errorMessage = 'Alamat email wajib diisi.';
-			return;
-		}
-
-		if (password.length < 8) {
-			errorMessage = 'Password minimal terdiri dari 8 karakter.';
-			return;
-		}
-
-		if (password !== confirmPassword) {
-			errorMessage = 'Konfirmasi password tidak cocok.';
+		if (validationError) {
+			errorMessage = validationError;
 			return;
 		}
 
@@ -95,15 +88,18 @@
 							Akun Berhasil Dibuat!
 						</h1>
 						<p class="text-sm leading-relaxed text-slate dark:text-stone-300">
-							Kami telah mengirimkan email verifikasi via Resend ke
+							Kami telah mengirimkan tautan verifikasi ke alamat email
 							<strong class="font-semibold text-forest-ink dark:text-lime-voltage">{email}</strong>.
 							Silakan periksa kotak masuk atau spam Anda untuk mengaktifkan akun.
 						</p>
-						<div class="pt-4">
+						<div class="flex flex-col gap-3 pt-4 sm:flex-row">
+							<a href={resolve('/auth/login')} class="flex-1">
+								<Button variant="secondary" size="md" class="w-full">Ke Halaman Masuk</Button>
+							</a>
 							<Button
 								variant="primary"
 								size="md"
-								class="w-full"
+								class="flex-1"
 								onclick={() => goto(resolve('/dashboard'))}
 							>
 								Lanjut ke Dashboard

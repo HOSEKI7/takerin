@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
-import { createAuth } from './index';
+import { createAuth, setUserRole } from './index';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -187,5 +187,24 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 		});
 
 		expect(newLogin.user.email).toBe('budi@example.com');
+	});
+
+	it('allows updating user role to admin via setUserRole', async () => {
+		const loginRes = await auth.api.signInEmail({
+			body: {
+				email: 'budi@example.com',
+				password: 'newSecretPassword789'
+			}
+		});
+
+		expect((loginRes.user as { role?: string }).role).toBe('user');
+
+		await setUserRole(proxy.env.DB, loginRes.user.id, 'admin');
+
+		const userRecord = await proxy.env.DB.prepare('SELECT role FROM user WHERE id = ?')
+			.bind(loginRes.user.id)
+			.first<{ role: string }>();
+
+		expect(userRecord?.role).toBe('admin');
 	});
 });

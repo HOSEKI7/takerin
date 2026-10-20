@@ -1,8 +1,9 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
+import { eq } from 'drizzle-orm';
 import { getDb } from '#lib/server/db/index.js';
 import * as schema from '#lib/server/db/schema.js';
-import { env } from 'cloudflare:workers';
+import { getRuntimeEnv } from '#lib/server/env.js';
 import {
 	sendVerificationEmail as defaultSendVerification,
 	sendResetPasswordEmail as defaultSendResetPassword,
@@ -13,32 +14,23 @@ import {
 export interface AuthOptions {
 	secret?: string;
 	baseURL?: string;
+	platformEnv?: Record<string, unknown>;
 	emailService?: {
 		sendVerificationEmail: (opts: EmailOptions) => Promise<EmailResult>;
 		sendResetPasswordEmail: (opts: EmailOptions) => Promise<EmailResult>;
 	};
 }
 
-function getEnvVar(key: string): string | undefined {
-	try {
-		const val = (env as unknown as Record<string, string | undefined>)?.[key];
-		if (typeof val === 'string') return val;
-	} catch {
-		// Fallback when accessed outside Cloudflare request context
-	}
-	if (typeof process !== 'undefined') {
-		return process.env?.[key];
-	}
-	return undefined;
-}
-
 export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 	const db = getDb(d1);
 	const secret =
 		options.secret ||
-		getEnvVar('BETTER_AUTH_SECRET') ||
+		getRuntimeEnv('BETTER_AUTH_SECRET', options.platformEnv) ||
 		'takerin-default-secret-key-for-development-32-chars';
-	const baseURL = options.baseURL || getEnvVar('BETTER_AUTH_URL') || 'http://localhost:5173';
+	const baseURL =
+		options.baseURL ||
+		getRuntimeEnv('BETTER_AUTH_URL', options.platformEnv) ||
+		'http://localhost:5173';
 
 	const emailService = options.emailService || {
 		sendVerificationEmail: defaultSendVerification,
@@ -86,12 +78,21 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 const authCache = new WeakMap<D1Database, ReturnType<typeof createAuth>>();
 
 export function getAuth(d1: D1Database, options?: AuthOptions) {
-	if (!authCache.has(d1) || options) {
-		const instance = createAuth(d1, options);
+	const instance = authCache.get(d1);
+	if (!instance || options) {
+		const created = createAuth(d1, options);
 		if (!options) {
-			authCache.set(d1, instance);
+			authCache.set(d1, created);
 		}
-		return instance;
+		return created;
 	}
-	return authCache.get(d1)!;
+	return instance;
+}
+
+export async function setUserRole(d1: D1Database, userId: string, role: 'user' | 'admin') {
+	const db = getDb(d1);
+	return db
+		.update(schema.user)
+		.set({ role, updatedAt: new Date() })
+		.where(eq(schema.user.id, userId));
 }

@@ -4,6 +4,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { resetPassword } from '#lib/auth-client.js';
+	import { validateResetPasswordInput } from '#lib/validation/auth.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -20,18 +21,14 @@
 		event.preventDefault();
 		errorMessage = '';
 
-		if (!token) {
-			errorMessage = 'Token reset password tidak valid atau tidak ditemukan.';
-			return;
-		}
+		const validationError = validateResetPasswordInput({
+			token,
+			password: newPassword,
+			confirmPassword
+		});
 
-		if (newPassword.length < 8) {
-			errorMessage = 'Password baru minimal terdiri dari 8 karakter.';
-			return;
-		}
-
-		if (newPassword !== confirmPassword) {
-			errorMessage = 'Konfirmasi password baru tidak cocok.';
+		if (validationError) {
+			errorMessage = validationError;
 			return;
 		}
 

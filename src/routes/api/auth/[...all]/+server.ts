@@ -7,7 +7,9 @@ export const fallback: RequestHandler = async ({ request, platform }) => {
 	if (!d1) {
 		return new Response('Database tidak tersedia', { status: 500 });
 	}
-	const auth = getAuth(d1);
+	const auth = getAuth(d1, {
+		platformEnv: platform?.env as unknown as Record<string, unknown>
+	});
 	return auth.handler(request);
 };
 

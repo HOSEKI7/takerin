@@ -4,6 +4,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import { requestPasswordReset } from '#lib/auth-client.js';
+	import { validateForgotPasswordInput } from '#lib/validation/auth.js';
 	import { resolve } from '$app/paths';
 
 	let email = $state('');
@@ -15,8 +16,9 @@
 		event.preventDefault();
 		errorMessage = '';
 
-		if (!email.trim()) {
-			errorMessage = 'Alamat email wajib diisi.';
+		const validationError = validateForgotPasswordInput({ email });
+		if (validationError) {
+			errorMessage = validationError;
 			return;
 		}
 
@@ -75,7 +77,7 @@
 						<p class="text-sm leading-relaxed text-slate dark:text-stone-300">
 							Jika email <strong class="font-semibold text-forest-ink dark:text-lime-voltage"
 								>{email}</strong
-							> terdaftar di Takerin, tautan untuk mereset password telah dikirim via Resend.
+							> terdaftar di Takerin, tautan untuk mereset password telah dikirim ke email tersebut.
 						</p>
 						<div class="pt-4">
 							<a

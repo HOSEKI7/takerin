@@ -75,9 +75,9 @@
 						<p class="font-semibold text-forest-ink dark:text-linen-mist">{data.user?.email}</p>
 					</div>
 					<div>
-						<span class="text-slate dark:text-stone-400">Peran (Role):</span>
+						<span class="text-slate dark:text-stone-400">Peran:</span>
 						<p class="font-semibold text-forest-ink dark:text-lime-voltage">
-							{data.user?.role ?? 'user'}
+							{data.user?.role === 'admin' ? 'Admin' : 'Pengguna'}
 						</p>
 					</div>
 					<div>

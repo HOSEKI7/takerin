@@ -7,6 +7,12 @@ import {
 	requestPasswordReset,
 	resetPassword
 } from '#lib/auth-client.js';
+import {
+	validateRegisterInput,
+	validateLoginInput,
+	validateForgotPasswordInput,
+	validateResetPasswordInput
+} from '#lib/validation/auth.js';
 
 describe('Auth Client & Route Interfaces', () => {
 	it('exports working client methods from auth-client', () => {
@@ -19,19 +25,6 @@ describe('Auth Client & Route Interfaces', () => {
 	});
 
 	it('validates registration input requirements', () => {
-		function validateRegisterInput(input: {
-			name: string;
-			email: string;
-			password: string;
-			confirmPassword: string;
-		}) {
-			if (!input.name.trim()) return 'Nama lengkap wajib diisi.';
-			if (!input.email.trim()) return 'Alamat email wajib diisi.';
-			if (input.password.length < 8) return 'Password minimal terdiri dari 8 karakter.';
-			if (input.password !== input.confirmPassword) return 'Konfirmasi password tidak cocok.';
-			return null;
-		}
-
 		expect(
 			validateRegisterInput({
 				name: '',
@@ -78,23 +71,48 @@ describe('Auth Client & Route Interfaces', () => {
 		).toBeNull();
 	});
 
-	it('validates password reset token requirement', () => {
-		function validateResetPasswordInput(token: string | null, password: string, confirm: string) {
-			if (!token) return 'Token reset password tidak valid atau tidak ditemukan.';
-			if (password.length < 8) return 'Password baru minimal terdiri dari 8 karakter.';
-			if (password !== confirm) return 'Konfirmasi password baru tidak cocok.';
-			return null;
-		}
+	it('validates login and forgot password input', () => {
+		expect(validateLoginInput({ email: '', password: '123' })).toBe('Alamat email wajib diisi.');
+		expect(validateLoginInput({ email: 'user@example.com', password: '' })).toBe(
+			'Password wajib diisi.'
+		);
+		expect(validateLoginInput({ email: 'user@example.com', password: 'password123' })).toBeNull();
 
-		expect(validateResetPasswordInput(null, 'newPassword123', 'newPassword123')).toBe(
-			'Token reset password tidak valid atau tidak ditemukan.'
-		);
-		expect(validateResetPasswordInput('valid-token', 'short', 'short')).toBe(
-			'Password baru minimal terdiri dari 8 karakter.'
-		);
-		expect(validateResetPasswordInput('valid-token', 'validpass1', 'validpass2')).toBe(
-			'Konfirmasi password baru tidak cocok.'
-		);
-		expect(validateResetPasswordInput('valid-token', 'validpass1', 'validpass1')).toBeNull();
+		expect(validateForgotPasswordInput({ email: '' })).toBe('Alamat email wajib diisi.');
+		expect(validateForgotPasswordInput({ email: 'user@example.com' })).toBeNull();
+	});
+
+	it('validates password reset token requirement', () => {
+		expect(
+			validateResetPasswordInput({
+				token: null,
+				password: 'newPassword123',
+				confirmPassword: 'newPassword123'
+			})
+		).toBe('Token reset password tidak valid atau tidak ditemukan.');
+
+		expect(
+			validateResetPasswordInput({
+				token: 'valid-token',
+				password: 'short',
+				confirmPassword: 'short'
+			})
+		).toBe('Password baru minimal terdiri dari 8 karakter.');
+
+		expect(
+			validateResetPasswordInput({
+				token: 'valid-token',
+				password: 'validpass1',
+				confirmPassword: 'validpass2'
+			})
+		).toBe('Konfirmasi password baru tidak cocok.');
+
+		expect(
+			validateResetPasswordInput({
+				token: 'valid-token',
+				password: 'validpass1',
+				confirmPassword: 'validpass1'
+			})
+		).toBeNull();
 	});
 });

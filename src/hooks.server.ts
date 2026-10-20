@@ -10,7 +10,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	if (d1) {
 		try {
-			const auth = getAuth(d1);
+			const auth = getAuth(d1, {
+				platformEnv: event.platform?.env as unknown as Record<string, unknown>
+			});
 			const sessionData = await auth.api.getSession({
 				headers: event.request.headers
 			});
