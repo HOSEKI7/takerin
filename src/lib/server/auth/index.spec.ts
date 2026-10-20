@@ -4,17 +4,29 @@ import { createAuth, setUserRole } from './index';
 import fs from 'node:fs';
 import path from 'node:path';
 
+function extractCookies(res: Response): string {
+	const raw = res.headers.getSetCookie
+		? res.headers.getSetCookie()
+		: [res.headers.get('set-cookie') || ''];
+	return raw
+		.map((c) => c.split(';')[0].trim())
+		.filter(Boolean)
+		.join('; ');
+}
+
 describe('Better Auth Server Integration (Miniflare D1)', () => {
 	let proxy: Awaited<ReturnType<typeof getPlatformProxy<Env>>>;
 	let auth: ReturnType<typeof createAuth>;
 
 	const sentVerificationEmails: Array<{ to: string; url: string; token?: string }> = [];
 	const sentResetPasswordEmails: Array<{ to: string; url: string; token?: string }> = [];
+	const sentOTPEmails: Array<{ to: string; otp: string; type?: string }> = [];
 
 	beforeAll(async () => {
 		proxy = await getPlatformProxy<Env>();
 
 		// Reset D1 tables
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS two_factor;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS verification;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS account;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS session;');
@@ -54,6 +66,10 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 				},
 				sendResetPasswordEmail: async (opts) => {
 					sentResetPasswordEmails.push(opts);
+					return { success: true };
+				},
+				sendOTPEmail: async (opts) => {
+					sentOTPEmails.push(opts);
 					return { success: true };
 				}
 			}
@@ -206,5 +222,152 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 			.first<{ role: string }>();
 
 		expect(userRecord?.role).toBe('admin');
+	});
+
+	it('enables 2FA, requires OTP or backup code on login, and allows disabling 2FA', async () => {
+		// 1. Sign in to get active session
+		const loginRes = await auth.api.signInEmail({
+			body: {
+				email: 'budi@example.com',
+				password: 'newSecretPassword789'
+			},
+			asResponse: true
+		});
+
+		const sessionHeaders = new Headers();
+		sessionHeaders.set('cookie', extractCookies(loginRes));
+
+		// 2. Enable 2FA
+		const enableRes = await auth.api.enableTwoFactor({
+			headers: sessionHeaders,
+			body: {
+				password: 'newSecretPassword789'
+			}
+		});
+
+		expect(enableRes.method).toBe('totp');
+		expect('backupCodes' in enableRes).toBe(true);
+		const backupCodes = (enableRes as { backupCodes: string[] }).backupCodes;
+		expect(Array.isArray(backupCodes)).toBe(true);
+		expect(backupCodes.length).toBeGreaterThan(0);
+
+		// Verify twoFactorEnabled in user DB
+		const userDb = await proxy.env.DB.prepare('SELECT two_factor_enabled FROM user WHERE email = ?')
+			.bind('budi@example.com')
+			.first<{ two_factor_enabled: number }>();
+		expect(userDb?.two_factor_enabled).toBe(1);
+
+		// 3. Attempt login with password -> receives 2FA challenge / redirect
+		const challengeLoginRes = await auth.api.signInEmail({
+			body: {
+				email: 'budi@example.com',
+				password: 'newSecretPassword789'
+			},
+			asResponse: true
+		});
+
+		const challengeCookies = extractCookies(challengeLoginRes);
+		expect(challengeCookies).toBeDefined();
+
+		const challengeJson = (await challengeLoginRes.json()) as { twoFactorRedirect?: boolean };
+		expect(challengeJson.twoFactorRedirect).toBe(true);
+
+		const challengeHeaders = new Headers();
+		challengeHeaders.set('cookie', challengeCookies);
+
+		// 4. Request 2FA OTP code
+		sentOTPEmails.length = 0;
+		const sendOtpRes = await auth.api.sendTwoFactorOTP({
+			headers: challengeHeaders
+		});
+		expect(sendOtpRes.status).toBe(true);
+		expect(sentOTPEmails.length).toBe(1);
+		expect(sentOTPEmails[0].to).toBe('budi@example.com');
+		expect(sentOTPEmails[0].otp).toBeDefined();
+
+		const otpCode = sentOTPEmails[0].otp;
+
+		// 5. Verify invalid OTP code -> rejected
+		await expect(
+			auth.api.verifyTwoFactorOTP({
+				headers: challengeHeaders,
+				body: {
+					code: '000000'
+				}
+			})
+		).rejects.toThrow();
+
+		// 6. Verify valid OTP code -> succeeds and grants session
+		const verifyOtpRes = await auth.api.verifyTwoFactorOTP({
+			headers: challengeHeaders,
+			body: {
+				code: otpCode
+			},
+			asResponse: true
+		});
+
+		const validOtpSessionCookie = extractCookies(verifyOtpRes);
+		expect(validOtpSessionCookie).toContain('better-auth');
+
+		// 7. Test login with backup code
+		const secondChallengeRes = await auth.api.signInEmail({
+			body: {
+				email: 'budi@example.com',
+				password: 'newSecretPassword789'
+			},
+			asResponse: true
+		});
+		const secondChallengeHeaders = new Headers();
+		secondChallengeHeaders.set('cookie', extractCookies(secondChallengeRes));
+
+		const backupCode = backupCodes[0];
+		const verifyBackupRes = await auth.api.verifyBackupCode({
+			headers: secondChallengeHeaders,
+			body: {
+				code: backupCode
+			},
+			asResponse: true
+		});
+		expect(extractCookies(verifyBackupRes)).toContain('better-auth');
+
+		// Trying the same backup code again should fail because backup codes are one-time use
+		const thirdChallengeRes = await auth.api.signInEmail({
+			body: {
+				email: 'budi@example.com',
+				password: 'newSecretPassword789'
+			},
+			asResponse: true
+		});
+		const thirdChallengeHeaders = new Headers();
+		thirdChallengeHeaders.set('cookie', extractCookies(thirdChallengeRes));
+
+		await expect(
+			auth.api.verifyBackupCode({
+				headers: thirdChallengeHeaders,
+				body: {
+					code: backupCode
+				}
+			})
+		).rejects.toThrow();
+
+		// 8. Disable 2FA with user session
+		const authenticatedSessionHeaders = new Headers();
+		authenticatedSessionHeaders.set('cookie', extractCookies(verifyBackupRes));
+
+		const disableRes = await auth.api.disableTwoFactor({
+			headers: authenticatedSessionHeaders,
+			body: {
+				password: 'newSecretPassword789'
+			}
+		});
+		expect(disableRes.status).toBe(true);
+
+		// Verify twoFactorEnabled in user DB is now 0
+		const userAfterDisable = await proxy.env.DB.prepare(
+			'SELECT two_factor_enabled FROM user WHERE email = ?'
+		)
+			.bind('budi@example.com')
+			.first<{ two_factor_enabled: number }>();
+		expect(userAfterDisable?.two_factor_enabled).toBe(0);
 	});
 });

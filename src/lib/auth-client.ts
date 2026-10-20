@@ -1,4 +1,5 @@
 import { createAuthClient } from 'better-auth/svelte';
+import { twoFactorClient, emailOTPClient } from 'better-auth/client/plugins';
 
 export interface AuthClientExtended {
 	requestPasswordReset: (opts: {
@@ -11,8 +12,61 @@ export interface AuthClientExtended {
 	}) => Promise<{ error: { message?: string } | null }>;
 }
 
-export const authClient = createAuthClient() as ReturnType<typeof createAuthClient> &
-	AuthClientExtended;
+export const authClient = createAuthClient({
+	plugins: [
+		twoFactorClient({
+			twoFactorPage: '/auth/two-factor'
+		}),
+		emailOTPClient()
+	]
+}) as ReturnType<typeof createAuthClient> &
+	AuthClientExtended & {
+		twoFactor: {
+			enable: (opts: { password: string; issuer?: string }) => Promise<{
+				data: {
+					method: 'totp' | 'otp';
+					backupCodes?: string[];
+					totpURI?: string;
+				} | null;
+				error: { message?: string } | null;
+			}>;
+			disable: (opts: { password: string }) => Promise<{
+				data: { status: boolean } | null;
+				error: { message?: string } | null;
+			}>;
+			sendOtp: () => Promise<{
+				data: { status: boolean } | null;
+				error: { message?: string } | null;
+			}>;
+			verifyOtp: (opts: { code: string; trustDevice?: boolean }) => Promise<{
+				data: { token?: string; user?: unknown } | null;
+				error: { message?: string } | null;
+			}>;
+			verifyTotp: (opts: { code: string; trustDevice?: boolean }) => Promise<{
+				data: { token?: string; user?: unknown } | null;
+				error: { message?: string } | null;
+			}>;
+			verifyBackupCode: (opts: { code: string; trustDevice?: boolean }) => Promise<{
+				data: { token?: string; user?: unknown } | null;
+				error: { message?: string } | null;
+			}>;
+			generateBackupCodes: (opts: { password: string }) => Promise<{
+				data: { status: boolean; backupCodes: string[] } | null;
+				error: { message?: string } | null;
+			}>;
+			getTotpUri: (opts: { password: string }) => Promise<{
+				data: { totpURI: string } | null;
+				error: { message?: string } | null;
+			}>;
+		};
+	};
 
-export const { signIn, signUp, signOut, useSession, requestPasswordReset, resetPassword } =
-	authClient;
+export const {
+	signIn,
+	signUp,
+	signOut,
+	useSession,
+	requestPasswordReset,
+	resetPassword,
+	twoFactor
+} = authClient;

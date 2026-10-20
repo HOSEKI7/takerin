@@ -18,6 +18,7 @@ declare global {
 				emailVerified: boolean;
 				image?: string | null;
 				role?: 'user' | 'admin';
+				twoFactorEnabled?: boolean;
 				createdAt: Date;
 				updatedAt: Date;
 			} | null;

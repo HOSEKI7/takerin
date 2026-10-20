@@ -15,7 +15,8 @@ export const user = sqliteTable('user', {
 	image: text('image'),
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
-	role: text('role').notNull().default('user')
+	role: text('role').notNull().default('user'),
+	twoFactorEnabled: integer('two_factor_enabled', { mode: 'boolean' }).notNull().default(false)
 });
 
 export const session = sqliteTable('session', {
@@ -56,4 +57,16 @@ export const verification = sqliteTable('verification', {
 	expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export const twoFactor = sqliteTable('two_factor', {
+	id: text('id').primaryKey(),
+	secret: text('secret').notNull(),
+	backupCodes: text('backup_codes').notNull(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	verified: integer('verified', { mode: 'boolean' }).notNull().default(true),
+	failedVerificationCount: integer('failed_verification_count').notNull().default(0),
+	lockedUntil: integer('locked_until', { mode: 'timestamp' })
 });

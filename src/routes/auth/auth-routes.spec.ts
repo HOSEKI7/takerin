@@ -5,13 +5,17 @@ import {
 	signUp,
 	signOut,
 	requestPasswordReset,
-	resetPassword
+	resetPassword,
+	twoFactor
 } from '#lib/auth-client.js';
 import {
 	validateRegisterInput,
 	validateLoginInput,
 	validateForgotPasswordInput,
-	validateResetPasswordInput
+	validateResetPasswordInput,
+	validateOTPInput,
+	validateBackupCodeInput,
+	formatAuthError
 } from '#lib/validation/auth.js';
 
 describe('Auth Client & Route Interfaces', () => {
@@ -22,6 +26,12 @@ describe('Auth Client & Route Interfaces', () => {
 		expect(typeof signOut).toBe('function');
 		expect(typeof requestPasswordReset).toBe('function');
 		expect(typeof resetPassword).toBe('function');
+		expect(twoFactor).toBeDefined();
+		expect(typeof twoFactor.enable).toBe('function');
+		expect(typeof twoFactor.disable).toBe('function');
+		expect(typeof twoFactor.sendOtp).toBe('function');
+		expect(typeof twoFactor.verifyOtp).toBe('function');
+		expect(typeof twoFactor.verifyBackupCode).toBe('function');
 	});
 
 	it('validates registration input requirements', () => {
@@ -114,5 +124,35 @@ describe('Auth Client & Route Interfaces', () => {
 				confirmPassword: 'validpass1'
 			})
 		).toBeNull();
+	});
+
+	it('validates OTP and backup code inputs', () => {
+		expect(validateOTPInput('')).toBe('Kode OTP wajib diisi.');
+		expect(validateOTPInput('123')).toBe('Kode OTP harus terdiri dari 6 digit angka.');
+		expect(validateOTPInput('12345a')).toBe('Kode OTP harus terdiri dari 6 digit angka.');
+		expect(validateOTPInput('123456')).toBeNull();
+
+		expect(validateBackupCodeInput('')).toBe('Kode cadangan wajib diisi.');
+		expect(validateBackupCodeInput('123')).toBe('Format kode cadangan tidak valid.');
+		expect(validateBackupCodeInput('a1b2c3d4e5')).toBeNull();
+	});
+
+	it('formats auth error messages into Indonesian', () => {
+		expect(formatAuthError({ message: 'Invalid code' })).toBe(
+			'Kode verifikasi salah atau tidak valid.'
+		);
+		expect(formatAuthError({ message: 'OTP has expired' })).toBe(
+			'Kode verifikasi sudah kedaluwarsa. Silakan minta kode baru.'
+		);
+		expect(formatAuthError({ message: 'Invalid password' })).toBe(
+			'Password yang Anda masukkan salah.'
+		);
+		expect(formatAuthError({ message: 'Invalid two factor cookie' })).toBe(
+			'Sesi verifikasi dua langkah tidak valid atau kedaluwarsa. Silakan masuk kembali.'
+		);
+		expect(formatAuthError({ message: 'Invalid backup code' })).toBe(
+			'Kode cadangan tidak valid atau sudah digunakan.'
+		);
+		expect(formatAuthError(null)).toBe('Terjadi kesalahan. Silakan coba lagi.');
 	});
 });

@@ -7,6 +7,12 @@ export interface EmailOptions {
 	token?: string;
 }
 
+export interface OTPEmailOptions {
+	to: string;
+	otp: string;
+	type?: 'sign-in' | 'email-verification' | 'forget-password' | 'sign-in-2fa' | string;
+}
+
 export interface EmailServiceConfig {
 	apiKey?: string;
 	fromEmail?: string;
@@ -183,9 +189,105 @@ Tautan ini berlaku selama 1 jam. Jika Anda tidak meminta reset password, Anda da
 		}
 	}
 
+	async function sendOTPEmail({
+		to,
+		otp,
+		type = 'sign-in-2fa'
+	}: OTPEmailOptions): Promise<EmailResult> {
+		const client = getClient();
+		const from = getFrom();
+
+		let subject = 'Kode Verifikasi 2FA Akun Takerin Anda';
+		let title = 'Kode Verifikasi Dua Langkah';
+		let explanation =
+			'Gunakan kode One-Time Password (OTP) berikut untuk menyelesaikan proses masuk ke akun Takerin Anda:';
+
+		if (type === 'email-verification') {
+			subject = 'Kode Verifikasi Email Akun Takerin Anda';
+			title = 'Verifikasi Email Akun Takerin';
+			explanation = 'Gunakan kode OTP berikut untuk memverifikasi alamat email akun Takerin Anda:';
+		} else if (type === 'forget-password') {
+			subject = 'Kode Reset Password Akun Takerin Anda';
+			title = 'Reset Password Akun Takerin';
+			explanation =
+				'Gunakan kode OTP berikut untuk melanjutkan pengaturan ulang password akun Anda:';
+		}
+
+		const text = `Halo,
+
+${explanation}
+
+${otp}
+
+Kode ini berlaku selama 3 menit. Demi keamanan akun Anda, jangan berikan kode ini kepada siapa pun.
+Jika Anda tidak melakukan permintaan ini, segera amankan akun Anda.`;
+
+		const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f7f9f6; color: #163300; margin: 0; padding: 24px; }
+    .container { max-width: 540px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; padding: 32px; border: 1px solid #e8ebe6; }
+    .logo { font-size: 24px; font-weight: 800; color: #163300; margin-bottom: 24px; }
+    h1 { font-size: 20px; font-weight: 700; color: #0e0f0c; margin-bottom: 16px; }
+    p { font-size: 15px; line-height: 1.6; color: #454745; margin-bottom: 20px; }
+    .otp-box { background-color: #e2f6d5; border: 1px solid #9fe870; border-radius: 10px; padding: 18px 24px; text-align: center; margin: 24px 0; }
+    .otp-code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 32px; font-weight: 900; letter-spacing: 6px; color: #163300; }
+    .notice { font-size: 13px; color: #6a6c6a; }
+    .footer { font-size: 12px; color: #868685; margin-top: 32px; border-top: 1px solid #e8ebe6; padding-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">Takerin</div>
+    <h1>${title}</h1>
+    <p>Halo,</p>
+    <p>${explanation}</p>
+    <div class="otp-box">
+      <div class="otp-code">${otp}</div>
+    </div>
+    <p class="notice">Kode ini berlaku selama 3 menit. Demi keamanan, jangan berikan kode ini kepada siapa pun termasuk pihak Takerin.</p>
+    <div class="footer">
+      <p>Jika Anda tidak merasa melakukan permintaan ini, abaikan email ini atau segera hubungi kami.</p>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+		if (!client) {
+			console.info(`[Email Service - Mock] OTP email (${type}) to: ${to}, code: ${otp}`);
+			return { success: true, mocked: true };
+		}
+
+		try {
+			const { data, error } = await client.emails.send({
+				from,
+				to,
+				subject,
+				html,
+				text
+			});
+
+			if (error) {
+				console.error('[Email Service] Failed to send OTP email:', error);
+				return { success: false, error: error.message || 'Gagal mengirim email OTP' };
+			}
+
+			return { success: true, data };
+		} catch (err: unknown) {
+			const message = err instanceof Error ? err.message : 'Error saat mengirim email';
+			console.error('[Email Service] Unexpected error sending OTP email:', err);
+			return { success: false, error: message };
+		}
+	}
+
 	return {
 		sendVerificationEmail,
-		sendResetPasswordEmail
+		sendResetPasswordEmail,
+		sendOTPEmail
 	};
 }
 
@@ -194,3 +296,4 @@ const defaultService = createEmailService();
 
 export const sendVerificationEmail = defaultService.sendVerificationEmail;
 export const sendResetPasswordEmail = defaultService.sendResetPasswordEmail;
+export const sendOTPEmail = defaultService.sendOTPEmail;

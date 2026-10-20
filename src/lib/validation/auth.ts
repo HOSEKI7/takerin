@@ -65,3 +65,48 @@ export function validateResetPasswordInput(input: ResetPasswordInput): string | 
 	}
 	return null;
 }
+
+export function validateOTPInput(code: string): string | null {
+	if (!code || !code.trim()) {
+		return 'Kode OTP wajib diisi.';
+	}
+	if (!/^\d{6}$/.test(code.trim())) {
+		return 'Kode OTP harus terdiri dari 6 digit angka.';
+	}
+	return null;
+}
+
+export function validateBackupCodeInput(code: string): string | null {
+	if (!code || !code.trim()) {
+		return 'Kode cadangan wajib diisi.';
+	}
+	if (code.trim().length < 6) {
+		return 'Format kode cadangan tidak valid.';
+	}
+	return null;
+}
+
+export function formatAuthError(error?: { message?: string } | string | null): string {
+	if (!error) return 'Terjadi kesalahan. Silakan coba lagi.';
+	const msg = typeof error === 'string' ? error : error.message || '';
+	const lower = msg.toLowerCase();
+	if (lower.includes('backup')) {
+		return 'Kode cadangan tidak valid atau sudah digunakan.';
+	}
+	if (lower.includes('invalid') && (lower.includes('code') || lower.includes('otp'))) {
+		return 'Kode verifikasi salah atau tidak valid.';
+	}
+	if (lower.includes('expired')) {
+		return 'Kode verifikasi sudah kedaluwarsa. Silakan minta kode baru.';
+	}
+	if (lower.includes('invalid') && lower.includes('password')) {
+		return 'Password yang Anda masukkan salah.';
+	}
+	if (lower.includes('invalid') && lower.includes('cookie')) {
+		return 'Sesi verifikasi dua langkah tidak valid atau kedaluwarsa. Silakan masuk kembali.';
+	}
+	if (lower.includes('too many attempts')) {
+		return 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat atau minta kode baru.';
+	}
+	return 'Terjadi kesalahan saat memproses permintaan Anda.';
+}

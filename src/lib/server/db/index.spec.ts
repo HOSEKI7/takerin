@@ -15,6 +15,7 @@ describe('D1 Database & Drizzle ORM (Miniflare)', () => {
 		db = getDb(proxy.env.DB);
 
 		// Ensure clean test state
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS two_factor;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS verification;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS account;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS session;');

@@ -102,4 +102,63 @@ describe('Email Service (Resend)', () => {
 		expect(result.success).toBe(false);
 		expect(result.error).toBe('Invalid API key');
 	});
+
+	it('formats OTP email and calls Resend emails.send for 2FA sign in', async () => {
+		const mockSend = vi.fn().mockResolvedValue({ data: { id: 'msg_otp_123' }, error: null });
+		const mockResend: NonNullable<EmailServiceConfig['resendClient']> = {
+			emails: {
+				send: mockSend
+			}
+		};
+
+		const service = createEmailService({
+			resendClient: mockResend,
+			fromEmail: 'Takerin <noreply@takerin.my.id>'
+		});
+
+		const result = await service.sendOTPEmail({
+			to: 'user@example.com',
+			otp: '123456',
+			type: 'sign-in-2fa'
+		});
+
+		expect(result.success).toBe(true);
+		expect(mockSend).toHaveBeenCalledTimes(1);
+		const callArg = mockSend.mock.calls[0][0];
+		expect(callArg.to).toBe('user@example.com');
+		expect(callArg.subject).toContain('Kode Verifikasi');
+		expect(callArg.html).toContain('123456');
+		expect(callArg.text).toContain('123456');
+	});
+
+	it('formats OTP email for email verification and password reset', async () => {
+		const mockSend = vi.fn().mockResolvedValue({ data: { id: 'msg_otp_456' }, error: null });
+		const mockResend: NonNullable<EmailServiceConfig['resendClient']> = {
+			emails: {
+				send: mockSend
+			}
+		};
+
+		const service = createEmailService({
+			resendClient: mockResend
+		});
+
+		const verifyRes = await service.sendOTPEmail({
+			to: 'user@example.com',
+			otp: '654321',
+			type: 'email-verification'
+		});
+		expect(verifyRes.success).toBe(true);
+		expect(mockSend.mock.calls[0][0].subject).toContain('Verifikasi Email');
+		expect(mockSend.mock.calls[0][0].html).toContain('654321');
+
+		const resetRes = await service.sendOTPEmail({
+			to: 'user@example.com',
+			otp: '987654',
+			type: 'forget-password'
+		});
+		expect(resetRes.success).toBe(true);
+		expect(mockSend.mock.calls[1][0].subject).toContain('Reset Password');
+		expect(mockSend.mock.calls[1][0].html).toContain('987654');
+	});
 });

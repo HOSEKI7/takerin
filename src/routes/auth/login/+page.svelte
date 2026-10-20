@@ -37,6 +37,10 @@
 			}
 
 			if (data) {
+				if ((data as { twoFactorRedirect?: boolean })?.twoFactorRedirect) {
+					goto(resolve('/auth/two-factor'));
+					return;
+				}
 				goto(resolve('/dashboard'));
 			}
 		} catch (err: unknown) {

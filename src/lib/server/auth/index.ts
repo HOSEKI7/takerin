@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth';
+import { twoFactor, emailOTP } from 'better-auth/plugins';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { eq } from 'drizzle-orm';
 import { getDb } from '#lib/server/db/index.js';
@@ -7,7 +8,9 @@ import { getRuntimeEnv } from '#lib/server/env.js';
 import {
 	sendVerificationEmail as defaultSendVerification,
 	sendResetPasswordEmail as defaultSendResetPassword,
+	sendOTPEmail as defaultSendOTP,
 	type EmailOptions,
+	type OTPEmailOptions,
 	type EmailResult
 } from '#lib/server/email/index.js';
 
@@ -18,6 +21,7 @@ export interface AuthOptions {
 	emailService?: {
 		sendVerificationEmail: (opts: EmailOptions) => Promise<EmailResult>;
 		sendResetPasswordEmail: (opts: EmailOptions) => Promise<EmailResult>;
+		sendOTPEmail?: (opts: OTPEmailOptions) => Promise<EmailResult>;
 	};
 }
 
@@ -34,7 +38,8 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 
 	const emailService = options.emailService || {
 		sendVerificationEmail: defaultSendVerification,
-		sendResetPasswordEmail: defaultSendResetPassword
+		sendResetPasswordEmail: defaultSendResetPassword,
+		sendOTPEmail: defaultSendOTP
 	};
 
 	return betterAuth({
@@ -44,11 +49,40 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 				user: schema.user,
 				session: schema.session,
 				account: schema.account,
-				verification: schema.verification
+				verification: schema.verification,
+				twoFactor: schema.twoFactor
 			}
 		}),
 		secret,
 		baseURL,
+		plugins: [
+			twoFactor({
+				appName: 'Takerin',
+				skipVerificationOnEnable: true,
+				otpOptions: {
+					async sendOTP({ user, otp }) {
+						if (emailService.sendOTPEmail) {
+							await emailService.sendOTPEmail({
+								to: user.email,
+								otp,
+								type: 'sign-in-2fa'
+							});
+						}
+					}
+				}
+			}),
+			emailOTP({
+				async sendVerificationOTP({ email, otp, type }) {
+					if (emailService.sendOTPEmail) {
+						await emailService.sendOTPEmail({
+							to: email,
+							otp,
+							type
+						});
+					}
+				}
+			})
+		],
 		user: {
 			additionalFields: {
 				role: {
