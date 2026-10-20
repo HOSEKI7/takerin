@@ -1,0 +1,15 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "takerin",
+	"compatibility_date": "2026-10-20",
+	"compatibility_flags": ["nodejs_als"],
+	"pages_build_output_dir": ".svelte-kit/cloudflare",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "takerin-db",
+			"database_id": "takerin-db-local",
+			"migrations_dir": "drizzle"
+		}
+	]
+}

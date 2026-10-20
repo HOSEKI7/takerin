@@ -1,0 +1,19 @@
+# Package Managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Agents and docs
+.agents
+docs
+tokens.json
+skills-lock.json
+*.md
+
+# Output
+.output
+.wrangler
+.svelte-kit
+build
+drizzle
+worker-configuration.d.ts

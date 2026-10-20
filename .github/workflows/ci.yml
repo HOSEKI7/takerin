@@ -1,0 +1,41 @@
+name: CI & Deployment Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-and-build:
+    name: Check, Test & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Wrangler types check
+        run: pnpm run gen
+
+      - name: Type check
+        run: pnpm run check
+
+      - name: Lint & format check
+        run: pnpm run lint
+
+      - name: Run tests with Vitest & D1 Miniflare
+        run: pnpm test
+
+      - name: Build for Cloudflare Pages
+        run: pnpm run build
