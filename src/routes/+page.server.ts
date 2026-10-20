@@ -3,7 +3,7 @@ import { getDb } from '#lib/server/db/index.js';
 import { env } from 'cloudflare:workers';
 import { sql } from 'drizzle-orm';
 
-export const load: PageServerLoad = async ({ platform }) => {
+export const load: PageServerLoad = async ({ platform, locals }) => {
 	let dbStatus: 'connected' | 'disconnected' | 'error' = 'disconnected';
 	const d1 = platform?.env?.DB ?? env?.DB;
 
@@ -21,6 +21,7 @@ export const load: PageServerLoad = async ({ platform }) => {
 	return {
 		title: 'Takerin',
 		message: 'Atur dan catat pengeluaran berdasarkan pemasukan.',
-		dbStatus
+		dbStatus,
+		user: locals.user ?? null
 	};
 };

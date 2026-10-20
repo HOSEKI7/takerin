@@ -2,3 +2,5 @@ allowBuilds:
   workerd: true
   esbuild: true
   '@hugeicons/svelte': false
+  '@prisma/client': false
+  better-sqlite3: false

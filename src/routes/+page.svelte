@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
+	import { resolve } from '$app/paths';
 	import { Button, Card, Input, Badge, ProgressBar, ThemeToggle, StatusBadge } from '#lib';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
@@ -55,6 +56,18 @@
 			<div class="flex items-center gap-3">
 				<StatusBadge status={data.dbStatus} />
 				<ThemeToggle showLabel />
+				{#if data.user}
+					<a href={resolve('/dashboard')}>
+						<Button variant="primary" size="sm">Dashboard</Button>
+					</a>
+				{:else}
+					<a href={resolve('/auth/login')} class="hidden sm:inline-block">
+						<Button variant="secondary" size="sm">Masuk</Button>
+					</a>
+					<a href={resolve('/auth/register')}>
+						<Button variant="primary" size="sm">Daftar</Button>
+					</a>
+				{/if}
 			</div>
 		</div>
 	</header>

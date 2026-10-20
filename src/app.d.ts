@@ -10,7 +10,28 @@ declare global {
 		}
 
 		// interface Error {}
-		// interface Locals {}
+		interface Locals {
+			user: {
+				id: string;
+				name: string;
+				email: string;
+				emailVerified: boolean;
+				image?: string | null;
+				role?: 'user' | 'admin';
+				createdAt: Date;
+				updatedAt: Date;
+			} | null;
+			session: {
+				id: string;
+				userId: string;
+				expiresAt: Date;
+				token: string;
+				createdAt: Date;
+				updatedAt: Date;
+				ipAddress?: string | null;
+				userAgent?: string | null;
+			} | null;
+		}
 		// interface PageData {}
 		// interface PageState {}
 	}
