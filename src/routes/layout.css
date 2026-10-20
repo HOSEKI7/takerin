@@ -1,1 +1,52 @@
 @import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	/* 12 Colors from tokens.json */
+	--color-forest-ink: #163300;
+	--color-lime-voltage: #9fe870;
+	--color-spruce: #054d28;
+	--color-linen-mist: #e2f6d5;
+	--color-signal-blue: #0b4c72;
+	--color-alarm-red: #cb272f;
+	--color-charcoal: #454745;
+	--color-obsidian: #0e0f0c;
+	--color-pebble: #868685;
+	--color-slate: #6a6c6a;
+	--color-fog: #e8ebe6;
+	--color-paper: #ffffff;
+
+	/* Dark Mode Palette Tokens (Harmonized with Forest Ink & Lime Voltage) */
+	--color-dark-canvas: #081103;
+	--color-dark-surface: #0f2006;
+	--color-dark-card: #152c08;
+	--color-dark-border: #1f3f0c;
+	--color-dark-muted: #254b0e;
+
+	/* Fonts */
+	--font-display: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+	/* Border Radii */
+	--radius-sm: 2px;
+	--radius-lg: 10px;
+	--radius-2xl: 16px;
+	--radius-3xl: 28px;
+	--radius-full: 9999px;
+
+	/* Shadows */
+	--shadow-subtle: rgba(14, 15, 12, 0.12) 0px 0px 0px 1px;
+	--shadow-subtle-2: rgb(134, 134, 133) 0px 0px 0px 1px inset;
+	--shadow-xl: rgba(0, 0, 0, 0.15) 0px 10px 32px 0px, rgba(0, 0, 0, 0.04) 0px 40px 40px 0px;
+	--shadow-lg: rgba(0, 0, 0, 0.08) 0px 6px 20px 0px;
+}
+
+:root {
+	color-scheme: light dark;
+}
+
+html {
+	font-family: var(--font-sans);
+}
