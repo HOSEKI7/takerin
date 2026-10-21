@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 
 const mockGetSession = vi.fn();
+const mockEnsureActivePeriod = vi.fn();
 const mockAuth = {
 	api: {
 		getSession: mockGetSession
@@ -10,6 +11,10 @@ const mockAuth = {
 
 vi.mock('#lib/server/auth/index.js', () => ({
 	getAuth: () => mockAuth
+}));
+
+vi.mock('#lib/server/db/period.js', () => ({
+	ensureActivePeriod: (...args: unknown[]) => mockEnsureActivePeriod(...args)
 }));
 
 import { handle } from './hooks.server';
@@ -215,5 +220,57 @@ describe('Server Hooks & Route Protection', () => {
 			location: '/dashboard'
 		});
 		expect(mockResolve).not.toHaveBeenCalled();
+	});
+
+	it('redirects unauthenticated requests targeting /categories to /auth/login', async () => {
+		mockGetSession.mockResolvedValue(null);
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/categories'),
+			request: new Request('http://localhost:5173/categories'),
+			platform: { env: { DB: {} as unknown as D1Database } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('OK'));
+
+		await expect(handle({ event: mockEvent, resolve: mockResolve })).rejects.toMatchObject({
+			status: 303,
+			location: '/auth/login'
+		});
+		expect(mockResolve).not.toHaveBeenCalled();
+	});
+
+	it('calls ensureActivePeriod when authenticated user accesses a protected route', async () => {
+		const mockUser = {
+			id: 'user_active',
+			name: 'Active User',
+			email: 'active@example.com',
+			role: 'user',
+			emailVerified: true,
+			onboardingCompleted: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: mockUser,
+			session: { id: 'sess_active', userId: 'user_active' }
+		});
+
+		const mockDb = { prepare: vi.fn() } as unknown as D1Database;
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/dashboard'),
+			request: new Request('http://localhost:5173/dashboard'),
+			platform: { env: { DB: mockDb } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('Dashboard content'));
+
+		const response = await handle({ event: mockEvent, resolve: mockResolve });
+		expect(response.status).toBe(200);
+		expect(mockEnsureActivePeriod).toHaveBeenCalledWith(mockDb, 'user_active');
 	});
 });

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index';
-import { user, monthlyPeriod, category, expense } from './schema';
+import { user, userSettings, incomeSource, monthlyPeriod, category, expense } from './schema';
 import { getManageCategoriesData, updateCategoriesMidPeriod } from './category';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -319,5 +319,88 @@ describe('Category Management D1 Database Operations (Seam 2)', () => {
 				]
 			})
 		).rejects.toThrow('Total persentase harus tepat 100%');
+	});
+
+	it('auto-transitions expired period when getManageCategoriesData is called', async () => {
+		const testUserId = 'user-cat-expired-' + Date.now();
+		const oldPeriodId = 'period-cat-expired-' + Date.now();
+		const oldDate = new Date('2026-08-25');
+
+		await db.insert(user).values({
+			id: testUserId,
+			name: 'Expired Cat Tester',
+			email: `cat-exp-${Date.now()}@example.com`,
+			emailVerified: true,
+			onboardingCompleted: true,
+			role: 'user',
+			createdAt: oldDate,
+			updatedAt: oldDate
+		});
+
+		await db.insert(userSettings).values({
+			id: 'settings-cat-' + Date.now(),
+			userId: testUserId,
+			payDay: 25,
+			language: 'id',
+			theme: 'light',
+			createdAt: oldDate,
+			updatedAt: oldDate
+		});
+
+		await db.insert(incomeSource).values({
+			id: 'inc-cat-' + Date.now(),
+			userId: testUserId,
+			name: 'Gaji',
+			amount: 5000000,
+			createdAt: oldDate,
+			updatedAt: oldDate
+		});
+
+		// Expired period
+		await db.insert(monthlyPeriod).values({
+			id: oldPeriodId,
+			userId: testUserId,
+			startDate: '2026-08-25',
+			endDate: '2026-09-24',
+			payDay: 25,
+			totalIncome: 5000000,
+			status: 'active',
+			createdAt: oldDate
+		});
+
+		await db.insert(category).values([
+			{
+				id: 'cat-active-' + Date.now(),
+				userId: testUserId,
+				periodId: oldPeriodId,
+				name: 'Living',
+				percentage: 100,
+				isSavings: false,
+				status: 'active',
+				createdAt: oldDate,
+				updatedAt: oldDate
+			},
+			{
+				id: 'cat-frozen-' + Date.now(),
+				userId: testUserId,
+				periodId: oldPeriodId,
+				name: 'Old Gym',
+				percentage: 0,
+				isSavings: false,
+				status: 'frozen',
+				createdAt: oldDate,
+				updatedAt: oldDate
+			}
+		]);
+
+		const data = await getManageCategoriesData(proxy.env.DB, testUserId);
+
+		expect(data.period).not.toBeNull();
+		expect(data.period?.id).not.toBe(oldPeriodId);
+		expect(data.period?.status).toBe('active');
+		expect(data.activeCategories).toHaveLength(1);
+		expect(data.activeCategories[0].name).toBe('Living');
+		// Frozen category was NOT carried over to the new period
+		expect(data.frozenCategories).toHaveLength(0);
 	});
 });

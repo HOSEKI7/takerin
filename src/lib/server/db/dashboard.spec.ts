@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index';
-import { user, monthlyPeriod, category } from './schema';
+import { user, userSettings, incomeSource, monthlyPeriod, category } from './schema';
 import { getDashboardData, calculateDashboardSummary } from './dashboard';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -219,5 +219,76 @@ describe('Dashboard D1 Operations & Calculations (Miniflare)', () => {
 		expect(summaryZeroIncome.spentPercentage).toBe(0);
 		expect(summaryZeroIncome.isWarning80).toBe(false);
 		expect(summaryZeroIncome.remaining).toBe(0);
+	});
+
+	it('auto-transitions expired period when getDashboardData is called', async () => {
+		const testUserId = 'test-dashboard-expired-' + Date.now();
+		const oldPeriodId = 'period-expired-' + Date.now();
+		const oldDate = new Date('2026-07-25');
+
+		await db.insert(user).values({
+			id: testUserId,
+			name: 'Expired Tester',
+			email: `expired-${Date.now()}@example.com`,
+			emailVerified: true,
+			onboardingCompleted: true,
+			role: 'user',
+			createdAt: oldDate,
+			updatedAt: oldDate
+		});
+
+		await db.insert(userSettings).values({
+			id: 'settings-' + Date.now(),
+			userId: testUserId,
+			payDay: 25,
+			language: 'id',
+			theme: 'light',
+			createdAt: oldDate,
+			updatedAt: oldDate
+		});
+
+		await db.insert(incomeSource).values({
+			id: 'inc-' + Date.now(),
+			userId: testUserId,
+			name: 'Gaji',
+			amount: 10000000,
+			createdAt: oldDate,
+			updatedAt: oldDate
+		});
+
+		// Expired period: July 25 - Aug 24
+		await db.insert(monthlyPeriod).values({
+			id: oldPeriodId,
+			userId: testUserId,
+			startDate: '2026-07-25',
+			endDate: '2026-08-24',
+			payDay: 25,
+			totalIncome: 10000000,
+			status: 'active',
+			createdAt: oldDate
+		});
+
+		const oldCatId = 'cat-exp-' + Date.now();
+		await db.insert(category).values({
+			id: oldCatId,
+			userId: testUserId,
+			periodId: oldPeriodId,
+			name: 'Kebutuhan',
+			percentage: 100,
+			isSavings: false,
+			status: 'active',
+			createdAt: oldDate,
+			updatedAt: oldDate
+		});
+
+		const data = await getDashboardData(proxy.env.DB, testUserId);
+
+		expect(data.period).not.toBeNull();
+		expect(data.period?.id).not.toBe(oldPeriodId);
+		expect(data.period?.status).toBe('active');
+		expect(data.categories).toHaveLength(1);
+		expect(data.categories[0].name).toBe('Kebutuhan');
+		expect(data.categories[0].spent).toBe(0);
+		expect(data.categories[0].balance).toBe(10000000);
 	});
 });

@@ -1,6 +1,7 @@
 import { eq, and, desc } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
+import { ensureActivePeriod } from './period.js';
 
 export interface DashboardCategory {
 	id: string;
@@ -77,15 +78,8 @@ export function calculateDashboardSummary(
 export async function getDashboardData(d1: D1Database, userId: string): Promise<DashboardData> {
 	const db = getDb(d1);
 
-	// 1. Fetch active monthly period
-	const activePeriods = await db
-		.select()
-		.from(schema.monthlyPeriod)
-		.where(and(eq(schema.monthlyPeriod.userId, userId), eq(schema.monthlyPeriod.status, 'active')))
-		.orderBy(desc(schema.monthlyPeriod.createdAt))
-		.limit(1);
-
-	const activePeriod = activePeriods[0] ?? null;
+	// 1. Ensure up-to-date active monthly period (auto-transitions if expired)
+	const { period: activePeriod } = await ensureActivePeriod(d1, userId);
 
 	if (!activePeriod) {
 		return {

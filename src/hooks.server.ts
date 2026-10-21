@@ -1,9 +1,17 @@
 import type { Handle } from '@sveltejs/kit/hooks';
 import { redirect } from '@sveltejs/kit';
 import { getAuth } from '#lib/server/auth/index.js';
+import { ensureActivePeriod } from '#lib/server/db/period.js';
 import { env } from 'cloudflare:workers';
 
-const PROTECTED_PREFIXES = ['/dashboard', '/expenses', '/history', '/settings', '/onboarding'];
+const PROTECTED_PREFIXES = [
+	'/dashboard',
+	'/expenses',
+	'/history',
+	'/settings',
+	'/categories',
+	'/onboarding'
+];
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const d1 = event.platform?.env?.DB ?? env?.DB;
@@ -50,6 +58,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 		if (hasCompletedOnboarding && isOnboardingRoute) {
 			throw redirect(303, '/dashboard');
+		}
+
+		if (
+			d1 &&
+			typeof (d1 as { prepare?: unknown }).prepare === 'function' &&
+			isProtected &&
+			!isOnboardingRoute &&
+			hasCompletedOnboarding
+		) {
+			try {
+				await ensureActivePeriod(d1, event.locals.user.id);
+			} catch (err) {
+				console.error('Error ensuring active period in hook:', err);
+			}
 		}
 	}
 
