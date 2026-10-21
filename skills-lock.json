@@ -121,6 +121,18 @@
       "skillPath": "skills/misc/setup-pre-commit/SKILL.md",
       "computedHash": "7fc7b680161a5cb834b165e36efc2378ff63a1f80df0a9efd18448d366bea98a"
     },
+    "svelte-code-writer": {
+      "source": "sveltejs/ai-tools",
+      "sourceType": "github",
+      "skillPath": "plugins/claude/svelte/skills/svelte-code-writer/SKILL.md",
+      "computedHash": "abe888cce357ab0fa0104ff2266edaf9c3a8382320b303f920cd777762a6bc85"
+    },
+    "svelte-core-bestpractices": {
+      "source": "sveltejs/ai-tools",
+      "sourceType": "github",
+      "skillPath": "plugins/claude/svelte/skills/svelte-core-bestpractices/SKILL.md",
+      "computedHash": "3cd6c1f1a92b8bf52af8120e5cb3a93b5512f83b905fd902b895adafb7225456"
+    },
     "tdd": {
       "source": "mattpocock/skills",
       "sourceType": "github",
