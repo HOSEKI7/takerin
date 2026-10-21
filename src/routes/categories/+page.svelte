@@ -301,6 +301,12 @@
 				>
 					Pengeluaran
 				</a>
+				<a
+					href={resolve('/history')}
+					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
+				>
+					Riwayat
+				</a>
 				<ThemeToggle />
 			</div>
 		</div>

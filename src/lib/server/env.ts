@@ -6,10 +6,10 @@ import { env } from 'cloudflare:workers';
  */
 export function getRuntimeEnv(
 	key: string,
-	platformEnv?: Record<string, unknown>
+	platformEnv?: Record<string, unknown> | unknown
 ): string | undefined {
-	if (platformEnv && typeof platformEnv[key] === 'string') {
-		return platformEnv[key] as string;
+	if (platformEnv && typeof (platformEnv as Record<string, unknown>)[key] === 'string') {
+		return (platformEnv as Record<string, unknown>)[key] as string;
 	}
 
 	try {
