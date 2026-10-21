@@ -6,6 +6,7 @@ export { default as Badge } from './components/Badge.svelte';
 export { default as ProgressBar } from './components/ProgressBar.svelte';
 export { default as ThemeToggle } from './components/ThemeToggle.svelte';
 export { default as StatusBadge } from './components/StatusBadge.svelte';
+export { default as BrandLogo } from './components/BrandLogo.svelte';
 
 // Theme Utilities
 export * from './theme';

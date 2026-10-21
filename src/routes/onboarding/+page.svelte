@@ -7,6 +7,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ProgressBar from '#lib/components/ProgressBar.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
+	import BrandLogo from '#lib/components/BrandLogo.svelte';
 	import {
 		validatePayDay,
 		validateIncomeSources,
@@ -343,9 +344,7 @@
 	>
 		<div class="mx-auto flex max-w-4xl items-center justify-between">
 			<div class="flex items-center gap-3">
-				<span class="text-xl font-black tracking-tight text-forest-ink dark:text-lime-voltage">
-					Takerin
-				</span>
+				<BrandLogo size="sm" />
 				<span
 					class="rounded-full bg-linen-mist px-2.5 py-0.5 text-xs font-semibold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
 				>

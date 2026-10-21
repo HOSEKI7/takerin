@@ -1,7 +1,16 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { resolve } from '$app/paths';
-	import { Button, Card, Input, Badge, ProgressBar, ThemeToggle, StatusBadge } from '#lib';
+	import {
+		Button,
+		Card,
+		Input,
+		Badge,
+		ProgressBar,
+		ThemeToggle,
+		StatusBadge,
+		BrandLogo
+	} from '#lib';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		SparklesIcon,
@@ -45,11 +54,7 @@
 	>
 		<div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
 			<div class="flex items-center gap-3">
-				<span
-					class="font-display text-2xl font-extrabold tracking-tight text-forest-ink dark:text-lime-voltage"
-				>
-					takerin.
-				</span>
+				<BrandLogo href="/" size="md" />
 				<Badge variant="lime" class="hidden sm:inline-flex">Sistem Desain v1</Badge>
 			</div>
 
@@ -92,6 +97,61 @@
 				{data.message} Sistem tema mendukung mode terang dan mode gelap yang serasi, tipografi Manrope
 				& Inter, serta komponen dasar UI siap pakai.
 			</p>
+		</section>
+
+		<!-- Brand Logo System Showcase -->
+		<section class="space-y-4">
+			<div class="flex items-center justify-between">
+				<h2 class="font-display text-2xl font-extrabold text-forest-ink dark:text-paper">
+					Identitas Brand & Logo
+				</h2>
+				<Badge variant="lime">Format WebP & Favicon ICO</Badge>
+			</div>
+
+			<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+				<!-- Standalone Mark -->
+				<Card
+					variant="default"
+					class="flex flex-col items-center justify-center space-y-3 p-6 text-center"
+				>
+					<div class="flex h-20 items-center justify-center">
+						<BrandLogo variant="mark" size="xl" />
+					</div>
+					<div>
+						<div class="text-sm font-bold text-obsidian dark:text-paper">Logo Mark (Ikon Saja)</div>
+						<div class="text-xs text-slate dark:text-stone-400">takerin-logo.webp (1:1)</div>
+					</div>
+				</Card>
+
+				<!-- Combined Brand Logo -->
+				<Card
+					variant="default"
+					class="flex flex-col items-center justify-center space-y-3 p-6 text-center"
+				>
+					<div class="flex h-20 items-center justify-center">
+						<BrandLogo variant="combined" size="lg" />
+					</div>
+					<div>
+						<div class="text-sm font-bold text-obsidian dark:text-paper">
+							Logo Kombinasi (Navigasi)
+						</div>
+						<div class="text-xs text-slate dark:text-stone-400">Mark + Tipografi Adaptif Tema</div>
+					</div>
+				</Card>
+
+				<!-- Full Wordmark (on Dark Container) -->
+				<div
+					class="flex flex-col items-center justify-center space-y-3 rounded-xl bg-forest-ink p-6 text-center text-paper shadow-md"
+				>
+					<div class="flex h-20 items-center justify-center">
+						<BrandLogo variant="wordmark" size="lg" />
+					</div>
+					<div>
+						<div class="text-sm font-bold text-paper">Wordmark Horizontal</div>
+						<div class="text-xs text-linen-mist/80">takerin-wordmark.webp (16:9)</div>
+					</div>
+				</div>
+			</div>
 		</section>
 
 		<!-- Color Tokens Palette Swatch -->

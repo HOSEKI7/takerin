@@ -5,6 +5,7 @@
 	import Input from '#lib/components/Input.svelte';
 	import ProgressBar from '#lib/components/ProgressBar.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
+	import BrandLogo from '#lib/components/BrandLogo.svelte';
 	import { authClient } from '#lib/auth-client.js';
 	import { formatAuthError } from '#lib/validation/auth.js';
 	import { formatRupiah, formatDateIndonesian } from '#lib/validation/onboarding.js';
@@ -148,12 +149,7 @@
 	>
 		<div class="mx-auto flex max-w-6xl items-center justify-between">
 			<div class="flex items-center gap-3">
-				<a
-					href={resolve('/dashboard')}
-					class="text-xl font-black tracking-tight text-forest-ink dark:text-lime-voltage"
-				>
-					Takerin
-				</a>
+				<BrandLogo href="/dashboard" size="sm" />
 				<span
 					class="rounded-full bg-linen-mist px-2.5 py-0.5 text-xs font-semibold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
 				>

@@ -4,6 +4,7 @@
 	import Input from '#lib/components/Input.svelte';
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
+	import BrandLogo from '#lib/components/BrandLogo.svelte';
 	import { authClient } from '#lib/auth-client.js';
 	import {
 		validateOTPInput,
@@ -128,12 +129,7 @@
 	class="flex min-h-screen flex-col bg-paper font-sans text-charcoal transition-colors dark:bg-dark-surface dark:text-linen-mist"
 >
 	<header class="flex items-center justify-between px-6 py-6 sm:px-10">
-		<a
-			href={resolve('/')}
-			class="text-2xl font-black tracking-tight text-forest-ink dark:text-lime-voltage"
-		>
-			Takerin
-		</a>
+		<BrandLogo href="/" size="md" />
 		<ThemeToggle />
 	</header>
 
