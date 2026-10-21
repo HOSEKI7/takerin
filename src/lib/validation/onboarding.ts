@@ -71,15 +71,16 @@ export function calculateTotalIncome(
 }
 
 /**
- * Formats a numeric value to Indonesian Rupiah (e.g. "Rp 10.000.000").
+ * Formats a numeric value to Indonesian Rupiah (e.g. "Rp 10.000.000" or "-Rp 2.000.000").
  */
 export function formatRupiah(amount: number | string): string {
 	const num = Number(amount);
 	if (Number.isNaN(num)) return 'Rp 0';
-	const formatted = Math.round(num)
+	const isNegative = num < 0;
+	const formatted = Math.round(Math.abs(num))
 		.toString()
 		.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-	return `Rp ${formatted}`;
+	return isNegative ? `-Rp ${formatted}` : `Rp ${formatted}`;
 }
 
 const MONTH_NAMES_ID = [

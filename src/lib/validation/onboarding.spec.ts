@@ -93,6 +93,7 @@ describe('Onboarding Calculations & Formatting', () => {
 		expect(formatRupiah(10000000)).toBe('Rp 10.000.000');
 		expect(formatRupiah(0)).toBe('Rp 0');
 		expect(formatRupiah(750500)).toBe('Rp 750.500');
+		expect(formatRupiah(-2000000)).toBe('-Rp 2.000.000');
 	});
 
 	it('formats ISO date to Indonesian date string', () => {

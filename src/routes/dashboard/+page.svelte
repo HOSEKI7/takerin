@@ -176,7 +176,7 @@
 				<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
 					Selamat datang, {data.user?.name ?? 'Pengguna'}!
 				</h1>
-				<p class="mt-1 text-sm text-slate dark:text-stone-300">
+				<p class="mt-1 text-sm text-slate dark:text-pebble">
 					Overview pengelolaan alokasi budget dan pemantauan keuangan Periode Bulan aktif Anda.
 				</p>
 			</div>
@@ -252,7 +252,7 @@
 				<h2 class="mt-4 text-lg font-bold text-forest-ink dark:text-linen-mist">
 					Belum Ada Periode Bulan Aktif
 				</h2>
-				<p class="mx-auto mt-2 max-w-md text-sm text-charcoal dark:text-stone-300">
+				<p class="mx-auto mt-2 max-w-md text-sm text-charcoal dark:text-pebble">
 					Anda belum memiliki konfigurasi budget bulanan yang aktif. Mulai atur Tanggal Gajian dan
 					alokasi kategori Anda untuk memulai pemantauan.
 				</p>
@@ -297,7 +297,7 @@
 							>
 								{formatRupiah(data.summary.totalIncome)}
 							</p>
-							<span class="mt-1 block text-[11px] text-slate dark:text-stone-400">
+							<span class="mt-1 block text-[11px] text-slate dark:text-pebble">
 								Basis alokasi 100% kategori
 							</span>
 						</div>
@@ -315,7 +315,7 @@
 							<span
 								class="mt-1 block text-[11px] {data.summary.isWarning80
 									? 'font-bold text-alarm-red'
-									: 'text-slate dark:text-stone-400'}"
+									: 'text-slate dark:text-pebble'}"
 							>
 								{data.summary.spentPercentage}% dari total pemasukan
 							</span>
@@ -333,7 +333,7 @@
 							>
 								{formatRupiah(data.summary.remaining)}
 							</p>
-							<span class="mt-1 block text-[11px] text-slate dark:text-stone-400">
+							<span class="mt-1 block text-[11px] text-slate dark:text-pebble">
 								{Math.max(0, 100 - data.summary.spentPercentage)}% anggaran tersisa
 							</span>
 						</div>
@@ -372,7 +372,7 @@
 							<h2 class="text-lg font-extrabold text-obsidian sm:text-xl dark:text-paper">
 								Rincian Kategori
 							</h2>
-							<p class="text-xs text-slate dark:text-stone-400">
+							<p class="text-xs text-slate dark:text-pebble">
 								Alokasi budget dan sisa saldo untuk tiap kategori aktif.
 							</p>
 						</div>
@@ -460,7 +460,7 @@
 											<!-- Visual treatment berbeda: progress = positif (terkumpul menuju target alokasi) -->
 											<ProgressBar value={cat.spent} max={cat.allocation || 1} variant="savings" />
 											<div
-												class="mt-1.5 flex items-center justify-between text-[11px] text-slate dark:text-stone-400"
+												class="mt-1.5 flex items-center justify-between text-[11px] text-slate dark:text-pebble"
 											>
 												<span>Tersisa: {formatRupiah(cat.balance)}</span>
 												<span class="font-semibold text-spruce dark:text-lime-voltage">
@@ -475,7 +475,7 @@
 												variant={cat.remainingPercentage <= 20 ? 'danger' : 'lime'}
 											/>
 											<div
-												class="mt-1.5 flex items-center justify-between text-[11px] text-slate dark:text-stone-400"
+												class="mt-1.5 flex items-center justify-between text-[11px] text-slate dark:text-pebble"
 											>
 												<span>Terpakai: {formatRupiah(cat.spent)}</span>
 												<span
@@ -502,7 +502,7 @@
 								<h2 class="text-lg font-extrabold text-obsidian dark:text-paper">
 									Pengeluaran Terbaru
 								</h2>
-								<p class="text-xs text-slate dark:text-stone-400">
+								<p class="text-xs text-slate dark:text-pebble">
 									Catatan pengeluaran dalam Periode Bulan ini.
 								</p>
 							</div>
@@ -522,7 +522,7 @@
 								<h3 class="mt-3 text-sm font-bold text-obsidian dark:text-paper">
 									Belum Ada Pengeluaran
 								</h3>
-								<p class="mt-1 text-xs text-slate dark:text-stone-400">
+								<p class="mt-1 text-xs text-slate dark:text-pebble">
 									Belum ada pengeluaran yang dicatat pada periode ini. Seluruh saldo kategori Anda
 									masih utuh 100%.
 								</p>
@@ -561,7 +561,7 @@
 						<h3 class="text-sm font-bold text-forest-ink dark:text-linen-mist">
 							Tentang Periode Bulan Ini
 						</h3>
-						<p class="mt-1.5 text-xs leading-relaxed text-charcoal dark:text-stone-300">
+						<p class="mt-1.5 text-xs leading-relaxed text-charcoal dark:text-linen-mist/80">
 							Siklus budget berjalan dari tanggal <span class="font-bold"
 								>{formatDateIndonesian(data.period.startDate)}</span
 							>
@@ -578,6 +578,8 @@
 		<div class="mt-12 border-t border-fog pt-6 dark:border-dark-border">
 			<button
 				type="button"
+				aria-expanded={showAccountSecurity}
+				aria-controls="account-security-section"
 				class="flex w-full cursor-pointer items-center justify-between text-left"
 				onclick={() => {
 					showAccountSecurity = !showAccountSecurity;
@@ -599,7 +601,7 @@
 			</button>
 
 			{#if showAccountSecurity}
-				<div class="mt-6 grid gap-6 md:grid-cols-2">
+				<div id="account-security-section" class="mt-6 grid gap-6 md:grid-cols-2">
 					<Card variant="default" padding="lg">
 						<h4 class="text-sm font-bold text-obsidian dark:text-paper">Informasi Akun</h4>
 						<div class="mt-4 space-y-3 text-sm">
