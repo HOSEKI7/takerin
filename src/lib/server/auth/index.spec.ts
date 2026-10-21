@@ -26,6 +26,7 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 		proxy = await getPlatformProxy<Env>();
 
 		// Reset D1 tables
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS expense;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS monthly_period;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category_template;');

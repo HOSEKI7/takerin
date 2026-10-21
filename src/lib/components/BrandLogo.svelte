@@ -5,7 +5,8 @@
 
 	type LogoVariant = 'mark' | 'wordmark' | 'combined';
 	type LogoSize = 'sm' | 'md' | 'lg' | 'xl';
-	type StaticRoute = Exclude<RouteId, '/api/auth/[...all]'>;
+	type DistributiveExclude<T> = T extends `${string}[${string}` ? never : T;
+	type StaticRoute = DistributiveExclude<RouteId>;
 
 	interface Props extends HTMLAttributes<HTMLElement> {
 		variant?: LogoVariant;

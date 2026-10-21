@@ -157,6 +157,12 @@
 				</span>
 			</div>
 			<div class="flex items-center gap-3 sm:gap-4">
+				<a
+					href={resolve('/expenses')}
+					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
+				>
+					Pengeluaran
+				</a>
 				<ThemeToggle />
 				<Button variant="secondary" size="sm" onclick={handleLogout} disabled={isLoggingOut}>
 					{isLoggingOut ? 'Mengeluarkan...' : 'Keluar'}
@@ -178,18 +184,25 @@
 			</div>
 
 			{#if data.period}
-				<div
-					class="flex items-center gap-2 rounded-xl border border-fog bg-fog/40 px-3.5 py-1.5 text-xs font-medium text-forest-ink dark:border-dark-border dark:bg-dark-card dark:text-linen-mist"
-				>
-					<HugeiconsIcon
-						icon={Calendar01Icon}
-						class="h-4 w-4 text-forest-ink dark:text-lime-voltage"
-					/>
-					<span>
-						{formatDateIndonesian(data.period.startDate)} – {formatDateIndonesian(
-							data.period.endDate
-						)}
-					</span>
+				<div class="flex flex-wrap items-center gap-2">
+					<div
+						class="flex items-center gap-2 rounded-xl border border-fog bg-fog/40 px-3.5 py-1.5 text-xs font-medium text-forest-ink dark:border-dark-border dark:bg-dark-card dark:text-linen-mist"
+					>
+						<HugeiconsIcon
+							icon={Calendar01Icon}
+							class="h-4 w-4 text-forest-ink dark:text-lime-voltage"
+						/>
+						<span>
+							{formatDateIndonesian(data.period.startDate)} – {formatDateIndonesian(
+								data.period.endDate
+							)}
+						</span>
+					</div>
+					<a href={resolve('/expenses/new')}>
+						<Button variant="primary" size="sm" class="font-bold shadow-sm">
+							+ Catat Pengeluaran
+						</Button>
+					</a>
 				</div>
 			{/if}
 		</div>
@@ -502,7 +515,15 @@
 									Catatan pengeluaran dalam Periode Bulan ini.
 								</p>
 							</div>
-							<HugeiconsIcon icon={Invoice01Icon} class="h-5 w-5 text-slate dark:text-pebble" />
+							<div class="flex items-center gap-2">
+								<a
+									href={resolve('/expenses')}
+									class="text-xs font-bold text-forest-ink hover:underline dark:text-lime-voltage"
+								>
+									Lihat Semua
+								</a>
+								<HugeiconsIcon icon={Invoice01Icon} class="h-5 w-5 text-slate dark:text-pebble" />
+							</div>
 						</div>
 
 						{#if data.recentExpenses.length === 0}
@@ -548,6 +569,14 @@
 										</p>
 									</div>
 								{/each}
+							</div>
+							<div class="mt-4 border-t border-fog pt-3 text-center dark:border-dark-border">
+								<a
+									href={resolve('/expenses')}
+									class="text-xs font-bold text-forest-ink hover:underline dark:text-lime-voltage"
+								>
+									Buka Halaman Pengeluaran Lengkap →
+								</a>
 							</div>
 						{/if}
 					</Card>

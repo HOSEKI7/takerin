@@ -135,3 +135,23 @@ export const category = sqliteTable('category', {
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
 });
+
+export const expense = sqliteTable('expense', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	periodId: text('period_id')
+		.notNull()
+		.references(() => monthlyPeriod.id, { onDelete: 'cascade' }),
+	categoryId: text('category_id')
+		.notNull()
+		.references(() => category.id, { onDelete: 'cascade' }),
+	name: text('name').notNull(),
+	amount: integer('amount').notNull(),
+	date: text('date').notNull(),
+	time: text('time'),
+	notes: text('notes'),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});

@@ -15,6 +15,7 @@ describe('D1 Database & Drizzle ORM (Miniflare)', () => {
 		db = getDb(proxy.env.DB);
 
 		// Ensure clean test state
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS expense;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS monthly_period;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category_template;');

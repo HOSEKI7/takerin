@@ -96,25 +96,43 @@ export async function getDashboardData(d1: D1Database, userId: string): Promise<
 		};
 	}
 
-	// 2. Fetch categories belonging to this active period
+	// 2. Fetch categories belonging to this active period (active and frozen, frozen shown for remaining balance)
 	const categories = await db
 		.select()
 		.from(schema.category)
-		.where(
-			and(
-				eq(schema.category.userId, userId),
-				eq(schema.category.periodId, activePeriod.id),
-				eq(schema.category.status, 'active')
-			)
-		);
+		.where(and(eq(schema.category.userId, userId), eq(schema.category.periodId, activePeriod.id)));
 
-	// Total spent across period (placeholder until expense table is integrated in #9)
-	const totalSpent = 0;
+	// 3. Fetch all expenses for this active period
+	const expenses = await db
+		.select({
+			id: schema.expense.id,
+			categoryId: schema.expense.categoryId,
+			categoryName: schema.category.name,
+			isSavings: schema.category.isSavings,
+			name: schema.expense.name,
+			amount: schema.expense.amount,
+			date: schema.expense.date,
+			createdAt: schema.expense.createdAt
+		})
+		.from(schema.expense)
+		.innerJoin(schema.category, eq(schema.expense.categoryId, schema.category.id))
+		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, activePeriod.id)))
+		.orderBy(desc(schema.expense.date), desc(schema.expense.createdAt));
+
+	// Group spent by category
+	const spentByCat = new Map<string, number>();
+	let totalSpent = 0;
+
+	for (const exp of expenses) {
+		const prev = spentByCat.get(exp.categoryId) ?? 0;
+		spentByCat.set(exp.categoryId, prev + exp.amount);
+		totalSpent += exp.amount;
+	}
 
 	// Calculate category allocations and remaining balances
 	const dashboardCategories: DashboardCategory[] = categories.map((cat) => {
 		const allocation = Math.round(activePeriod.totalIncome * (cat.percentage / 100));
-		const spent = 0; // Will be populated from expenses in ticket #9
+		const spent = spentByCat.get(cat.id) ?? 0;
 		const balance = allocation - spent;
 		const spentPercentage = allocation > 0 ? Math.round((spent / allocation) * 100) : 0;
 		const remainingPercentage =
@@ -136,6 +154,16 @@ export async function getDashboardData(d1: D1Database, userId: string): Promise<
 
 	const summary = calculateDashboardSummary(activePeriod.totalIncome, totalSpent);
 
+	// Top 5 recent expenses
+	const recentExpenses: DashboardExpenseItem[] = expenses.slice(0, 5).map((exp) => ({
+		id: exp.id,
+		name: exp.name,
+		amount: exp.amount,
+		categoryName: exp.categoryName,
+		isSavings: Boolean(exp.isSavings),
+		date: exp.date
+	}));
+
 	return {
 		period: {
 			id: activePeriod.id,
@@ -147,6 +175,6 @@ export async function getDashboardData(d1: D1Database, userId: string): Promise<
 		},
 		summary,
 		categories: dashboardCategories,
-		recentExpenses: []
+		recentExpenses
 	};
 }
