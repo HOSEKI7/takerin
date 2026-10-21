@@ -4,6 +4,7 @@ import {
 	validateIncomeSources,
 	calculateTotalIncome,
 	formatRupiah,
+	formatDateIndonesian,
 	validateCategories,
 	calculatePeriodDates,
 	type CategoryInput
@@ -92,6 +93,12 @@ describe('Onboarding Calculations & Formatting', () => {
 		expect(formatRupiah(10000000)).toBe('Rp 10.000.000');
 		expect(formatRupiah(0)).toBe('Rp 0');
 		expect(formatRupiah(750500)).toBe('Rp 750.500');
+	});
+
+	it('formats ISO date to Indonesian date string', () => {
+		expect(formatDateIndonesian('2026-10-21')).toBe('21 Okt 2026');
+		expect(formatDateIndonesian('2026-05-05')).toBe('5 Mei 2026');
+		expect(formatDateIndonesian('2026-11-20')).toBe('20 Nov 2026');
 	});
 });
 

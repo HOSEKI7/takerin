@@ -82,6 +82,37 @@ export function formatRupiah(amount: number | string): string {
 	return `Rp ${formatted}`;
 }
 
+const MONTH_NAMES_ID = [
+	'Jan',
+	'Feb',
+	'Mar',
+	'Apr',
+	'Mei',
+	'Jun',
+	'Jul',
+	'Agu',
+	'Sep',
+	'Okt',
+	'Nov',
+	'Des'
+];
+
+/**
+ * Formats an ISO date string (YYYY-MM-DD) to Indonesian formatted date: e.g. 21 Okt 2026
+ */
+export function formatDateIndonesian(dateStr: string): string {
+	if (!dateStr || !dateStr.includes('-')) return dateStr;
+	const parts = dateStr.split('-');
+	if (parts.length !== 3) return dateStr;
+	const year = parts[0];
+	const monthIdx = parseInt(parts[1], 10) - 1;
+	const day = parseInt(parts[2], 10);
+	if (isNaN(monthIdx) || isNaN(day) || monthIdx < 0 || monthIdx > 11) {
+		return dateStr;
+	}
+	return `${day} ${MONTH_NAMES_ID[monthIdx]} ${year}`;
+}
+
 export interface CategoryInput {
 	name: string;
 	percentage: number | string;
