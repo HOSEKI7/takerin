@@ -19,6 +19,7 @@ declare global {
 				image?: string | null;
 				role?: 'user' | 'admin';
 				twoFactorEnabled?: boolean;
+				onboardingCompleted?: boolean;
 				createdAt: Date;
 				updatedAt: Date;
 			} | null;

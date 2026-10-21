@@ -16,7 +16,8 @@ export const user = sqliteTable('user', {
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 	role: text('role').notNull().default('user'),
-	twoFactorEnabled: integer('two_factor_enabled', { mode: 'boolean' }).notNull().default(false)
+	twoFactorEnabled: integer('two_factor_enabled', { mode: 'boolean' }).notNull().default(false),
+	onboardingCompleted: integer('onboarding_completed', { mode: 'boolean' }).notNull().default(false)
 });
 
 export const session = sqliteTable('session', {
@@ -69,4 +70,28 @@ export const twoFactor = sqliteTable('two_factor', {
 	verified: integer('verified', { mode: 'boolean' }).notNull().default(true),
 	failedVerificationCount: integer('failed_verification_count').notNull().default(0),
 	lockedUntil: integer('locked_until', { mode: 'timestamp' })
+});
+
+export const userSettings = sqliteTable('user_settings', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.unique()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	payDay: integer('pay_day').notNull(),
+	language: text('language').notNull().default('id'),
+	theme: text('theme').notNull().default('light'),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export const incomeSource = sqliteTable('income_source', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	name: text('name').notNull(),
+	amount: integer('amount').notNull(),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
 });

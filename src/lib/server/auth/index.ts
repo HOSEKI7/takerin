@@ -89,6 +89,11 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 					type: 'string',
 					defaultValue: 'user',
 					input: false
+				},
+				onboardingCompleted: {
+					type: 'boolean',
+					defaultValue: false,
+					input: false
 				}
 			}
 		},

@@ -3,7 +3,7 @@ import { redirect } from '@sveltejs/kit';
 import { getAuth } from '#lib/server/auth/index.js';
 import { env } from 'cloudflare:workers';
 
-const PROTECTED_PREFIXES = ['/dashboard'];
+const PROTECTED_PREFIXES = ['/dashboard', '/expenses', '/history', '/settings', '/onboarding'];
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const d1 = event.platform?.env?.DB ?? env?.DB;
@@ -38,6 +38,19 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	if (isProtected && !event.locals.user) {
 		throw redirect(303, '/auth/login');
+	}
+
+	if (event.locals.user) {
+		const isOnboardingRoute = event.url.pathname.startsWith('/onboarding');
+		const hasCompletedOnboarding = Boolean(event.locals.user.onboardingCompleted);
+
+		if (!hasCompletedOnboarding && isProtected && !isOnboardingRoute) {
+			throw redirect(303, '/onboarding');
+		}
+
+		if (hasCompletedOnboarding && isOnboardingRoute) {
+			throw redirect(303, '/dashboard');
+		}
 	}
 
 	return resolve(event);

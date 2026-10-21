@@ -65,6 +65,7 @@ describe('Server Hooks & Route Protection', () => {
 			email: 'budi@example.com',
 			role: 'user',
 			emailVerified: false,
+			onboardingCompleted: true,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		};
@@ -98,5 +99,121 @@ describe('Server Hooks & Route Protection', () => {
 		expect(mockResolve).toHaveBeenCalled();
 		expect(mockEvent.locals.user).toEqual(mockUser);
 		expect(mockEvent.locals.session).toEqual(mockSession);
+	});
+
+	it('redirects unauthenticated requests targeting /onboarding to /auth/login', async () => {
+		mockGetSession.mockResolvedValue(null);
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/onboarding'),
+			request: new Request('http://localhost:5173/onboarding'),
+			platform: { env: { DB: {} as unknown as D1Database } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('OK'));
+
+		await expect(handle({ event: mockEvent, resolve: mockResolve })).rejects.toMatchObject({
+			status: 303,
+			location: '/auth/login'
+		});
+		expect(mockResolve).not.toHaveBeenCalled();
+	});
+
+	it('redirects user who has NOT completed onboarding from /dashboard to /onboarding', async () => {
+		const mockUser = {
+			id: 'user_pending',
+			name: 'Pending User',
+			email: 'pending@example.com',
+			role: 'user',
+			emailVerified: false,
+			onboardingCompleted: false,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: mockUser,
+			session: { id: 'sess_pending', userId: 'user_pending' }
+		});
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/dashboard'),
+			request: new Request('http://localhost:5173/dashboard'),
+			platform: { env: { DB: {} as unknown as D1Database } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('Dashboard content'));
+
+		await expect(handle({ event: mockEvent, resolve: mockResolve })).rejects.toMatchObject({
+			status: 303,
+			location: '/onboarding'
+		});
+		expect(mockResolve).not.toHaveBeenCalled();
+	});
+
+	it('allows user who has NOT completed onboarding to access /onboarding', async () => {
+		const mockUser = {
+			id: 'user_pending',
+			name: 'Pending User',
+			email: 'pending@example.com',
+			role: 'user',
+			emailVerified: false,
+			onboardingCompleted: false,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: mockUser,
+			session: { id: 'sess_pending', userId: 'user_pending' }
+		});
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/onboarding'),
+			request: new Request('http://localhost:5173/onboarding'),
+			platform: { env: { DB: {} as unknown as D1Database } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('Onboarding content'));
+
+		const response = await handle({ event: mockEvent, resolve: mockResolve });
+		expect(response.status).toBe(200);
+		expect(mockResolve).toHaveBeenCalled();
+	});
+
+	it('redirects user who HAS completed onboarding from /onboarding to /dashboard', async () => {
+		const mockUser = {
+			id: 'user_done',
+			name: 'Done User',
+			email: 'done@example.com',
+			role: 'user',
+			emailVerified: false,
+			onboardingCompleted: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: mockUser,
+			session: { id: 'sess_done', userId: 'user_done' }
+		});
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/onboarding'),
+			request: new Request('http://localhost:5173/onboarding'),
+			platform: { env: { DB: {} as unknown as D1Database } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('Onboarding content'));
+
+		await expect(handle({ event: mockEvent, resolve: mockResolve })).rejects.toMatchObject({
+			status: 303,
+			location: '/dashboard'
+		});
+		expect(mockResolve).not.toHaveBeenCalled();
 	});
 });

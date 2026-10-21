@@ -100,9 +100,9 @@
 								variant="primary"
 								size="md"
 								class="flex-1"
-								onclick={() => goto(resolve('/dashboard'))}
+								onclick={() => goto(resolve('/onboarding'))}
 							>
-								Lanjut ke Dashboard
+								Mulai Onboarding
 							</Button>
 						</div>
 					</div>

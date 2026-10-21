@@ -16,6 +16,7 @@ export default defineConfig({
 		})
 	],
 	test: {
+		fileParallelism: false,
 		projects: [
 			{
 				extends: './vite.config.ts',
