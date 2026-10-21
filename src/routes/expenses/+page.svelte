@@ -122,7 +122,7 @@
 				aria-selected={!data.selectedCategory}
 				class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition {data.selectedCategory ===
 				''
-					? 'bg-forest-ink text-paper shadow dark:bg-lime-voltage dark:text-forest-ink'
+					? 'bg-forest-ink text-paper dark:bg-lime-voltage dark:text-forest-ink'
 					: 'border border-fog bg-paper text-charcoal hover:bg-fog dark:border-dark-border dark:bg-dark-card dark:text-linen-mist'}"
 				onclick={() => handleCategoryFilter('')}
 			>
@@ -139,7 +139,7 @@
 					role="tab"
 					aria-selected={isSelected}
 					class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition {isSelected
-						? 'bg-forest-ink text-paper shadow dark:bg-lime-voltage dark:text-forest-ink'
+						? 'bg-forest-ink text-paper dark:bg-lime-voltage dark:text-forest-ink'
 						: 'border border-fog bg-paper text-charcoal hover:bg-fog dark:border-dark-border dark:bg-dark-card dark:text-linen-mist'}"
 					onclick={() => handleCategoryFilter(cat.id)}
 				>
@@ -181,7 +181,7 @@
 			<div class="space-y-3">
 				{#each data.expenses as exp (exp.id)}
 					<div
-						class="flex flex-col justify-between gap-3 rounded-2xl border border-fog bg-paper p-4 transition-colors hover:border-pebble/50 sm:flex-row sm:items-center dark:border-dark-border dark:bg-dark-card dark:hover:border-slate/60"
+						class="flex flex-col justify-between gap-3 rounded-xl border border-fog bg-paper p-4 transition-colors hover:border-pebble/50 sm:flex-row sm:items-center dark:border-dark-border dark:bg-dark-card dark:hover:border-slate/60"
 					>
 						<!-- Left: Details -->
 						<div class="flex items-start gap-3.5">
@@ -282,10 +282,10 @@
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="modal-delete-title"
-			class="fixed inset-0 z-50 flex items-center justify-center bg-obsidian/60 p-4 backdrop-blur-xs"
+			class="fixed inset-0 z-50 flex items-center justify-center bg-obsidian/60 p-4"
 		>
 			<div
-				class="w-full max-w-md rounded-2xl border border-fog bg-paper p-6 shadow-xl dark:border-dark-border dark:bg-dark-card"
+				class="w-full max-w-md rounded-2xl border border-fog bg-paper p-6 shadow-lg dark:border-dark-border dark:bg-dark-card"
 			>
 				<div class="flex items-center gap-3 text-alarm-red">
 					<div class="flex h-10 w-10 items-center justify-center rounded-full bg-alarm-red/10">

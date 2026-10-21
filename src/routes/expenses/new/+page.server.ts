@@ -64,6 +64,13 @@ export const actions: Actions = {
 			return fail(400, { error: validation.error });
 		}
 
+		const targetCategory = dashboardData.categories.find(
+			(c) => c.id === validation.data!.categoryId
+		);
+		if (!targetCategory || targetCategory.status !== 'active') {
+			return fail(400, { error: 'Kategori tidak valid atau sudah dibekukan.' });
+		}
+
 		await createExpense(platform.env.DB, {
 			userId: locals.user.id,
 			periodId: dashboardData.period.id,

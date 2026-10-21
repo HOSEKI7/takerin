@@ -55,7 +55,7 @@
 
 	function handleEvaluate() {
 		const evalVal = evaluateCalculatorExpression(expression);
-		if (evalVal > 0) {
+		if (Number.isFinite(evalVal) && expression.trim().length > 0) {
 			updateExpression(evalVal.toString());
 		}
 	}

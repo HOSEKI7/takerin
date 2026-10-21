@@ -82,7 +82,8 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 
 		it('creates expense and redirects to /expenses on valid form submission', async () => {
 			mockGetDashboardData.mockResolvedValue({
-				period: { id: 'p-1' }
+				period: { id: 'p-1' },
+				categories: [{ id: 'c-1', status: 'active' }]
 			});
 			mockCreateExpense.mockResolvedValue({ id: 'exp-1', success: true });
 
@@ -120,6 +121,34 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 					notes: 'Rendang'
 				})
 			);
+		});
+
+		it('rejects submission with frozen or invalid category', async () => {
+			mockGetDashboardData.mockResolvedValue({
+				period: { id: 'p-1' },
+				categories: [{ id: 'c-frozen', status: 'frozen' }]
+			});
+
+			const formData = new FormData();
+			formData.set('name', 'Nasi Padang');
+			formData.set('amount', '45000');
+			formData.set('categoryId', 'c-frozen');
+			formData.set('date', '2026-10-21');
+
+			const mockEvent = {
+				locals: { user: { id: 'u-1' } },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: {
+					formData: async () => formData
+				}
+			} as unknown as Parameters<typeof actionsNew.default>[0];
+
+			const result = await actionsNew.default(mockEvent);
+			expect(result).toMatchObject({
+				status: 400,
+				data: { error: 'Kategori tidak valid atau sudah dibekukan.' }
+			});
+			expect(mockCreateExpense).not.toHaveBeenCalled();
 		});
 	});
 
@@ -230,6 +259,15 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 		});
 
 		it('updates expense and redirects to /expenses', async () => {
+			mockGetDashboardData.mockResolvedValue({
+				period: { id: 'p-1' },
+				categories: [{ id: 'c-1', status: 'active' }]
+			});
+			mockGetExpenseById.mockResolvedValue({
+				id: 'exp-1',
+				userId: 'u-1',
+				categoryId: 'c-1'
+			});
 			mockUpdateExpense.mockResolvedValue({ success: true });
 
 			const formData = new FormData();
@@ -261,6 +299,39 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 					amount: 28000
 				})
 			);
+		});
+
+		it('allows updating an expense retaining its existing category even if frozen', async () => {
+			mockGetDashboardData.mockResolvedValue({
+				period: { id: 'p-1' },
+				categories: [{ id: 'c-frozen', status: 'frozen' }]
+			});
+			mockGetExpenseById.mockResolvedValue({
+				id: 'exp-1',
+				userId: 'u-1',
+				categoryId: 'c-frozen'
+			});
+			mockUpdateExpense.mockResolvedValue({ success: true });
+
+			const formData = new FormData();
+			formData.set('name', 'Biaya Langganan');
+			formData.set('amount', '50000');
+			formData.set('categoryId', 'c-frozen');
+			formData.set('date', '2026-10-21');
+
+			const mockEvent = {
+				locals: { user: { id: 'u-1' } },
+				params: { id: 'exp-1' },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: {
+					formData: async () => formData
+				}
+			} as unknown as Parameters<typeof actionsEdit.default>[0];
+
+			await expect(actionsEdit.default(mockEvent)).rejects.toMatchObject({
+				status: 303,
+				location: '/expenses'
+			});
 		});
 	});
 });

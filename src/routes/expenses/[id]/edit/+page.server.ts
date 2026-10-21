@@ -31,11 +31,15 @@ export const load: PageServerLoad = async ({ locals, platform, params }) => {
 		throw error(404, 'Pengeluaran tidak ditemukan.');
 	}
 
-	const categories = await getActivePeriodCategories(platform.env.DB, {
+	const allCategories = await getActivePeriodCategories(platform.env.DB, {
 		userId: locals.user.id,
 		periodId: dashboardData.period.id,
-		includeFrozen: false
+		includeFrozen: true
 	});
+
+	const categories = allCategories.filter(
+		(c) => c.status === 'active' || c.id === expenseItem.categoryId
+	);
 
 	return {
 		expense: expenseItem,
@@ -55,6 +59,20 @@ export const actions: Actions = {
 			return fail(500, { error: 'Database tidak tersedia.' });
 		}
 
+		const dashboardData = await getDashboardData(platform.env.DB, locals.user.id);
+		if (!dashboardData.period) {
+			return fail(400, { error: 'Tidak ada Periode Bulan aktif.' });
+		}
+
+		const expenseItem = await getExpenseById(platform.env.DB, {
+			id: params.id,
+			userId: locals.user.id
+		});
+
+		if (!expenseItem) {
+			return fail(404, { error: 'Pengeluaran tidak ditemukan.' });
+		}
+
 		const formData = await request.formData();
 		const validation = validateExpenseInput({
 			name: formData.get('name'),
@@ -67,6 +85,16 @@ export const actions: Actions = {
 
 		if (!validation.success || !validation.data) {
 			return fail(400, { error: validation.error });
+		}
+
+		const targetCategory = dashboardData.categories.find(
+			(c) => c.id === validation.data!.categoryId
+		);
+		if (
+			!targetCategory ||
+			(targetCategory.status !== 'active' && targetCategory.id !== expenseItem.categoryId)
+		) {
+			return fail(400, { error: 'Kategori tidak valid atau sudah dibekukan.' });
 		}
 
 		await updateExpense(platform.env.DB, {

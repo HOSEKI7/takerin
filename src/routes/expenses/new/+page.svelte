@@ -78,7 +78,7 @@
 	<main class="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
 		<div class="mb-6 flex flex-col justify-between gap-1 sm:flex-row sm:items-baseline">
 			<div>
-				<h1 class="text-2xl font-black text-obsidian sm:text-3xl dark:text-paper">
+				<h1 class="text-2xl font-bold text-obsidian sm:text-3xl dark:text-paper">
 					Catat Pengeluaran
 				</h1>
 				<p class="mt-1 text-xs text-slate sm:text-sm dark:text-pebble">
@@ -177,7 +177,7 @@
 								type="date"
 								bind:value={date}
 								required
-								class="w-full rounded-xl border border-fog bg-paper px-3.5 py-2.5 text-sm text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
+								class="w-full rounded-lg border border-fog bg-paper px-3.5 py-2.5 text-sm text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
 							/>
 						</div>
 					</div>
@@ -191,51 +191,51 @@
 						>
 							{showMoreDetails
 								? '− Sembunyikan Detail Tambahan'
-								: '+ Tambah Jam & Catatan (Opsional)'}
+								: '+ Tambah Catatan & Jam (Opsional)'}
 						</button>
 					</div>
 
-					{#if showMoreDetails}
-						<div
-							class="space-y-3 rounded-xl border border-fog/80 bg-fog/20 p-3.5 dark:border-dark-border/60 dark:bg-dark-surface/40"
-						>
-							<!-- Jam (Opsional, tidak auto-fill) -->
-							<div>
-								<label
-									for="expense-time"
-									class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
-								>
-									Waktu / Jam (Opsional)
-								</label>
-								<input
-									id="expense-time"
-									name="time"
-									type="time"
-									bind:value={time}
-									placeholder="HH:MM"
-									class="mt-1 w-full rounded-xl border border-fog bg-paper px-3.5 py-2 text-sm text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
-								/>
-							</div>
-
-							<!-- Catatan (Opsional) -->
-							<div>
-								<label
-									for="expense-notes"
-									class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
-								>
-									Catatan Tambahan (Opsional)
-								</label>
-								<textarea
-									id="expense-notes"
-									name="notes"
-									rows="2"
-									bind:value={notes}
-									placeholder="Detail tambahan mengenai pengeluaran ini..."
-									class="mt-1 w-full rounded-xl border border-fog bg-paper px-3.5 py-2 text-sm text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
-								></textarea>
-							</div>
+					<div
+						class={showMoreDetails
+							? 'space-y-3 rounded-xl border border-fog/80 bg-fog/20 p-3.5 dark:border-dark-border/60 dark:bg-dark-surface/40'
+							: 'hidden'}
+					>
+						<!-- Catatan (Opsional) -->
+						<div>
+							<label
+								for="expense-notes"
+								class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
+							>
+								Catatan Tambahan (Opsional)
+							</label>
+							<textarea
+								id="expense-notes"
+								name="notes"
+								rows="2"
+								bind:value={notes}
+								placeholder="Detail tambahan mengenai pengeluaran ini..."
+								class="mt-1 w-full rounded-lg border border-fog bg-paper px-3.5 py-2 text-sm text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
+							></textarea>
 						</div>
-					{/if}
+
+						<!-- Jam (Opsional, tidak auto-fill) -->
+						<div>
+							<label
+								for="expense-time"
+								class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
+							>
+								Waktu / Jam (Opsional)
+							</label>
+							<input
+								id="expense-time"
+								name="time"
+								type="time"
+								bind:value={time}
+								placeholder="HH:MM"
+								class="mt-1 w-full rounded-lg border border-fog bg-paper px-3.5 py-2 text-sm text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
+							/>
+						</div>
+					</div>
 
 					<!-- Submit Button -->
 					<div class="pt-3">
@@ -243,7 +243,7 @@
 							type="submit"
 							variant="primary"
 							size="lg"
-							class="w-full font-bold shadow-md"
+							class="w-full font-bold"
 							disabled={!canSubmit}
 						>
 							Simpan Pengeluaran
