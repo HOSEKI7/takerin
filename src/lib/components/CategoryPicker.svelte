@@ -69,6 +69,10 @@
 		selectedId = id;
 		onSelect?.(id);
 	}
+
+	const visibleCategories = $derived(
+		categories.filter((c) => c.status !== 'frozen' || selectedId === c.id)
+	);
 </script>
 
 <div class="w-full space-y-2 {className}">
@@ -77,12 +81,12 @@
 			Pilih Kategori <span class="text-alarm-red">*</span>
 		</span>
 		<span class="text-xs text-slate dark:text-pebble">
-			{categories.length} kategori aktif
+			{visibleCategories.length} kategori aktif
 		</span>
 	</div>
 
 	<div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label="Kategori">
-		{#each categories as cat (cat.id)}
+		{#each visibleCategories as cat (cat.id)}
 			{@const isSelected = selectedId === cat.id}
 			{@const icon = getCategoryIcon(cat.name, cat.isSavings)}
 

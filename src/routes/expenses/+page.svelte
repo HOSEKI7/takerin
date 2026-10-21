@@ -61,6 +61,12 @@
 				</span>
 			</div>
 			<div class="flex items-center gap-2 sm:gap-3">
+				<a
+					href={resolve('/categories')}
+					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
+				>
+					Kategori
+				</a>
 				<ThemeToggle />
 				<a href={resolve('/expenses/new')}>
 					<Button variant="primary" size="sm" class="flex items-center gap-1.5 font-bold shadow-sm">

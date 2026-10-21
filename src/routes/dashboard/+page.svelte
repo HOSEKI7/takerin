@@ -158,6 +158,12 @@
 			</div>
 			<div class="flex items-center gap-3 sm:gap-4">
 				<a
+					href={resolve('/categories')}
+					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
+				>
+					Kategori
+				</a>
+				<a
 					href={resolve('/expenses')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
@@ -385,11 +391,18 @@
 								Alokasi budget dan sisa saldo untuk tiap kategori aktif.
 							</p>
 						</div>
-						<span
-							class="rounded-full bg-fog px-2.5 py-0.5 text-xs font-semibold text-slate dark:bg-dark-border dark:text-linen-mist"
-						>
-							{data.categories.length} Kategori
-						</span>
+						<div class="flex items-center gap-2">
+							<a href={resolve('/categories')}>
+								<Button variant="secondary" size="sm" class="text-xs font-semibold">
+									Kelola Kategori
+								</Button>
+							</a>
+							<span
+								class="rounded-full bg-fog px-2.5 py-0.5 text-xs font-semibold text-slate dark:bg-dark-border dark:text-linen-mist"
+							>
+								{data.categories.length} Kategori
+							</span>
+						</div>
 					</div>
 
 					{#if data.categories.length === 0}
@@ -432,6 +445,14 @@
 															class="rounded-full bg-spruce/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-spruce dark:bg-lime-voltage/25 dark:text-lime-voltage"
 														>
 															Tabungan
+														</span>
+													{/if}
+													{#if cat.status === 'frozen'}
+														<span
+															data-testid="badge-frozen"
+															class="rounded-full bg-fog px-2 py-0.5 text-[10px] font-bold tracking-wide text-slate dark:bg-dark-border dark:text-pebble"
+														>
+															Dibekukan
 														</span>
 													{/if}
 												</div>

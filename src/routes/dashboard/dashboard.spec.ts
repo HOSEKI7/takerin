@@ -85,6 +85,71 @@ describe('Dashboard Route Server (+page.server.ts)', () => {
 		expect(result.categories[1].isSavings).toBe(true);
 	});
 
+	it('loads frozen categories retaining their balance and frozen status', async () => {
+		const mockDashboardData = {
+			period: {
+				id: 'period-123',
+				startDate: '2026-10-21',
+				endDate: '2026-11-20',
+				payDay: 21,
+				totalIncome: 10000000,
+				status: 'active'
+			},
+			summary: {
+				totalIncome: 10000000,
+				totalSpent: 500000,
+				remaining: 9500000,
+				spentPercentage: 5,
+				isWarning80: false
+			},
+			categories: [
+				{
+					id: 'cat-active',
+					name: 'Kebutuhan',
+					percentage: 100,
+					allocation: 10000000,
+					spent: 300000,
+					balance: 9700000,
+					spentPercentage: 3,
+					remainingPercentage: 97,
+					isSavings: false,
+					status: 'active'
+				},
+				{
+					id: 'cat-frozen',
+					name: 'Kategori Beku',
+					percentage: 10,
+					allocation: 1000000,
+					spent: 200000,
+					balance: 800000,
+					spentPercentage: 20,
+					remainingPercentage: 80,
+					isSavings: false,
+					status: 'frozen'
+				}
+			],
+			recentExpenses: []
+		};
+
+		mockGetDashboardData.mockResolvedValueOnce(mockDashboardData);
+
+		const mockEvent = {
+			locals: {
+				user: { id: 'u-1', name: 'User 1', email: 'u1@example.com', onboardingCompleted: true }
+			},
+			platform: { env: { DB: {} as unknown as D1Database } }
+		} as unknown as Parameters<typeof load>[0];
+
+		const result = (await load(mockEvent)) as typeof mockDashboardData & { user: unknown };
+
+		expect(result.categories).toHaveLength(2);
+		const frozen = result.categories.find((c) => c.status === 'frozen');
+		expect(frozen).toBeDefined();
+		expect(frozen?.name).toBe('Kategori Beku');
+		expect(frozen?.status).toBe('frozen');
+		expect(frozen?.balance).toBe(800000);
+	});
+
 	it('returns default empty structures if database is not available', async () => {
 		const mockEvent = {
 			locals: {
