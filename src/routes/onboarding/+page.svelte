@@ -219,7 +219,13 @@
 					</div>
 
 					<!-- Manual Input -->
-					<div class="space-y-2">
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							handleNextToStep2();
+						}}
+						class="space-y-2"
+					>
 						<Input
 							id="onboarding-payday"
 							label="Atau Masukkan Tanggal Gajian (1 - 31)"
@@ -233,7 +239,7 @@
 						<p class="text-xs text-slate dark:text-stone-400">
 							Masukkan angka antara 1 sampai 31 sesuai siklus gaji atau pemasukan utama Anda.
 						</p>
-					</div>
+					</form>
 
 					<div class="pt-4">
 						<Button
@@ -252,18 +258,16 @@
 				<!-- Step 2: Input Sumber Pemasukan -->
 				<form
 					method="POST"
-					use:enhance={() => {
+					use:enhance={({ formData, cancel }) => {
+						validateAndPrepareSubmit({ cancel });
+						if (isSubmitting) {
+							formData.set('payDay', String(payDay));
+							formData.set('incomeSources', JSON.stringify(incomeSources));
+						}
 						return async ({ update }) => {
 							isSubmitting = false;
 							await update();
 						};
-					}}
-					onsubmit={(e) => {
-						validateAndPrepareSubmit({
-							cancel: () => {
-								e.preventDefault();
-							}
-						});
 					}}
 					class="space-y-6"
 				>
@@ -338,6 +342,9 @@
 										placeholder="contoh: 8000000"
 										required
 										bind:value={source.amount}
+										hint={source.amount && Number(source.amount) > 0
+											? formatRupiah(source.amount)
+											: undefined}
 										disabled={isSubmitting}
 									/>
 								</div>
