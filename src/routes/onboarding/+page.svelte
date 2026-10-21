@@ -614,7 +614,7 @@
 							<span>Langkah 3: Template Kategori</span>
 						</div>
 						<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-							Pilih Template Budget Kategori
+							Pilih Template Kategori
 						</h1>
 						<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
 							Pilih titik awal pembagian budget Anda. Anda tetap dapat mengubah nama, persentase,
@@ -821,7 +821,8 @@
 										id={`category-percentage-${index}`}
 										label="Alokasi Persentase (%)"
 										type="number"
-										min="1"
+										step="any"
+										min="0.1"
 										max="100"
 										placeholder="contoh: 50"
 										required

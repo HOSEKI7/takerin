@@ -203,28 +203,42 @@ export async function completeOnboarding(
 		.where(eq(schema.userSettings.userId, userId))
 		.limit(1);
 
+	// 3. Compute period dates and total income
+	const totalIncome = calculateTotalIncome(data.incomeSources);
+	const { startDate, endDate } = calculatePeriodDates(now, data.payDay);
+	const periodId = crypto.randomUUID();
+
+	// 4. Prepare atomic batch statements
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const batchStatements: any[] = [];
+
 	if (existingSettings.length > 0) {
-		await db
-			.update(schema.userSettings)
-			.set({
+		batchStatements.push(
+			db
+				.update(schema.userSettings)
+				.set({
+					payDay: data.payDay,
+					updatedAt: now
+				})
+				.where(eq(schema.userSettings.userId, userId))
+		);
+	} else {
+		batchStatements.push(
+			db.insert(schema.userSettings).values({
+				id: crypto.randomUUID(),
+				userId,
 				payDay: data.payDay,
+				language: data.language ?? 'id',
+				theme: data.theme ?? 'light',
+				createdAt: now,
 				updatedAt: now
 			})
-			.where(eq(schema.userSettings.userId, userId));
-	} else {
-		await db.insert(schema.userSettings).values({
-			id: crypto.randomUUID(),
-			userId,
-			payDay: data.payDay,
-			language: data.language ?? 'id',
-			theme: data.theme ?? 'light',
-			createdAt: now,
-			updatedAt: now
-		});
+		);
 	}
 
-	// 2. Overwrite income_sources: remove existing, insert new
-	await db.delete(schema.incomeSource).where(eq(schema.incomeSource.userId, userId));
+	batchStatements.push(
+		db.delete(schema.incomeSource).where(eq(schema.incomeSource.userId, userId))
+	);
 
 	if (data.incomeSources.length > 0) {
 		const newSources = data.incomeSources.map((source) => ({
@@ -235,28 +249,22 @@ export async function completeOnboarding(
 			createdAt: now,
 			updatedAt: now
 		}));
-
-		await db.insert(schema.incomeSource).values(newSources);
+		batchStatements.push(db.insert(schema.incomeSource).values(newSources));
 	}
 
-	// 3. Compute period dates and total income
-	const totalIncome = calculateTotalIncome(data.incomeSources);
-	const { startDate, endDate } = calculatePeriodDates(now, data.payDay);
-	const periodId = crypto.randomUUID();
+	batchStatements.push(
+		db.insert(schema.monthlyPeriod).values({
+			id: periodId,
+			userId,
+			startDate,
+			endDate,
+			payDay: data.payDay,
+			totalIncome,
+			status: 'active',
+			createdAt: now
+		})
+	);
 
-	// Insert active monthly_period
-	await db.insert(schema.monthlyPeriod).values({
-		id: periodId,
-		userId,
-		startDate,
-		endDate,
-		payDay: data.payDay,
-		totalIncome,
-		status: 'active',
-		createdAt: now
-	});
-
-	// 4. Insert active categories
 	if (data.categories.length > 0) {
 		const newCategories = data.categories.map((c) => ({
 			id: crypto.randomUUID(),
@@ -269,18 +277,20 @@ export async function completeOnboarding(
 			createdAt: now,
 			updatedAt: now
 		}));
-
-		await db.insert(schema.category).values(newCategories);
+		batchStatements.push(db.insert(schema.category).values(newCategories));
 	}
 
-	// 5. Mark user onboardingCompleted = true
-	await db
-		.update(schema.user)
-		.set({
-			onboardingCompleted: true,
-			updatedAt: now
-		})
-		.where(eq(schema.user.id, userId));
+	batchStatements.push(
+		db
+			.update(schema.user)
+			.set({
+				onboardingCompleted: true,
+				updatedAt: now
+			})
+			.where(eq(schema.user.id, userId))
+	);
+
+	await db.batch(batchStatements as [(typeof batchStatements)[0], ...typeof batchStatements]);
 
 	return { success: true, periodId };
 }
