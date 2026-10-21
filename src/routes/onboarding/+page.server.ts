@@ -3,12 +3,16 @@ import { fail, redirect } from '@sveltejs/kit';
 import {
 	validatePayDay,
 	validateIncomeSources,
-	type IncomeSourceInput
+	validateCategories,
+	type IncomeSourceInput,
+	type CategoryInput
 } from '#lib/validation/onboarding.js';
 import {
-	saveOnboardingStep1And2,
 	getUserSettings,
-	getIncomeSources
+	getIncomeSources,
+	getCategoryTemplates,
+	completeOnboarding,
+	type CategoryTemplateRecord
 } from '#lib/server/db/onboarding.js';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
@@ -22,20 +26,23 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 
 	let userSettings = null;
 	let incomeSources: Array<{ id: string; name: string; amount: number }> = [];
+	let categoryTemplates: CategoryTemplateRecord[] = [];
 
 	if (platform?.env?.DB) {
 		try {
 			userSettings = await getUserSettings(platform.env.DB, locals.user.id);
 			incomeSources = (await getIncomeSources(platform.env.DB, locals.user.id)) ?? [];
+			categoryTemplates = (await getCategoryTemplates(platform.env.DB)) ?? [];
 		} catch (err) {
-			console.error('Failed to load user settings or income sources:', err);
+			console.error('Failed to load onboarding data:', err);
 		}
 	}
 
 	return {
 		user: locals.user,
 		userSettings,
-		incomeSources
+		incomeSources,
+		categoryTemplates
 	};
 };
 
@@ -48,6 +55,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const payDayRaw = formData.get('payDay');
 		const incomeSourcesRaw = formData.get('incomeSources');
+		const categoriesRaw = formData.get('categories');
 
 		const payDayError = validatePayDay(payDayRaw);
 		if (payDayError) {
@@ -76,6 +84,25 @@ export const actions: Actions = {
 			});
 		}
 
+		let parsedCategories: CategoryInput[] = [];
+		try {
+			if (typeof categoriesRaw === 'string') {
+				parsedCategories = JSON.parse(categoriesRaw);
+			}
+		} catch {
+			return fail(400, {
+				errorMessage: 'Format data kategori tidak valid.'
+			});
+		}
+
+		const categoryError = validateCategories(parsedCategories);
+		if (categoryError) {
+			return fail(400, {
+				errorMessage: categoryError,
+				payDay: payDayRaw?.toString()
+			});
+		}
+
 		if (!platform?.env?.DB) {
 			return fail(500, {
 				errorMessage: 'Database tidak tersedia. Silakan hubungi administrator.'
@@ -89,12 +116,13 @@ export const actions: Actions = {
 		}));
 
 		try {
-			await saveOnboardingStep1And2(platform.env.DB, locals.user.id, {
+			await completeOnboarding(platform.env.DB, locals.user.id, {
 				payDay,
-				incomeSources: sources
+				incomeSources: sources,
+				categories: parsedCategories
 			});
 		} catch (err: unknown) {
-			console.error('Failed to save onboarding data:', err);
+			console.error('Failed to complete onboarding:', err);
 			return fail(500, {
 				errorMessage: 'Gagal menyimpan data onboarding. Silakan coba lagi.'
 			});

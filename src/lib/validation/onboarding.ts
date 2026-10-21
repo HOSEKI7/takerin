@@ -81,3 +81,105 @@ export function formatRupiah(amount: number | string): string {
 		.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 	return `Rp ${formatted}`;
 }
+
+export interface CategoryInput {
+	name: string;
+	percentage: number | string;
+	isSavings?: boolean;
+	is_savings?: boolean;
+}
+
+/**
+ * Validates a list of categories.
+ * Must have at least 1 category, all names non-empty, percentage > 0, and total sum === 100%.
+ */
+export function validateCategories(categories: CategoryInput[] | null | undefined): string | null {
+	if (!categories || !Array.isArray(categories) || categories.length === 0) {
+		return 'Minimal harus memiliki satu kategori.';
+	}
+
+	let totalPercentage = 0;
+
+	for (const cat of categories) {
+		if (!cat.name || cat.name.trim().length === 0) {
+			return 'Nama kategori tidak boleh kosong.';
+		}
+
+		const pct = Number(cat.percentage);
+		if (Number.isNaN(pct) || cat.percentage === '' || pct <= 0) {
+			return 'Persentase kategori harus lebih besar dari 0%.';
+		}
+
+		totalPercentage += pct;
+	}
+
+	// Total percentage must sum to 100% (allowing tolerance for minor float precision)
+	if (Math.abs(totalPercentage - 100) > 0.001) {
+		return `Total persentase harus tepat 100% (saat ini: ${Math.round(totalPercentage * 100) / 100}%).`;
+	}
+
+	return null;
+}
+
+/**
+ * Returns the number of days in a given month.
+ */
+export function getDaysInMonth(year: number, monthIndex: number): number {
+	return new Date(year, monthIndex + 1, 0).getDate();
+}
+
+/**
+ * Formats a Date to ISO date string 'YYYY-MM-DD'.
+ */
+export function formatDateISO(d: Date): string {
+	const year = d.getFullYear();
+	const month = String(d.getMonth() + 1).padStart(2, '0');
+	const day = String(d.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
+}
+
+/**
+ * Calculates start_date and end_date for the first Periode Bulan:
+ * - start_date = today (ISO YYYY-MM-DD)
+ * - end_date = 1 day before the next pay date (with fallback for day 31 / month length)
+ */
+export function calculatePeriodDates(
+	today: Date,
+	payDay: number
+): { startDate: string; endDate: string } {
+	const currentYear = today.getFullYear();
+	const currentMonth = today.getMonth(); // 0-indexed
+	const currentDay = today.getDate();
+
+	const daysInCurrentMonth = getDaysInMonth(currentYear, currentMonth);
+	const clampedPayDayCurrent = Math.min(payDay, daysInCurrentMonth);
+
+	let nextPayYear: number;
+	let nextPayMonth: number;
+	let nextPayDay: number;
+
+	if (currentDay < clampedPayDayCurrent) {
+		// Pay day in current month is still upcoming
+		nextPayYear = currentYear;
+		nextPayMonth = currentMonth;
+		nextPayDay = clampedPayDayCurrent;
+	} else {
+		// Pay day for this month has passed or is today; next pay day is next month
+		if (currentMonth === 11) {
+			nextPayYear = currentYear + 1;
+			nextPayMonth = 0;
+		} else {
+			nextPayYear = currentYear;
+			nextPayMonth = currentMonth + 1;
+		}
+		const daysInNextMonth = getDaysInMonth(nextPayYear, nextPayMonth);
+		nextPayDay = Math.min(payDay, daysInNextMonth);
+	}
+
+	const endDateObj = new Date(nextPayYear, nextPayMonth, nextPayDay - 1);
+
+	return {
+		startDate: formatDateISO(today),
+		endDate: formatDateISO(endDateObj)
+	};
+}

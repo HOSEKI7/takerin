@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index';
-import { user } from './schema';
+import { user, monthlyPeriod, category } from './schema';
 import {
 	saveOnboardingStep1And2,
 	getUserSettings,
 	getIncomeSources,
-	setOnboardingCompleted
+	setOnboardingCompleted,
+	getCategoryTemplates,
+	completeOnboarding
 } from './onboarding';
 import { eq } from 'drizzle-orm';
 import fs from 'node:fs';
@@ -21,6 +23,9 @@ describe('Onboarding D1 Database & Drizzle Operations (Miniflare)', () => {
 		db = getDb(proxy.env.DB);
 
 		// Clean up tables
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS monthly_period;');
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS category_template;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS income_source;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS user_settings;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS two_factor;');
@@ -169,5 +174,89 @@ describe('Onboarding D1 Database & Drizzle Operations (Miniflare)', () => {
 		await setOnboardingCompleted(proxy.env.DB, testUserId, false);
 		userRecord = await db.select().from(user).where(eq(user.id, testUserId));
 		expect(userRecord[0].onboardingCompleted).toBe(false);
+	});
+
+	it('retrieves category templates with parsed categories', async () => {
+		const templates = await getCategoryTemplates(proxy.env.DB);
+		expect(templates.length).toBeGreaterThanOrEqual(2);
+
+		const template503020 = templates.find((t) => t.name === '50/30/20');
+		expect(template503020).toBeDefined();
+		expect(template503020?.categories).toHaveLength(3);
+		expect(template503020?.categories[0].name).toBe('Kebutuhan');
+		expect(template503020?.categories[0].percentage).toBe(50);
+		expect(template503020?.categories[2].isSavings).toBe(true);
+
+		const template6Toples = templates.find((t) => t.name === '6 Toples');
+		expect(template6Toples).toBeDefined();
+		expect(template6Toples?.categories).toHaveLength(6);
+	});
+
+	it('completes onboarding: creates monthly_period and active categories, updates user settings and income sources', async () => {
+		const testUserId = 'test-complete-onboard-' + Date.now();
+		const now = new Date(2026, 9, 21); // 2026-10-21 (Oct 21)
+
+		await db.insert(user).values({
+			id: testUserId,
+			name: 'Budi Lengkap',
+			email: `budi-lengkap-${Date.now()}@example.com`,
+			emailVerified: true,
+			onboardingCompleted: false,
+			role: 'user',
+			createdAt: now,
+			updatedAt: now
+		});
+
+		const result = await completeOnboarding(proxy.env.DB, testUserId, {
+			payDay: 25,
+			incomeSources: [
+				{ name: 'Gaji Utama', amount: 8000000 },
+				{ name: 'Side Project', amount: 2000000 }
+			],
+			categories: [
+				{ name: 'Kebutuhan', percentage: 50, isSavings: false },
+				{ name: 'Keinginan', percentage: 30, isSavings: false },
+				{ name: 'Tabungan & Investasi', percentage: 20, isSavings: true }
+			],
+			now
+		});
+
+		expect(result.success).toBe(true);
+		expect(result.periodId).toBeDefined();
+
+		// Check user settings
+		const settings = await getUserSettings(proxy.env.DB, testUserId);
+		expect(settings?.payDay).toBe(25);
+
+		// Check income sources
+		const sources = await getIncomeSources(proxy.env.DB, testUserId);
+		expect(sources).toHaveLength(2);
+
+		// Check monthly period
+		const periods = await db
+			.select()
+			.from(monthlyPeriod)
+			.where(eq(monthlyPeriod.userId, testUserId));
+		expect(periods).toHaveLength(1);
+		const period = periods[0];
+		expect(period.startDate).toBe('2026-10-21');
+		expect(period.endDate).toBe('2026-10-24');
+		expect(period.payDay).toBe(25);
+		expect(period.totalIncome).toBe(10000000);
+		expect(period.status).toBe('active');
+
+		// Check categories created for this period
+		const categories = await db.select().from(category).where(eq(category.periodId, period.id));
+		expect(categories).toHaveLength(3);
+		expect(categories.every((c) => c.status === 'active')).toBe(true);
+		expect(categories.every((c) => c.userId === testUserId)).toBe(true);
+
+		const savingsCat = categories.find((c) => c.name === 'Tabungan & Investasi');
+		expect(savingsCat?.percentage).toBe(20);
+		expect(savingsCat?.isSavings).toBe(true);
+
+		// Check user onboarding_completed flag
+		const userRecord = await db.select().from(user).where(eq(user.id, testUserId));
+		expect(userRecord[0].onboardingCompleted).toBe(true);
 	});
 });

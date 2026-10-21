@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index';
-import { healthCheck, user, session } from './schema';
+import { healthCheck, user, session, categoryTemplate } from './schema';
 import { sql } from 'drizzle-orm';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,6 +15,9 @@ describe('D1 Database & Drizzle ORM (Miniflare)', () => {
 		db = getDb(proxy.env.DB);
 
 		// Ensure clean test state
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS monthly_period;');
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS category_template;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS income_source;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS user_settings;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS two_factor;');
@@ -110,5 +113,30 @@ describe('D1 Database & Drizzle ORM (Miniflare)', () => {
 
 		const sessions = await db.select().from(session);
 		expect(sessions.find((s) => s.id === sessionId)).toBeDefined();
+	});
+
+	it('seeds category_template table with 2 presets (50/30/20 and 6 Toples)', async () => {
+		const templates = await db.select().from(categoryTemplate);
+		expect(templates).toHaveLength(2);
+
+		const names = templates.map((t) => t.name);
+		expect(names).toContain('50/30/20');
+		expect(names).toContain('6 Toples');
+
+		const preset503020 = templates.find((t) => t.name === '50/30/20');
+		expect(preset503020).toBeDefined();
+		const parsed503020 = JSON.parse(preset503020!.categories);
+		expect(parsed503020).toHaveLength(3);
+		expect(
+			parsed503020.reduce((acc: number, c: { percentage: number }) => acc + c.percentage, 0)
+		).toBe(100);
+
+		const preset6Toples = templates.find((t) => t.name === '6 Toples');
+		expect(preset6Toples).toBeDefined();
+		const parsed6Toples = JSON.parse(preset6Toples!.categories);
+		expect(parsed6Toples).toHaveLength(6);
+		expect(
+			parsed6Toples.reduce((acc: number, c: { percentage: number }) => acc + c.percentage, 0)
+		).toBe(100);
 	});
 });

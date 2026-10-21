@@ -3,11 +3,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockSaveOnboarding = vi.fn();
 const mockGetUserSettings = vi.fn();
 const mockGetIncomeSources = vi.fn();
+const mockGetCategoryTemplates = vi.fn();
+const mockCompleteOnboarding = vi.fn();
 
 vi.mock('#lib/server/db/onboarding.js', () => ({
 	saveOnboardingStep1And2: (...args: unknown[]) => mockSaveOnboarding(...args),
 	getUserSettings: (...args: unknown[]) => mockGetUserSettings(...args),
-	getIncomeSources: (...args: unknown[]) => mockGetIncomeSources(...args)
+	getIncomeSources: (...args: unknown[]) => mockGetIncomeSources(...args),
+	getCategoryTemplates: (...args: unknown[]) => mockGetCategoryTemplates(...args),
+	completeOnboarding: (...args: unknown[]) => mockCompleteOnboarding(...args)
 }));
 
 import { load, actions } from './+page.server';
@@ -17,9 +21,18 @@ describe('Onboarding Route Server (+page.server.ts)', () => {
 		vi.clearAllMocks();
 	});
 
-	it('loads existing user settings and income sources if available', async () => {
+	it('loads existing user settings, income sources, and category templates', async () => {
 		mockGetUserSettings.mockResolvedValue({ payDay: 25, language: 'id', theme: 'light' });
 		mockGetIncomeSources.mockResolvedValue([{ id: 'inc_1', name: 'Gaji', amount: 5000000 }]);
+		mockGetCategoryTemplates.mockResolvedValue([
+			{
+				id: 't1',
+				name: '50/30/20',
+				description: 'Desc',
+				categories: [{ name: 'Kebutuhan', percentage: 50, isSavings: false }],
+				isSystem: true
+			}
+		]);
 
 		const mockEvent = {
 			locals: {
@@ -32,19 +45,27 @@ describe('Onboarding Route Server (+page.server.ts)', () => {
 			user: unknown;
 			userSettings: { payDay: number; language: string; theme: string } | null;
 			incomeSources: Array<{ id: string; name: string; amount: number }>;
+			categoryTemplates: Array<{ id: string; name: string }>;
 		};
 
 		expect(result).toHaveProperty('user');
 		expect(result).toHaveProperty('userSettings');
 		expect(result).toHaveProperty('incomeSources');
+		expect(result).toHaveProperty('categoryTemplates');
 		expect(result.userSettings?.payDay).toBe(25);
 		expect(result.incomeSources).toHaveLength(1);
+		expect(result.categoryTemplates).toHaveLength(1);
+		expect(result.categoryTemplates[0].name).toBe('50/30/20');
 	});
 
 	it('validates and rejects invalid payDay in form action', async () => {
 		const formData = new FormData();
 		formData.append('payDay', '35'); // Invalid > 31
 		formData.append('incomeSources', JSON.stringify([{ name: 'Gaji', amount: 5000000 }]));
+		formData.append(
+			'categories',
+			JSON.stringify([{ name: 'Kebutuhan', percentage: 100, isSavings: false }])
+		);
 
 		const mockEvent = {
 			locals: {
@@ -62,13 +83,17 @@ describe('Onboarding Route Server (+page.server.ts)', () => {
 		};
 		expect(actionResult?.status).toBe(400);
 		expect(actionResult?.data).toHaveProperty('errorMessage');
-		expect(mockSaveOnboarding).not.toHaveBeenCalled();
+		expect(mockCompleteOnboarding).not.toHaveBeenCalled();
 	});
 
 	it('validates and rejects empty income sources in form action', async () => {
 		const formData = new FormData();
 		formData.append('payDay', '25');
 		formData.append('incomeSources', JSON.stringify([]));
+		formData.append(
+			'categories',
+			JSON.stringify([{ name: 'Kebutuhan', percentage: 100, isSavings: false }])
+		);
 
 		const mockEvent = {
 			locals: {
@@ -88,10 +113,41 @@ describe('Onboarding Route Server (+page.server.ts)', () => {
 		expect(actionResult?.data?.errorMessage).toContain(
 			'Minimal harus menambahkan satu sumber pemasukan'
 		);
-		expect(mockSaveOnboarding).not.toHaveBeenCalled();
+		expect(mockCompleteOnboarding).not.toHaveBeenCalled();
 	});
 
-	it('saves valid payDay and income sources and redirects to /dashboard', async () => {
+	it('validates and rejects categories with total percentage not 100%', async () => {
+		const formData = new FormData();
+		formData.append('payDay', '25');
+		formData.append('incomeSources', JSON.stringify([{ name: 'Gaji', amount: 5000000 }]));
+		formData.append(
+			'categories',
+			JSON.stringify([
+				{ name: 'Kebutuhan', percentage: 50, isSavings: false },
+				{ name: 'Keinginan', percentage: 30, isSavings: false }
+			])
+		);
+
+		const mockEvent = {
+			locals: {
+				user: { id: 'u1', name: 'User 1', email: 'u1@test.com', onboardingCompleted: false }
+			},
+			request: {
+				formData: vi.fn().mockResolvedValue(formData)
+			},
+			platform: { env: { DB: {} as unknown as D1Database } }
+		} as unknown as Parameters<NonNullable<typeof actions.default>>[0];
+
+		const actionResult = (await actions.default(mockEvent)) as {
+			status: number;
+			data: { errorMessage: string };
+		};
+		expect(actionResult?.status).toBe(400);
+		expect(actionResult?.data?.errorMessage).toContain('Total persentase harus tepat 100%');
+		expect(mockCompleteOnboarding).not.toHaveBeenCalled();
+	});
+
+	it('saves valid payDay, income sources, and categories via completeOnboarding and redirects to /dashboard', async () => {
 		const formData = new FormData();
 		formData.append('payDay', '25');
 		formData.append(
@@ -101,8 +157,16 @@ describe('Onboarding Route Server (+page.server.ts)', () => {
 				{ name: 'Freelance', amount: 3000000 }
 			])
 		);
+		formData.append(
+			'categories',
+			JSON.stringify([
+				{ name: 'Kebutuhan', percentage: 50, isSavings: false },
+				{ name: 'Keinginan', percentage: 30, isSavings: false },
+				{ name: 'Tabungan & Investasi', percentage: 20, isSavings: true }
+			])
+		);
 
-		mockSaveOnboarding.mockResolvedValue({ success: true });
+		mockCompleteOnboarding.mockResolvedValue({ success: true, periodId: 'p-1' });
 
 		const mockEvent = {
 			locals: {
@@ -119,7 +183,7 @@ describe('Onboarding Route Server (+page.server.ts)', () => {
 			location: '/dashboard'
 		});
 
-		expect(mockSaveOnboarding).toHaveBeenCalledWith(
+		expect(mockCompleteOnboarding).toHaveBeenCalledWith(
 			expect.anything(),
 			'u1',
 			expect.objectContaining({
@@ -127,6 +191,11 @@ describe('Onboarding Route Server (+page.server.ts)', () => {
 				incomeSources: [
 					{ name: 'Gaji Pokok', amount: 10000000 },
 					{ name: 'Freelance', amount: 3000000 }
+				],
+				categories: [
+					{ name: 'Kebutuhan', percentage: 50, isSavings: false },
+					{ name: 'Keinginan', percentage: 30, isSavings: false },
+					{ name: 'Tabungan & Investasi', percentage: 20, isSavings: true }
 				]
 			})
 		);

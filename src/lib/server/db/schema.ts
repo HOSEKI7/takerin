@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 
 export const healthCheck = sqliteTable('health_check', {
 	id: text('id').primaryKey(),
@@ -92,6 +92,46 @@ export const incomeSource = sqliteTable('income_source', {
 		.references(() => user.id, { onDelete: 'cascade' }),
 	name: text('name').notNull(),
 	amount: integer('amount').notNull(),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export const categoryTemplate = sqliteTable('category_template', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	description: text('description'),
+	categories: text('categories').notNull(),
+	isSystem: integer('is_system', { mode: 'boolean' }).notNull().default(false),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+});
+
+export const monthlyPeriod = sqliteTable('monthly_period', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	startDate: text('start_date').notNull(),
+	endDate: text('end_date').notNull(),
+	payDay: integer('pay_day').notNull(),
+	totalIncome: integer('total_income').notNull(),
+	status: text('status').notNull().default('active'),
+	aiSummary: text('ai_summary'),
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+});
+
+export const category = sqliteTable('category', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	periodId: text('period_id')
+		.notNull()
+		.references(() => monthlyPeriod.id, { onDelete: 'cascade' }),
+	name: text('name').notNull(),
+	percentage: real('percentage').notNull(),
+	isSavings: integer('is_savings', { mode: 'boolean' }).notNull().default(false),
+	status: text('status').notNull().default('active'),
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
 });
