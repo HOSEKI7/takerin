@@ -35,6 +35,7 @@ export interface UpdateCategoriesMidPeriodParams {
 	periodId: string;
 	activeCategories: ManagedCategoryInput[];
 	freezeCategoryIds?: string[];
+	frozenCategoryRenames?: Array<{ id: string; name: string }>;
 }
 
 /**
@@ -185,6 +186,30 @@ export async function updateCategoriesMidPeriod(
 						)
 					)
 			);
+		}
+	}
+
+	// B. Rename frozen categories if requested
+	if (params.frozenCategoryRenames && params.frozenCategoryRenames.length > 0) {
+		for (const rename of params.frozenCategoryRenames) {
+			const trimmed = rename.name.trim();
+			if (trimmed.length > 0) {
+				batchStatements.push(
+					db
+						.update(schema.category)
+						.set({
+							name: trimmed,
+							updatedAt: now
+						})
+						.where(
+							and(
+								eq(schema.category.id, rename.id),
+								eq(schema.category.userId, params.userId),
+								eq(schema.category.periodId, params.periodId)
+							)
+						)
+				);
+			}
 		}
 	}
 

@@ -269,12 +269,6 @@
 		candidateToFreeze = null;
 		showFreezeModal = false;
 	}
-
-	// Auto-balance button when total != 100%
-	function handleAutoBalance() {
-		if (categories.length === 0 || differenceFrom100 === 0) return;
-		categories = redistributePercentage(categories, differenceFrom100);
-	}
 </script>
 
 <div
@@ -398,20 +392,6 @@
 					</div>
 
 					<div class="flex flex-wrap items-center gap-2.5">
-						{#if !isExactly100}
-							<Button
-								type="button"
-								variant="secondary"
-								size="sm"
-								onclick={handleAutoBalance}
-								class="text-xs font-semibold"
-							>
-								{differenceFrom100 > 0
-									? `Bagi Sisa ${differenceFrom100}% Otomatis`
-									: `Seimbangkan ke 100%`}
-							</Button>
-						{/if}
-
 						<Button
 							type="button"
 							variant="primary"
@@ -462,6 +442,11 @@
 				)}
 			/>
 			<input type="hidden" name="freezeCategoryIds" value={JSON.stringify(freezeCategoryIds)} />
+			<input
+				type="hidden"
+				name="frozenCategoryRenames"
+				value={JSON.stringify(frozenCategories.map((f) => ({ id: f.id, name: f.name })))}
+			/>
 
 			<!-- ACTIVE CATEGORIES LIST -->
 			<section aria-label="Daftar Kategori Aktif" class="space-y-4">
@@ -470,7 +455,7 @@
 						Kategori Aktif ({categories.length})
 					</h2>
 					<span class="text-xs text-slate dark:text-pebble">
-						Total Pemasukan: {formatRupiah(data.period?.totalIncome ?? 0)}
+						Pemasukan Bulanan: {formatRupiah(data.period?.totalIncome ?? 0)}
 					</span>
 				</div>
 
@@ -526,34 +511,42 @@
 									</div>
 								</div>
 
-								<!-- Right: Percentage, Nominal Allocation, Live Category Balance, and Freeze Button -->
+								<!-- Right: Percentage Slider & Input, Nominal Allocation, Live Category Balance, and Freeze Button -->
 								<div
 									class="flex flex-wrap items-center justify-between gap-4 border-t border-fog pt-3 sm:border-0 sm:pt-0"
 								>
 									<div class="flex items-center gap-3">
-										<div class="w-24">
-											<label
-												for={`pct-${cat.id || idx}`}
-												class="block text-[10px] font-semibold text-slate dark:text-pebble"
+										<div class="flex w-28 flex-col gap-1 sm:w-36">
+											<div
+												class="flex items-center justify-between text-[10px] font-semibold text-slate dark:text-pebble"
 											>
-												Persentase
-											</label>
-											<div class="relative mt-0.5">
-												<input
-													id={`pct-${cat.id || idx}`}
-													type="number"
-													min="1"
-													max="100"
-													step="0.5"
-													bind:value={cat.percentage}
-													required
-													class="w-full rounded-lg border border-fog bg-paper px-2.5 py-1.5 text-right font-mono text-sm font-bold text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
-												/>
-												<span
-													class="pointer-events-none absolute top-2 right-2 text-xs text-slate dark:text-pebble"
-													>%</span
-												>
+												<label for={`pct-${cat.id || idx}`}>Persentase</label>
+												<div class="relative w-14">
+													<input
+														id={`pct-${cat.id || idx}`}
+														type="number"
+														min="1"
+														max="100"
+														step="0.5"
+														bind:value={cat.percentage}
+														required
+														class="w-full rounded-lg border border-fog bg-paper px-1.5 py-0.5 text-right font-mono text-xs font-bold text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
+													/>
+													<span
+														class="pointer-events-none absolute top-1 right-1 text-[10px] text-slate dark:text-pebble"
+														>%</span
+													>
+												</div>
 											</div>
+											<input
+												type="range"
+												min="1"
+												max="100"
+												step="0.5"
+												bind:value={cat.percentage}
+												aria-label={`Geser persentase untuk ${cat.name}`}
+												class="h-1.5 w-full cursor-pointer accent-forest-ink dark:accent-lime-voltage"
+											/>
 										</div>
 
 										<div class="space-y-0.5 text-right text-xs">
@@ -627,7 +620,12 @@
 									>
 										Dibekukan
 									</span>
-									<span class="text-sm font-bold text-obsidian dark:text-paper">{fCat.name}</span>
+									<input
+										type="text"
+										bind:value={fCat.name}
+										aria-label={`Ubah nama kategori dibekukan ${fCat.name}`}
+										class="rounded-lg border border-fog/80 bg-paper px-2.5 py-1 text-sm font-bold text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
+									/>
 								</div>
 
 								<div class="text-right text-xs">
@@ -809,21 +807,32 @@
 								>
 									{#each categories as c (c.id || c.name)}
 										{@const key = c.id || c.name}
-										<div class="flex items-center justify-between gap-2 text-xs">
+										<div class="flex items-center justify-between gap-3 text-xs">
 											<span class="font-medium text-obsidian dark:text-paper">
 												{c.name} ({c.percentage}%)
 											</span>
-											<div class="flex items-center gap-1">
-												<span class="text-alarm-red">-</span>
+											<div class="flex items-center gap-2">
 												<input
-													type="number"
+													type="range"
 													min="0"
 													max={c.percentage - 0.5}
 													step="0.5"
 													bind:value={manualReductions[key]}
-													class="w-16 rounded border border-fog bg-paper px-2 py-1 text-right font-mono text-xs dark:border-dark-border dark:bg-dark-card"
+													aria-label={`Kurangi persentase ${c.name}`}
+													class="h-1.5 w-20 cursor-pointer accent-forest-ink dark:accent-lime-voltage"
 												/>
-												<span class="text-slate dark:text-pebble">%</span>
+												<div class="flex items-center gap-1">
+													<span class="text-alarm-red">-</span>
+													<input
+														type="number"
+														min="0"
+														max={c.percentage - 0.5}
+														step="0.5"
+														bind:value={manualReductions[key]}
+														class="w-16 rounded-lg border border-fog bg-paper px-2 py-1 text-right font-mono text-xs dark:border-dark-border dark:bg-dark-card"
+													/>
+													<span class="text-slate dark:text-pebble">%</span>
+												</div>
 											</div>
 										</div>
 									{/each}
@@ -915,19 +924,30 @@
 						>
 							{#each categories.filter((c) => (c.id || c.name) !== (candidateToFreeze?.id || candidateToFreeze?.name)) as remCat (remCat.id || remCat.name)}
 								{@const key = remCat.id || remCat.name}
-								<div class="flex items-center justify-between gap-2 text-xs">
+								<div class="flex items-center justify-between gap-3 text-xs">
 									<span class="font-medium text-obsidian dark:text-paper">{remCat.name}</span>
-									<div class="flex items-center gap-1">
-										<span class="text-slate dark:text-pebble">+</span>
+									<div class="flex items-center gap-2">
 										<input
-											type="number"
+											type="range"
 											min="0"
 											max="100"
 											step="0.5"
 											bind:value={manualAllocations[key]}
-											class="w-16 rounded border border-fog bg-paper px-2 py-1 text-right font-mono text-xs dark:border-dark-border dark:bg-dark-card"
+											aria-label={`Tambah persentase ke ${remCat.name}`}
+											class="h-1.5 w-20 cursor-pointer accent-forest-ink dark:accent-lime-voltage"
 										/>
-										<span class="text-slate dark:text-pebble">%</span>
+										<div class="flex items-center gap-1">
+											<span class="text-slate dark:text-pebble">+</span>
+											<input
+												type="number"
+												min="0"
+												max="100"
+												step="0.5"
+												bind:value={manualAllocations[key]}
+												class="w-16 rounded-lg border border-fog bg-paper px-2 py-1 text-right font-mono text-xs dark:border-dark-border dark:bg-dark-card"
+											/>
+											<span class="text-slate dark:text-pebble">%</span>
+										</div>
 									</div>
 								</div>
 							{/each}

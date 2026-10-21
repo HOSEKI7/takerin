@@ -73,6 +73,8 @@
 	const visibleCategories = $derived(
 		categories.filter((c) => c.status !== 'frozen' || selectedId === c.id)
 	);
+
+	const activeCount = $derived(categories.filter((c) => c.status !== 'frozen').length);
 </script>
 
 <div class="w-full space-y-2 {className}">
@@ -81,7 +83,7 @@
 			Pilih Kategori <span class="text-alarm-red">*</span>
 		</span>
 		<span class="text-xs text-slate dark:text-pebble">
-			{visibleCategories.length} kategori aktif
+			{activeCount} kategori aktif
 		</span>
 	</div>
 

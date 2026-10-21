@@ -63,6 +63,14 @@ export const actions: Actions = {
 			freezeCategoryIds = [];
 		}
 
+		let frozenCategoryRenames: Array<{ id: string; name: string }>;
+		try {
+			const rawRenames = String(formData.get('frozenCategoryRenames') || '[]');
+			frozenCategoryRenames = JSON.parse(rawRenames);
+		} catch {
+			frozenCategoryRenames = [];
+		}
+
 		const validation = validateCategoryManagementInput(parsedCategories);
 		if (!validation.success || !validation.data) {
 			return fail(400, { error: validation.error || 'Validasi kategori gagal.' });
@@ -73,7 +81,8 @@ export const actions: Actions = {
 				userId: locals.user.id,
 				periodId,
 				activeCategories: validation.data,
-				freezeCategoryIds
+				freezeCategoryIds,
+				frozenCategoryRenames
 			});
 
 			return { success: true, message: 'Kategori berhasil diperbarui.' };

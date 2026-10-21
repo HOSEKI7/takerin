@@ -109,6 +109,10 @@ describe('Categories Route Server Logic (Seam 3)', () => {
 			])
 		);
 		formData.set('freezeCategoryIds', JSON.stringify(['c-freeze']));
+		formData.set(
+			'frozenCategoryRenames',
+			JSON.stringify([{ id: 'c-frozen', name: 'Hobi Lama Diedit' }])
+		);
 
 		const result = await actions.default({
 			locals: { user: { id: 'u1' } },
@@ -124,7 +128,8 @@ describe('Categories Route Server Logic (Seam 3)', () => {
 				activeCategories: expect.arrayContaining([
 					expect.objectContaining({ name: 'Makan Enak', percentage: 70 })
 				]),
-				freezeCategoryIds: ['c-freeze']
+				freezeCategoryIds: ['c-freeze'],
+				frozenCategoryRenames: [{ id: 'c-frozen', name: 'Hobi Lama Diedit' }]
 			})
 		);
 		expect(result).toEqual({ success: true, message: 'Kategori berhasil diperbarui.' });
