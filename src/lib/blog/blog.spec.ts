@@ -25,11 +25,11 @@ Pernahkah kamu merasa gaji baru saja masuk rekening, tapi beberapa hari kemudian
 
 ## 1. Bagi Jatah di Awal Bulan
 
-Kunci utama pengelolaan keuangan adalah membagi pos pengeluaran di awal bulan.
+Kunci utama pengelolaan keuangan adalah membagi kategori pengeluaran di awal bulan.
 
-- Pos Kebutuhan Pokok (50%)
-- Pos Tabungan & Investasi (20%)
-- Pos Keinginan (30%)
+- Kategori Kebutuhan Pokok (50%)
+- Kategori Tabungan & Investasi (20%)
+- Kategori Keinginan (30%)
 
 Coba aplikasi [Takerin](/) untuk memudahkan penakaran jatah gajimu!
 `;

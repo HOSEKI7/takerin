@@ -89,7 +89,10 @@
 	<meta property="og:url" content={`https://takerin.my.id/blog/${data.post.slug}`} />
 	<meta property="og:type" content="article" />
 	<meta property="og:site_name" content="Takerin" />
-	<meta property="og:image" content="https://takerin.my.id/og-image.png" />
+	<meta
+		property="og:image"
+		content={data.post.image ?? 'https://takerin.my.id/brand/takerin-wordmark.webp'}
+	/>
 	<meta property="article:published_time" content={data.post.date} />
 	<meta property="article:author" content={data.post.author} />
 
@@ -97,7 +100,10 @@
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content={`${data.post.title} — Takerin`} />
 	<meta name="twitter:description" content={data.post.excerpt} />
-	<meta name="twitter:image" content="https://takerin.my.id/og-image.png" />
+	<meta
+		name="twitter:image"
+		content={data.post.image ?? 'https://takerin.my.id/brand/takerin-wordmark.webp'}
+	/>
 
 	<!-- Structured Data -->
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->

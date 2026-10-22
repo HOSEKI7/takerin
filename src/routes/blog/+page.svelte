@@ -35,7 +35,7 @@
 	<meta property="og:url" content="https://takerin.my.id/blog" />
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="Takerin" />
-	<meta property="og:image" content="https://takerin.my.id/og-image.png" />
+	<meta property="og:image" content="https://takerin.my.id/brand/takerin-wordmark.webp" />
 
 	<!-- Twitter Cards -->
 	<meta name="twitter:card" content="summary_large_image" />
@@ -44,7 +44,7 @@
 		name="twitter:description"
 		content="Panduan praktis atur gaji bulanan, tips hemat anak kos, dan strategi keuangan tanpa rasa bersalah."
 	/>
-	<meta name="twitter:image" content="https://takerin.my.id/og-image.png" />
+	<meta name="twitter:image" content="https://takerin.my.id/brand/takerin-wordmark.webp" />
 </svelte:head>
 
 <div
@@ -127,7 +127,7 @@
 				<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
 					{#each data.posts as post (post.slug)}
 						<article
-							class="flex flex-col justify-between rounded-lg border border-fog bg-paper p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-forest-ink/30 hover:shadow-md dark:border-dark-border dark:bg-dark-surface dark:hover:border-lime-voltage/40"
+							class="flex flex-col justify-between rounded-lg border border-fog bg-paper p-6 transition-colors hover:border-forest-ink/30 dark:border-dark-border dark:bg-dark-surface dark:hover:border-lime-voltage/40"
 						>
 							<div>
 								<div class="flex items-center justify-between gap-2">
@@ -193,20 +193,17 @@
 					Jangan biarkan penghasilanmu habis tanpa arah yang jelas. Bergabunglah dengan ribuan orang
 					yang mengelola keuangan dengan tenang bersama Takerin.
 				</p>
-				<div class="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+				<div class="mt-8 flex flex-col items-center justify-center gap-6 sm:flex-row">
 					<a href={resolve('/auth/register')}>
 						<Button variant="primary" size="lg" class="w-full sm:w-auto">
 							Daftar Gratis Sekarang
 						</Button>
 					</a>
-					<a href={resolve('/')}>
-						<Button
-							variant="secondary"
-							size="lg"
-							class="w-full border-lime-voltage bg-transparent text-lime-voltage hover:bg-spruce/50 sm:w-auto dark:text-lime-voltage"
-						>
-							Pelajari Fitur Takerin
-						</Button>
+					<a
+						href={resolve('/')}
+						class="text-sm font-semibold text-lime-voltage underline underline-offset-4 transition hover:opacity-80"
+					>
+						Pelajari Fitur Takerin
 					</a>
 				</div>
 			</div>

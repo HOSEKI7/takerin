@@ -17,7 +17,7 @@ Namun di akhir bulan, rekeningmu tetap kosong melompong. Kenapa bisa begitu? Buk
 
 ## Paradoks Buku Kas: Dokumentasi Rapi Kebangkrutan
 
-Mencatat transaksi setelah uang keluar hanya memberitahumu **ke mana uangmu pergi**, bukan **ke mana uangmu seharusnya pergi**.
+Mencatat pengeluaran setelah uang keluar hanya memberitahumu **ke mana uangmu pergi**, bukan **ke mana uangmu seharusnya pergi**.
 
 Jika kamu tidak menetapkan batasan jatah di awal, maka aktivitas catat pengeluaran hanyalah mendokumentasikan kebangkrutan pribadi secara rapi dan sistematis. Di akhir bulan kamu hanya akan menatap grafik indah seraya menghela napas: *"Wah, ternyata bulan ini aku habis 2 juta cuma buat kopi dan jajan online ya."*
 
@@ -29,7 +29,7 @@ Penyesalan di akhir bulan tidak mengembalikan saldo yang sudah raib.
 Ketika kamu rajin mencatat, otak merasa kamu sudah "mengelola keuangan". Rasa puas ini menipu, karena mencatat tanpa mengubah kebiasaan belanja sama sekali tidak melindungi tabungan masa depanmu.
 
 ### 2. Beban Mental Tinggi dan Bikin Cepat Bosan
-Mencatat ratusan transaksi harian dengan detail rumit membutuhkan energi kemauan (*willpower*) yang besar. Setelah dua atau tiga minggu, kebanyakan orang mengalami kelelahan mental (*decision fatigue*) lalu akhirnya berhenti mencatat sama sekali.
+Mencatat ratusan entri pengeluaran harian dengan detail rumit membutuhkan energi kemauan (*willpower*) yang besar. Setelah dua atau tiga minggu, kebanyakan orang mengalami kelelahan mental (*decision fatigue*) lalu akhirnya berhenti mencatat sama sekali.
 
 ### 3. Tidak Ada Panduan Saat Mau Belanja
 Saat kamu sedang berdiri di depan kasir atau membuka menu aplikasi pesan makanan, buku catatan yang berisi riwayat pengeluaran kemarin tidak membantumu menjawab pertanyaan penting: *"Bolehkah aku memesan makanan ini sekarang?"*

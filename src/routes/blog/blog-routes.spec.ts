@@ -75,6 +75,7 @@ describe('Blog Routes, Prerendering & SEO (Seams 2 & 3)', () => {
 		expect(blogIndexContent).toMatch(/<title>[^<]*Blog[^<]*<\/title>/);
 		expect(blogIndexContent).toMatch(/<meta[^>]*name="description"/);
 		expect(blogIndexContent).toMatch(/property="og:title"/);
+		expect(blogIndexContent).toContain('takerin-wordmark.webp');
 
 		const blogSlugPath = path.resolve('src/routes/blog/[slug]/+page.svelte');
 		const blogSlugContent = fs.readFileSync(blogSlugPath, 'utf-8');
@@ -82,6 +83,7 @@ describe('Blog Routes, Prerendering & SEO (Seams 2 & 3)', () => {
 		expect(blogSlugContent).toContain("'@type': 'Article'");
 		expect(blogSlugContent).toContain('headline: data.post.title');
 		expect(blogSlugContent).toContain('image: data.post.image');
+		expect(blogSlugContent).toContain('takerin-wordmark.webp');
 		expect(blogSlugContent).toMatch(/property="og:type"[^>]*content="article"/);
 		expect(blogSlugContent).toMatch(/<link[^>]*rel="canonical"/);
 		expect(blogSlugContent).toContain('/auth/register');
