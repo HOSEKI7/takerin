@@ -16,8 +16,7 @@
 		Coins01Icon,
 		PiggyBankIcon,
 		AiChat02Icon,
-		Alert02Icon,
-		Download01Icon
+		Alert02Icon
 	} from '@hugeicons/core-free-icons';
 
 	let { data }: PageProps = $props();
@@ -129,20 +128,12 @@
 				</h1>
 			</div>
 
-			<div class="flex items-center gap-2 self-start">
-				<a href="{resolve('/api/export/pdf')}?periodId={data.period.id}" download>
-					<Button variant="secondary" size="sm" class="flex items-center gap-1.5">
-						<HugeiconsIcon icon={Download01Icon} class="h-4 w-4" />
-						<span>Unduh PDF</span>
-					</Button>
-				</a>
-				<a href={resolve('/history')}>
-					<Button variant="secondary" size="sm" class="flex items-center gap-1.5">
-						<HugeiconsIcon icon={ArrowLeft02Icon} class="h-4 w-4" />
-						<span>Daftar Riwayat</span>
-					</Button>
-				</a>
-			</div>
+			<a href={resolve('/history')}>
+				<Button variant="secondary" size="sm" class="flex items-center gap-1.5 self-start">
+					<HugeiconsIcon icon={ArrowLeft02Icon} class="h-4 w-4" />
+					<span>Daftar Riwayat</span>
+				</Button>
+			</a>
 		</div>
 
 		<!-- AI Summary Phrase Section -->

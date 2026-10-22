@@ -12,6 +12,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
+	import { onMount } from 'svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Calendar01Icon, Download01Icon, Alert02Icon } from '@hugeicons/core-free-icons';
 
@@ -222,6 +223,19 @@
 		setTheme(val);
 	}
 
+	onMount(() => {
+		const handleThemeChange = (e: Event) => {
+			const customEvent = e as CustomEvent<{ theme: 'light' | 'dark' }>;
+			if (customEvent.detail?.theme) {
+				selectedTheme = customEvent.detail.theme;
+			}
+		};
+		window.addEventListener('takerin:themechange', handleThemeChange);
+		return () => {
+			window.removeEventListener('takerin:themechange', handleThemeChange);
+		};
+	});
+
 	// 6. PDF Export Selection
 	// svelte-ignore state_referenced_locally
 	let selectedPdfPeriodId = $state(data.periods[0]?.id ?? '');
@@ -236,7 +250,9 @@
 	<title>Pengaturan Akun & Profil - Takerin</title>
 </svelte:head>
 
-<div class="bg-sand dark:bg-dark-base min-h-screen text-obsidian transition-colors dark:text-paper">
+<div
+	class="min-h-screen bg-fog text-obsidian transition-colors dark:bg-dark-surface dark:text-paper"
+>
 	<!-- HEADER NAVIGATION -->
 	<header
 		class="sticky top-0 z-20 border-b border-fog bg-paper/95 px-4 py-3 backdrop-blur-md sm:px-8 dark:border-dark-border dark:bg-dark-surface/95"
@@ -502,7 +518,7 @@
 								{:else}
 									<form
 										onsubmit={handleEnable2FA}
-										class="bg-sand/40 space-y-3 rounded-lg border border-fog p-4 dark:border-dark-border dark:bg-dark-surface"
+										class="space-y-3 rounded-lg border border-fog bg-fog/60 p-4 dark:border-dark-border dark:bg-dark-card"
 									>
 										<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
 											Masukkan Kata Sandi Akun untuk Mengaktifkan 2FA:
@@ -595,7 +611,7 @@
 								{#if twoFactorAction === 'backupCodes'}
 									<form
 										onsubmit={handleGenerateBackupCodes}
-										class="bg-sand/40 space-y-3 rounded-lg border border-fog p-4 dark:border-dark-border dark:bg-dark-surface"
+										class="space-y-3 rounded-lg border border-fog bg-fog/60 p-4 dark:border-dark-border dark:bg-dark-card"
 									>
 										<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
 											Masukkan Kata Sandi untuk Generate Kode Cadangan:
@@ -675,7 +691,7 @@
 				<form method="POST" action="?/updateSettings" use:enhance class="mt-6 space-y-6">
 					<!-- TANGGAL GAJIAN -->
 					<div
-						class="bg-sand/30 rounded-lg border border-fog p-4 dark:border-dark-border dark:bg-dark-surface/50"
+						class="rounded-lg border border-fog bg-fog/50 p-4 dark:border-dark-border dark:bg-dark-card"
 					>
 						<div class="flex items-start justify-between gap-4">
 							<div>
@@ -747,7 +763,7 @@
 						<div>
 							<label
 								for="settings-language"
-								class="block text-sm font-medium text-charcoal dark:text-stone-200"
+								class="block text-sm font-medium text-charcoal dark:text-linen-mist"
 							>
 								Bahasa Antarmuka
 							</label>
@@ -761,7 +777,7 @@
 								<option value="en">English (EN)</option>
 							</select>
 							<p class="mt-1 text-xs text-slate dark:text-pebble">
-								Tersimpan di preferensi database (alih bahasa antarmuka penuh pada tiket #15).
+								Tersimpan di preferensi profil pengguna.
 							</p>
 						</div>
 
@@ -769,7 +785,7 @@
 						<div>
 							<label
 								for="settings-theme"
-								class="block text-sm font-medium text-charcoal dark:text-stone-200"
+								class="block text-sm font-medium text-charcoal dark:text-linen-mist"
 							>
 								Tema Tampilan
 							</label>
@@ -805,7 +821,7 @@
 				<div class="mt-6 grid gap-6 sm:grid-cols-2">
 					<!-- EKSPOR CSV -->
 					<div
-						class="bg-sand/30 flex flex-col justify-between rounded-lg border border-fog p-5 dark:border-dark-border dark:bg-dark-surface/50"
+						class="flex flex-col justify-between rounded-lg border border-fog bg-fog/50 p-5 dark:border-dark-border dark:bg-dark-card"
 					>
 						<div>
 							<div class="flex items-center gap-2">
@@ -819,7 +835,7 @@
 								</h3>
 							</div>
 							<p class="mt-2 text-xs text-slate dark:text-linen-mist/80">
-								Berisi seluruh transaksi pengeluaran dari seluruh periode bulan (tanggal, jam, nama,
+								Berisi seluruh catatan pengeluaran dari seluruh Periode Bulan (tanggal, jam, nama,
 								kategori, nominal, catatan, dan periode). Kompatibel dengan Excel dan spreadsheet.
 							</p>
 						</div>
@@ -833,7 +849,7 @@
 
 					<!-- EKSPOR PDF -->
 					<div
-						class="bg-sand/30 flex flex-col justify-between rounded-lg border border-fog p-5 dark:border-dark-border dark:bg-dark-surface/50"
+						class="flex flex-col justify-between rounded-lg border border-fog bg-fog/50 p-5 dark:border-dark-border dark:bg-dark-card"
 					>
 						<div>
 							<div class="flex items-center gap-2">
@@ -913,7 +929,7 @@
 								showDeleteModal = true;
 								deleteConfirmText = '';
 							}}
-							class="cursor-pointer rounded-full bg-alarm-red px-5 py-2 text-xs font-bold text-paper transition hover:bg-red-700 active:scale-95"
+							class="cursor-pointer rounded-full bg-alarm-red px-5 py-2 text-xs font-bold text-paper transition hover:bg-alarm-red/90 active:scale-95"
 						>
 							Hapus Akun Saya
 						</button>
@@ -961,7 +977,7 @@
 					<div>
 						<label
 							for="delete-confirm-input"
-							class="block text-xs font-semibold text-charcoal dark:text-stone-300"
+							class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
 						>
 							Ketik <span class="font-mono text-alarm-red select-all">HAPUS AKUN SAYA</span> untuk mengonfirmasi:
 						</label>
@@ -994,7 +1010,7 @@
 						<button
 							type="submit"
 							disabled={deleteConfirmText !== 'HAPUS AKUN SAYA' || isDeletingAccount}
-							class="cursor-pointer rounded-full bg-alarm-red px-5 py-1.5 text-xs font-bold text-paper transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+							class="cursor-pointer rounded-full bg-alarm-red px-5 py-1.5 text-xs font-bold text-paper transition hover:bg-alarm-red/90 disabled:cursor-not-allowed disabled:opacity-40"
 						>
 							{isDeletingAccount ? 'Menghapus...' : 'Ya, Hapus Permanen'}
 						</button>

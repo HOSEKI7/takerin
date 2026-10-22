@@ -128,7 +128,9 @@ describe('Settings Validation & Formatting (Seam 1)', () => {
 			expect(csv.startsWith('\uFEFF')).toBe(true);
 
 			// Header line
-			expect(csv).toContain('Tanggal,Waktu,Nama Pengeluaran,Kategori,Nominal,Catatan,Periode');
+			expect(csv).toContain(
+				'Tanggal,Waktu,Nama Pengeluaran,Kategori,Nominal,Catatan,Periode Bulan'
+			);
 
 			// Check escaping of quotes
 			expect(csv).toContain('"Makan Siang ""Enak"""');
@@ -140,7 +142,9 @@ describe('Settings Validation & Formatting (Seam 1)', () => {
 		it('handles empty expenses list cleanly', () => {
 			const csv = formatExpensesCsv([]);
 			expect(csv.startsWith('\uFEFF')).toBe(true);
-			expect(csv).toBe('\uFEFFTanggal,Waktu,Nama Pengeluaran,Kategori,Nominal,Catatan,Periode');
+			expect(csv).toBe(
+				'\uFEFFTanggal,Waktu,Nama Pengeluaran,Kategori,Nominal,Catatan,Periode Bulan'
+			);
 		});
 	});
 });

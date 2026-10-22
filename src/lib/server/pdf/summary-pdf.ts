@@ -51,8 +51,8 @@ export async function generatePeriodSummaryPdf(
 	let page = doc.addPage([pageWidth, pageHeight]);
 	let y = pageHeight - margin;
 
-	// Brand Colors
-	const primaryColor = rgb(0.08, 0.22, 0.16); // Forest ink
+	// Brand Colors (from tokens.json: forest-ink #163300)
+	const primaryColor = rgb(0.086, 0.2, 0.0);
 	const grayText = rgb(0.35, 0.4, 0.38);
 	const lightBg = rgb(0.95, 0.96, 0.94);
 	const borderColor = rgb(0.85, 0.88, 0.85);

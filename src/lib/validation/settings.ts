@@ -1,11 +1,5 @@
 import { formatDateISO } from './onboarding.js';
 
-export interface ValidationResult<T> {
-	valid: boolean;
-	data?: T;
-	error?: string;
-}
-
 export interface CsvExpenseItem {
 	date: string;
 	time: string | null;
@@ -68,7 +62,7 @@ export function validatePayDate(
 	const todayISO = formatDateISO(today);
 
 	// Option A: today must be strictly before activePeriodEndDate (H-2 or earlier)
-	if (todayISO >= activePeriodEndDate) {
+	if (activePeriodEndDate && todayISO >= activePeriodEndDate) {
 		return {
 			valid: false,
 			error:
@@ -147,7 +141,7 @@ export function formatExpensesCsv(expenses: CsvExpenseItem[]): string {
 		'Kategori',
 		'Nominal',
 		'Catatan',
-		'Periode'
+		'Periode Bulan'
 	];
 
 	const rows = expenses.map((exp) => [

@@ -53,6 +53,15 @@ export function setTheme(theme: Theme): ResolvedTheme {
 			document.documentElement.classList.remove('dark');
 		}
 		document.documentElement.style.colorScheme = resolved;
+		if (typeof window.dispatchEvent === 'function') {
+			try {
+				window.dispatchEvent(
+					new CustomEvent('takerin:themechange', { detail: { theme: resolved } })
+				);
+			} catch {
+				// Ignore event dispatch errors in mock environments
+			}
+		}
 	}
 
 	return resolved;
