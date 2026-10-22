@@ -35,7 +35,7 @@ My device os is Mac OS on **MacBook Air M1 Apple Silicon**, everything is runnin
 - **Use Context7 MCP** to fetch up-to-date library docs before implementing.
 - **Provide verification steps** (if available and testable) so I can manually verify the work that has been done.
 - **Provide task summary output** with Indonesian (even if i prompting in english).
-- **Use /find-skills to find relevant agent skill for relevant task.**
+- **Always use /find-skills to find relevant agent skill for relevant task.**
 
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 

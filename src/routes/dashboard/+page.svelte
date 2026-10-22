@@ -175,6 +175,12 @@
 				>
 					Riwayat
 				</a>
+				<a
+					href={resolve('/settings')}
+					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
+				>
+					Pengaturan
+				</a>
 				<ThemeToggle />
 				<Button variant="secondary" size="sm" onclick={handleLogout} disabled={isLoggingOut}>
 					{isLoggingOut ? 'Mengeluarkan...' : 'Keluar'}

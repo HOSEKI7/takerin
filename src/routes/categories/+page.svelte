@@ -307,6 +307,12 @@
 				>
 					Riwayat
 				</a>
+				<a
+					href={resolve('/settings')}
+					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
+				>
+					Pengaturan
+				</a>
 				<ThemeToggle />
 			</div>
 		</div>
