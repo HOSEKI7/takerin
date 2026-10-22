@@ -9,6 +9,7 @@
 		CheckmarkCircle02Icon
 	} from '@hugeicons/core-free-icons';
 	import { formatRupiah } from '#lib/validation/onboarding.js';
+	import { t } from '#lib/i18n/index.js';
 
 	export interface CategoryOption {
 		id: string;
@@ -87,7 +88,7 @@
 		</span>
 	</div>
 
-	<div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label="Kategori">
+	<div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label={t('nav.categories')}>
 		{#each visibleCategories as cat (cat.id)}
 			{@const isSelected = selectedId === cat.id}
 			{@const icon = getCategoryIcon(cat.name, cat.isSavings)}
@@ -129,7 +130,7 @@
 								? 'font-bold text-alarm-red'
 								: 'text-slate dark:text-pebble'}"
 						>
-							Saldo: {formatRupiah(cat.balance)}
+							{t('categories.balancePrefix')}: {formatRupiah(cat.balance)}
 						</p>
 					{/if}
 
@@ -137,7 +138,7 @@
 						<span
 							class="py-0.2 mt-1 inline-block rounded-full bg-spruce/10 px-1.5 text-[10px] font-semibold text-spruce dark:bg-spruce/30 dark:text-lime-voltage"
 						>
-							Tabungan
+							{t('categories.savingsBadge')}
 						</span>
 					{/if}
 				</div>

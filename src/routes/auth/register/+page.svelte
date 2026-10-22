@@ -4,6 +4,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
+	import { t } from '#lib/i18n/index.js';
 	import { authClient } from '#lib/auth-client.js';
 	import { validateRegisterInput } from '#lib/validation/auth.js';
 	import { goto } from '$app/navigation';
@@ -81,16 +82,16 @@
 							<span class="text-2xl">✉️</span>
 						</div>
 						<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
-							Akun Berhasil Dibuat!
+							{t('auth.register.successTitle')}
 						</h1>
 						<p class="text-sm leading-relaxed text-slate dark:text-stone-300">
-							Kami telah mengirimkan tautan verifikasi ke alamat email
-							<strong class="font-semibold text-forest-ink dark:text-lime-voltage">{email}</strong>.
-							Silakan periksa kotak masuk atau spam Anda untuk mengaktifkan akun.
+							{t('auth.register.successDesc', { email })}
 						</p>
 						<div class="flex flex-col gap-3 pt-4 sm:flex-row">
 							<a href={resolve('/auth/login')} class="flex-1">
-								<Button variant="secondary" size="md" class="w-full">Ke Halaman Masuk</Button>
+								<Button variant="secondary" size="md" class="w-full">
+									{t('auth.register.toLogin')}
+								</Button>
 							</a>
 							<Button
 								variant="primary"
@@ -98,17 +99,17 @@
 								class="flex-1"
 								onclick={() => goto(resolve('/onboarding'))}
 							>
-								Mulai Onboarding
+								{t('auth.register.startOnboarding')}
 							</Button>
 						</div>
 					</div>
 				{:else}
 					<div class="mb-6">
 						<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
-							Daftar Akun Takerin
+							{t('auth.register.title')}
 						</h1>
 						<p class="mt-1 text-sm text-slate dark:text-stone-300">
-							Mulai atur pengeluaran berdasarkan alokasi pemasukan bulanan Anda.
+							{t('auth.register.subtitle')}
 						</p>
 					</div>
 
@@ -124,9 +125,9 @@
 					<form onsubmit={handleSubmit} class="space-y-4">
 						<Input
 							id="register-name"
-							label="Nama Lengkap"
+							label={t('auth.register.nameLabel')}
 							type="text"
-							placeholder="Nama lengkap Anda"
+							placeholder={t('auth.register.namePlaceholder')}
 							autocomplete="name"
 							required
 							bind:value={name}
@@ -135,9 +136,9 @@
 
 						<Input
 							id="register-email"
-							label="Alamat Email"
+							label={t('auth.register.emailLabel')}
 							type="email"
-							placeholder="nama@email.com"
+							placeholder={t('auth.register.emailPlaceholder')}
 							autocomplete="email"
 							required
 							bind:value={email}
@@ -146,9 +147,9 @@
 
 						<Input
 							id="register-password"
-							label="Password"
+							label={t('auth.register.passwordLabel')}
 							type="password"
-							placeholder="Minimal 8 karakter"
+							placeholder={t('auth.register.passwordPlaceholder')}
 							autocomplete="new-password"
 							required
 							bind:value={password}
@@ -157,9 +158,9 @@
 
 						<Input
 							id="register-confirm-password"
-							label="Konfirmasi Password"
+							label={t('auth.register.confirmPasswordLabel')}
 							type="password"
-							placeholder="Ulangi password"
+							placeholder={t('auth.register.confirmPasswordPlaceholder')}
 							autocomplete="new-password"
 							required
 							bind:value={confirmPassword}
@@ -168,7 +169,7 @@
 
 						<div class="pt-2">
 							<Button type="submit" variant="primary" size="md" class="w-full" disabled={isLoading}>
-								{isLoading ? 'Mendaftarkan...' : 'Daftar Akun'}
+								{isLoading ? t('auth.register.submitting') : t('auth.register.submitButton')}
 							</Button>
 						</div>
 					</form>
@@ -176,12 +177,12 @@
 					<div
 						class="mt-6 border-t border-fog pt-4 text-center text-sm text-slate dark:border-dark-border dark:text-stone-400"
 					>
-						Sudah punya akun?
+						{t('auth.register.alreadyHaveAccount')}
 						<a
 							href={resolve('/auth/login')}
 							class="font-semibold text-forest-ink hover:underline dark:text-lime-voltage"
 						>
-							Masuk di sini
+							{t('auth.register.loginLink')}
 						</a>
 					</div>
 				{/if}

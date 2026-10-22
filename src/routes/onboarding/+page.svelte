@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 	import type { PageProps } from './$types.js';
 	import { enhance } from '$app/forms';
+	import { t } from '#lib/i18n/index.js';
 	import Button from '#lib/components/Button.svelte';
 	import Input from '#lib/components/Input.svelte';
 	import Card from '#lib/components/Card.svelte';
@@ -291,13 +292,13 @@
 	const progressInfo = $derived.by(() => {
 		switch (currentStep) {
 			case 1:
-				return { value: 25, label: 'Langkah 1 dari 4: Tanggal Gajian' };
+				return { value: 25, label: t('onboarding.progress1') };
 			case 2:
-				return { value: 50, label: 'Langkah 2 dari 4: Sumber Pemasukan' };
+				return { value: 50, label: t('onboarding.progress2') };
 			case 3:
-				return { value: 75, label: 'Langkah 3 dari 4: Pilih Template Kategori' };
+				return { value: 75, label: t('onboarding.progress3') };
 			case 4:
-				return { value: 100, label: 'Langkah 4 dari 4: Atur & Sesuaikan Kategori' };
+				return { value: 100, label: t('onboarding.progress4') };
 		}
 	});
 
@@ -387,15 +388,13 @@
 							class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
 						>
 							<HugeiconsIcon icon={Calendar01Icon} size={16} />
-							<span>Langkah 1: Tanggal Gajian</span>
+							<span>{t('onboarding.step1Badge')}</span>
 						</div>
 						<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-							Kapan Tanggal Gajian Anda?
+							{t('onboarding.step1Title')}
 						</h1>
 						<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
-							<strong>Periode Bulan</strong> Anda akan dimulai dari tanggal ini setiap bulannya. Jika
-							suatu bulan tidak memiliki tanggal tersebut (misal tanggal 31 di bulan Februari), sistem
-							akan otomatis menyesuaikan ke hari terakhir bulan.
+							{t('onboarding.step1Desc')}
 						</p>
 					</div>
 
@@ -411,7 +410,7 @@
 					<!-- Quick Selection Buttons -->
 					<div class="space-y-2">
 						<p class="text-xs font-semibold text-slate dark:text-pebble">
-							Pilihan Cepat Tanggal Gajian:
+							{t('onboarding.quickPayDayLabel')}
 						</p>
 						<div class="flex flex-wrap gap-2">
 							{#each popularPayDays as day (day)}
@@ -424,7 +423,7 @@
 										? 'border-forest-ink bg-forest-ink text-paper dark:border-lime-voltage dark:bg-lime-voltage dark:text-forest-ink'
 										: 'border-pebble bg-paper text-charcoal hover:border-forest-ink dark:border-dark-border dark:bg-dark-surface dark:text-linen-mist dark:hover:border-lime-voltage'}"
 								>
-									Tanggal {day}
+									{t('onboarding.payDayButton', { day })}
 								</button>
 							{/each}
 						</div>
@@ -440,16 +439,16 @@
 					>
 						<Input
 							id="onboarding-payday"
-							label="Atau Masukkan Tanggal Gajian (1 - 31)"
+							label={t('onboarding.payDayInputLabel')}
 							type="number"
 							min="1"
 							max="31"
-							placeholder="Misal: 25"
+							placeholder="25"
 							required
 							bind:value={payDay}
 						/>
 						<p class="text-xs text-slate dark:text-pebble">
-							Masukkan angka antara 1 sampai 31 sesuai siklus gaji atau pemasukan utama Anda.
+							{t('onboarding.payDayInputHelp')}
 						</p>
 					</form>
 
@@ -461,7 +460,7 @@
 							class="w-full"
 							onclick={handleNextToStep2}
 						>
-							<span>Lanjut ke Sumber Pemasukan</span>
+							<span>{t('onboarding.nextToIncome')}</span>
 							<HugeiconsIcon icon={ArrowRight02Icon} size={18} />
 						</Button>
 					</div>
@@ -473,15 +472,13 @@
 						<div
 							class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
 						>
-							<span>Langkah 2: Sumber Pemasukan</span>
+							<span>{t('onboarding.step2Badge')}</span>
 						</div>
 						<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-							Dari Mana Saja Pemasukan Anda?
+							{t('onboarding.step2Title')}
 						</h1>
 						<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
-							Tambahkan satu atau lebih sumber pemasukan bulanan (seperti gaji, komisi, freelance,
-							atau bisnis). Total ini akan menjadi <strong>Pemasukan Bulanan</strong> sebagai dasar pembagian
-							budget.
+							{t('onboarding.step2Desc')}
 						</p>
 					</div>
 
@@ -504,13 +501,15 @@
 									<span
 										class="text-xs font-bold tracking-wide text-forest-ink uppercase dark:text-lime-voltage"
 									>
-										Sumber #{index + 1}
+										{t('onboarding.sourceItemLabel', { index: index + 1 })}
 									</span>
 									{#if incomeSources.length > 1}
 										<button
 											type="button"
 											onclick={() => handleRemoveSource(index)}
-											aria-label={`Hapus ${source.name || 'sumber pemasukan'}`}
+											aria-label={t('onboarding.deleteSourceAria', {
+												name: source.name || t('onboarding.incomeNameLabel')
+											})}
 											class="cursor-pointer text-xs font-semibold text-alarm-red hover:underline"
 										>
 											<HugeiconsIcon icon={Delete02Icon} size={16} />
@@ -521,19 +520,19 @@
 								<div class="grid gap-3 sm:grid-cols-2">
 									<Input
 										id={`source-name-${index}`}
-										label="Nama Sumber Pemasukan"
+										label={t('onboarding.incomeNameLabel')}
 										type="text"
-										placeholder="contoh: Gaji Pokok"
+										placeholder={t('onboarding.incomeNamePlaceholder')}
 										required
 										bind:value={source.name}
 									/>
 
 									<Input
 										id={`source-amount-${index}`}
-										label="Nominal (IDR)"
+										label={t('onboarding.incomeAmountLabel')}
 										type="number"
 										min="1"
-										placeholder="contoh: 8000000"
+										placeholder={t('onboarding.incomeAmountPlaceholder')}
 										required
 										bind:value={source.amount}
 										hint={source.amount && Number(source.amount) > 0
@@ -550,7 +549,7 @@
 							class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-dashed border-forest-ink/30 bg-paper py-3 font-sans text-sm font-semibold text-forest-ink transition hover:border-forest-ink hover:bg-fog dark:border-lime-voltage/30 dark:bg-dark-surface dark:text-lime-voltage dark:hover:border-lime-voltage dark:hover:bg-dark-card"
 						>
 							<HugeiconsIcon icon={Add01Icon} size={18} />
-							<span>Tambah Sumber Pemasukan Lain</span>
+							<span>{t('onboarding.addSourceButton')}</span>
 						</button>
 					</div>
 
@@ -561,18 +560,18 @@
 						<span
 							class="text-xs font-bold tracking-wider text-forest-ink uppercase dark:text-lime-voltage"
 						>
-							Total Pemasukan Bulanan
+							{t('onboarding.totalIncomeLabel')}
 						</span>
 						<div class="mt-1 flex items-baseline justify-between gap-2">
 							<span class="text-2xl font-black text-forest-ink sm:text-3xl dark:text-lime-voltage">
 								{formatRupiah(totalIncome)}
 							</span>
 							<span class="text-xs text-slate dark:text-pebble">
-								{incomeSources.length} sumber pemasukan
+								{t('onboarding.totalIncomeSourcesCount', { count: incomeSources.length })}
 							</span>
 						</div>
 						<p class="mt-2 text-xs text-charcoal/80 dark:text-linen-mist/80">
-							Total ini akan dialokasikan ke Kategori budget bulanan Anda pada langkah berikutnya.
+							{t('onboarding.totalIncomeHelp')}
 						</p>
 					</div>
 
@@ -586,7 +585,7 @@
 							onclick={handleBackToStep1}
 						>
 							<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
-							<span>Kembali</span>
+							<span>{t('onboarding.prevButton')}</span>
 						</Button>
 
 						<Button
@@ -597,7 +596,7 @@
 							onclick={handleNextToStep3}
 							disabled={totalIncome <= 0}
 						>
-							<span>Lanjut ke Pilih Template</span>
+							<span>{t('onboarding.nextToTemplate')}</span>
 							<HugeiconsIcon icon={ArrowRight02Icon} size={18} />
 						</Button>
 					</div>
@@ -610,14 +609,13 @@
 							class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
 						>
 							<HugeiconsIcon icon={PieChart01Icon} size={16} />
-							<span>Langkah 3: Template Kategori</span>
+							<span>{t('onboarding.step3Badge')}</span>
 						</div>
 						<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-							Pilih Template Kategori
+							{t('onboarding.step3Title')}
 						</h1>
 						<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
-							Pilih titik awal pembagian budget Anda. Anda tetap dapat mengubah nama, persentase,
-							maupun menambah atau menghapus kategori di langkah berikutnya.
+							{t('onboarding.step3Desc')}
 						</p>
 					</div>
 
@@ -647,7 +645,9 @@
 										</div>
 										<div>
 											<h2 class="text-lg font-black text-obsidian dark:text-paper">
-												{tpl.name === 'Custom' ? 'Kustom / Buat Sendiri' : `Template ${tpl.name}`}
+												{tpl.name === 'Custom'
+													? t('onboarding.customTemplateTitle')
+													: t('onboarding.templateNamed', { name: tpl.name })}
 											</h2>
 											{#if tpl.description}
 												<p class="text-xs text-slate dark:text-pebble">
@@ -688,7 +688,7 @@
 							onclick={handleBackToStep2}
 						>
 							<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
-							<span>Kembali</span>
+							<span>{t('onboarding.prevButton')}</span>
 						</Button>
 
 						<Button
@@ -698,7 +698,7 @@
 							class="flex-1"
 							onclick={handleNextToStep4}
 						>
-							<span>Lanjut ke Atur Kategori</span>
+							<span>{t('onboarding.nextToCategories')}</span>
 							<HugeiconsIcon icon={ArrowRight02Icon} size={18} />
 						</Button>
 					</div>
@@ -730,15 +730,13 @@
 							class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
 						>
 							<HugeiconsIcon icon={Layers01Icon} size={16} />
-							<span>Langkah 4: Atur Kategori</span>
+							<span>{t('onboarding.step4Badge')}</span>
 						</div>
 						<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-							Sesuaikan Kategori Budget Anda
+							{t('onboarding.step4Title')}
 						</h1>
 						<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
-							Beri nama, tentukan persentase alokasi, dan tandai jika termasuk
-							<strong>Kategori Tabungan</strong>. Jumlah total persentase semua kategori harus tepat
-							<strong>100%</strong>.
+							{t('onboarding.step4Desc')}
 						</p>
 					</div>
 
@@ -757,7 +755,7 @@
 					>
 						<div>
 							<span class="text-xs font-medium text-slate dark:text-pebble">
-								Total Pemasukan Bulanan:
+								{t('onboarding.totalIncomeLabel')}:
 							</span>
 							<p class="text-base font-extrabold text-forest-ink dark:text-lime-voltage">
 								{formatRupiah(totalIncome)}
@@ -766,7 +764,7 @@
 						<span
 							class="rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
 						>
-							Gajian Tgl {payDay}
+							{t('onboarding.payDayBadge', { day: payDay })}
 						</span>
 					</div>
 
@@ -781,14 +779,14 @@
 										<span
 											class="text-xs font-bold tracking-wide text-forest-ink uppercase dark:text-lime-voltage"
 										>
-											Kategori #{index + 1}
+											{t('onboarding.categoryItemLabel', { index: index + 1 })}
 										</span>
 										{#if category.isSavings}
 											<span
 												class="inline-flex items-center gap-1 rounded-full bg-spruce/10 px-2 py-0.5 text-xs font-semibold text-spruce dark:bg-lime-voltage/20 dark:text-lime-voltage"
 											>
 												<HugeiconsIcon icon={PiggyBankIcon} size={12} />
-												<span>Tabungan</span>
+												<span>{t('onboarding.savingsBadge')}</span>
 											</span>
 										{/if}
 									</div>
@@ -797,7 +795,9 @@
 										<button
 											type="button"
 											onclick={() => handleRemoveCategory(index)}
-											aria-label={`Hapus ${category.name || 'kategori'}`}
+											aria-label={t('onboarding.deleteCategoryAria', {
+												name: category.name || t('onboarding.categoryNameLabel')
+											})}
 											class="cursor-pointer text-xs font-semibold text-alarm-red hover:underline"
 										>
 											<HugeiconsIcon icon={Delete02Icon} size={16} />
@@ -808,9 +808,9 @@
 								<div class="grid gap-3 sm:grid-cols-2">
 									<Input
 										id={`category-name-${index}`}
-										label="Nama Kategori"
+										label={t('onboarding.categoryNameLabel')}
 										type="text"
-										placeholder="contoh: Kebutuhan Hidup"
+										placeholder={t('onboarding.categoryNamePlaceholder')}
 										required
 										bind:value={category.name}
 										disabled={isSubmitting}
@@ -818,16 +818,18 @@
 
 									<Input
 										id={`category-percentage-${index}`}
-										label="Alokasi Persentase (%)"
+										label={t('onboarding.categoryPercentageLabel')}
 										type="number"
 										step="any"
 										min="0.1"
 										max="100"
-										placeholder="contoh: 50"
+										placeholder="50"
 										required
 										bind:value={category.percentage}
 										hint={category.percentage && Number(category.percentage) > 0
-											? `Estimasi: ${formatRupiah((totalIncome * Number(category.percentage)) / 100)}`
+											? t('onboarding.estimatedAmount', {
+													amount: formatRupiah((totalIncome * Number(category.percentage)) / 100)
+												})
 											: undefined}
 										disabled={isSubmitting}
 									/>
@@ -849,12 +851,12 @@
 											disabled={isSubmitting}
 											class="h-4 w-4 rounded border-pebble text-forest-ink focus:ring-forest-ink dark:border-dark-border dark:focus:ring-lime-voltage"
 										/>
-										<span>Tandai sebagai Kategori Tabungan</span>
+										<span>{t('onboarding.markSavingsLabel')}</span>
 									</label>
 									<span class="text-xs text-slate dark:text-pebble">
 										{category.isSavings
-											? 'Uang dihitung sebagai aset tabungan'
-											: 'Kategori pengeluaran rutin'}
+											? t('onboarding.savingsHint')
+											: t('onboarding.expenseHint')}
 									</span>
 								</div>
 							</div>
@@ -867,7 +869,7 @@
 							class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-dashed border-forest-ink/30 bg-paper py-3 font-sans text-sm font-semibold text-forest-ink transition hover:border-forest-ink hover:bg-fog dark:border-lime-voltage/30 dark:bg-dark-surface dark:text-lime-voltage dark:hover:border-lime-voltage dark:hover:bg-dark-card"
 						>
 							<HugeiconsIcon icon={Add01Icon} size={18} />
-							<span>Tambah Kategori Lain</span>
+							<span>{t('onboarding.addCategoryButton')}</span>
 						</button>
 					</div>
 
@@ -884,7 +886,7 @@
 									? 'text-forest-ink dark:text-lime-voltage'
 									: 'text-alarm-red'}"
 							>
-								Total Alokasi Persentase
+								{t('onboarding.totalAllocationLabel')}
 							</span>
 							<span
 								class="text-lg font-black {Math.abs(totalPercentage - 100) < 0.001
@@ -905,17 +907,19 @@
 						<div class="mt-2 text-xs">
 							{#if Math.abs(totalPercentage - 100) < 0.001}
 								<p class="font-semibold text-forest-ink dark:text-lime-voltage">
-									✓ Total persentase sudah tepat 100%. Anda siap menggunakan Takerin!
+									{t('onboarding.allocationExact')}
 								</p>
 							{:else if totalPercentage < 100}
 								<p class="font-medium text-alarm-red">
-									Kurang {Math.round((100 - totalPercentage) * 100) / 100}% lagi untuk mencapai
-									100%.
+									{t('onboarding.allocationUnder', {
+										percent: Math.round((100 - totalPercentage) * 100) / 100
+									})}
 								</p>
 							{:else}
 								<p class="font-medium text-alarm-red">
-									Kelebihan {Math.round((totalPercentage - 100) * 100) / 100}%. Total alokasi tidak
-									boleh melebihi 100%.
+									{t('onboarding.allocationOver', {
+										percent: Math.round((totalPercentage - 100) * 100) / 100
+									})}
 								</p>
 							{/if}
 						</div>
@@ -932,7 +936,7 @@
 							disabled={isSubmitting}
 						>
 							<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
-							<span>Kembali</span>
+							<span>{t('onboarding.prevButton')}</span>
 						</Button>
 
 						<Button
@@ -942,7 +946,9 @@
 							class="flex-1"
 							disabled={isSubmitting || Math.abs(totalPercentage - 100) >= 0.001}
 						>
-							{isSubmitting ? 'Menyimpan & Menyiapkan Akun...' : 'Selesai & Mulai Pakai Takerin'}
+							{isSubmitting
+								? t('onboarding.savingAndPreparing')
+								: t('onboarding.finishAndStart')}
 						</Button>
 					</div>
 				</form>

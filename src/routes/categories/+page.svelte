@@ -11,6 +11,7 @@
 	import { resolve } from '$app/paths';
 	import { formatRupiah, formatDateIndonesian } from '#lib/validation/onboarding.js';
 	import { redistributePercentage } from '#lib/validation/category.js';
+	import { t } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		ArrowLeft02Icon,
@@ -283,7 +284,7 @@
 				<a
 					href={resolve('/dashboard')}
 					class="flex h-9 w-9 items-center justify-center rounded-full border border-fog bg-paper text-slate transition hover:bg-fog hover:text-obsidian dark:border-dark-border dark:bg-dark-surface dark:text-pebble dark:hover:text-paper"
-					aria-label="Kembali ke Dashboard"
+					aria-label={t('common.back')}
 				>
 					<HugeiconsIcon icon={ArrowLeft02Icon} class="h-4 w-4" />
 				</a>
@@ -291,7 +292,7 @@
 				<span
 					class="rounded-full bg-linen-mist px-2.5 py-0.5 text-xs font-semibold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
 				>
-					Kelola Kategori
+					{t('nav.categories')}
 				</span>
 			</div>
 			<div class="flex items-center gap-2 sm:gap-3">
@@ -299,19 +300,19 @@
 					href={resolve('/expenses')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Pengeluaran
+					{t('nav.expenses')}
 				</a>
 				<a
 					href={resolve('/history')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Riwayat
+					{t('nav.history')}
 				</a>
 				<a
 					href={resolve('/settings')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Pengaturan
+					{t('nav.settings')}
 				</a>
 				<ThemeToggle />
 			</div>
@@ -323,11 +324,10 @@
 		<div class="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
 			<div>
 				<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-					Kelola Kategori Budget
+					{t('categories.title')}
 				</h1>
 				<p class="mt-1 text-xs text-slate sm:text-sm dark:text-pebble">
-					Sesuaikan alokasi persentase, tambah kategori baru, atau bekukan kategori di tengah
-					Periode Bulan aktif.
+					{t('categories.subtitle')}
 				</p>
 			</div>
 
@@ -380,7 +380,7 @@
 							<span
 								class="text-xs font-semibold tracking-wider text-slate uppercase dark:text-pebble"
 							>
-								Total Persentase Kategori Aktif
+								{t('categories.totalAllocated')}
 							</span>
 							{#if isExactly100}
 								<span
@@ -412,7 +412,7 @@
 							class="flex items-center gap-1.5 font-bold shadow-sm"
 						>
 							<HugeiconsIcon icon={PlusSignIcon} class="h-4 w-4" />
-							<span>Tambah Kategori</span>
+							<span>{t('categories.addCategoryButton')}</span>
 						</Button>
 					</div>
 				</div>
@@ -683,7 +683,7 @@
 
 				<div class="flex items-center gap-3">
 					<a href={resolve('/dashboard')}>
-						<Button type="button" variant="secondary" size="md">Batal</Button>
+						<Button type="button" variant="secondary" size="md">{t('common.cancel')}</Button>
 					</a>
 					<Button
 						type="submit"
@@ -692,7 +692,7 @@
 						disabled={!canSave}
 						class="font-bold shadow-md"
 					>
-						{isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
+						{isSaving ? t('common.saving') : t('common.save')}
 					</Button>
 				</div>
 			</div>

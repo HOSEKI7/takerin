@@ -4,6 +4,7 @@
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import Button from '#lib/components/Button.svelte';
 	import Badge from '#lib/components/Badge.svelte';
+	import { t } from '#lib/i18n/index.js';
 	import { authClient } from '#lib/auth-client.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -33,22 +34,22 @@
 		}
 	}
 
-	const navItems = [
-		{ href: resolve('/admin'), label: 'Ringkasan', icon: Analytics01Icon, exact: true },
-		{ href: resolve('/admin/users'), label: 'Pengguna', icon: UserGroupIcon, exact: false },
+	const navItems = $derived([
+		{ href: resolve('/admin'), label: t('admin.navOverview'), icon: Analytics01Icon, exact: true },
+		{ href: resolve('/admin/users'), label: t('admin.navUsers'), icon: UserGroupIcon, exact: false },
 		{
 			href: resolve('/admin/templates'),
-			label: 'Template Kategori',
+			label: t('admin.navTemplates'),
 			icon: Layers01Icon,
 			exact: false
 		},
 		{
 			href: resolve('/admin/health'),
-			label: 'Kesehatan Sistem',
+			label: t('admin.navHealth'),
 			icon: Activity01Icon,
 			exact: false
 		}
-	] as const;
+	]);
 
 	function isNavActive(itemHref: string, exact: boolean) {
 		const currentPath = page.url.pathname;
@@ -70,7 +71,7 @@
 			<!-- Left: Logo & Admin Badge -->
 			<div class="flex items-center gap-3">
 				<BrandLogo href="/admin" size="sm" />
-				<Badge variant="lime" class="hidden sm:inline-flex">Admin Panel</Badge>
+				<Badge variant="lime" class="hidden sm:inline-flex">{t('admin.adminPanel')}</Badge>
 			</div>
 
 			<!-- Center: Navigation Tabs (Desktop) -->
@@ -96,7 +97,7 @@
 					class="inline-flex items-center gap-1.5 rounded-full border border-fog px-3 py-1 text-xs font-semibold text-charcoal transition hover:border-pebble hover:text-forest-ink dark:border-dark-border dark:text-linen-mist dark:hover:border-lime-voltage dark:hover:text-lime-voltage"
 				>
 					<HugeiconsIcon icon={ArrowLeft02Icon} size={14} />
-					<span class="hidden sm:inline">Ke Aplikasi</span>
+					<span class="hidden sm:inline">{t('admin.toApp')}</span>
 				</a>
 				<ThemeToggle />
 				<Button
@@ -107,7 +108,7 @@
 					class="text-xs"
 				>
 					<HugeiconsIcon icon={Logout01Icon} size={14} class="sm:hidden" />
-					<span class="hidden sm:inline">{isLoggingOut ? 'Keluar...' : 'Keluar'}</span>
+					<span class="hidden sm:inline">{isLoggingOut ? t('admin.loggingOut') : t('admin.logout')}</span>
 				</Button>
 			</div>
 		</div>

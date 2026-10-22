@@ -3,6 +3,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import Badge from '#lib/components/Badge.svelte';
 	import Input from '#lib/components/Input.svelte';
+	import { t } from '#lib/i18n/index.js';
 	import { formatDateIndonesian, formatDateISO } from '#lib/validation/onboarding.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
@@ -47,15 +48,14 @@
 		<div>
 			<div class="flex items-center gap-2">
 				<h1 class="text-2xl font-black tracking-tight text-obsidian sm:text-3xl dark:text-paper">
-					Daftar Pengguna
+					{t('admin.users.title')}
 				</h1>
 				<Badge variant="lime">
-					{users.length} Terdaftar
+					{t('admin.users.registeredCount', { count: users.length })}
 				</Badge>
 			</div>
 			<p class="mt-1 text-sm text-slate dark:text-pebble">
-				Daftar seluruh pengguna terdaftar, status onboarding, dan waktu aktivitas terakhir. Sesuai
-				kebijakan privasi finansial, data pengeluaran dan saldo pengguna tidak ditampilkan.
+				{t('admin.users.subtitle')}
 			</p>
 		</div>
 	</div>
@@ -65,9 +65,9 @@
 		<div class="max-w-md">
 			<Input
 				id="user-search"
-				label="Cari Pengguna"
+				label={t('admin.users.searchLabel')}
 				type="text"
-				placeholder="Cari berdasarkan nama atau alamat email..."
+				placeholder={t('admin.users.searchPlaceholder')}
 				bind:value={searchQuery}
 			/>
 		</div>
@@ -81,11 +81,11 @@
 					class="border-b border-fog bg-linen-mist/50 text-xs font-bold tracking-wider text-forest-ink uppercase dark:border-dark-border dark:bg-spruce/30 dark:text-lime-voltage"
 				>
 					<tr>
-						<th class="px-5 py-3.5">Pengguna</th>
-						<th class="px-5 py-3.5">Peran</th>
-						<th class="px-5 py-3.5">Status Onboarding</th>
-						<th class="px-5 py-3.5">Tanggal Registrasi</th>
-						<th class="px-5 py-3.5">Aktivitas Terakhir</th>
+						<th class="px-5 py-3.5">{t('admin.users.colUser')}</th>
+						<th class="px-5 py-3.5">{t('admin.users.colRole')}</th>
+						<th class="px-5 py-3.5">{t('admin.users.colOnboarding')}</th>
+						<th class="px-5 py-3.5">{t('admin.users.colRegistered')}</th>
+						<th class="px-5 py-3.5">{t('admin.users.colLastActive')}</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-fog dark:divide-dark-border">
@@ -102,7 +102,7 @@
 										</div>
 										<div class="min-w-0">
 											<p class="truncate font-bold text-obsidian dark:text-paper">
-												{u.name || 'Tanpa Nama'}
+												{u.name || t('admin.users.anonymous')}
 											</p>
 											<p class="truncate text-xs text-slate dark:text-pebble">
 												{u.email}
@@ -116,12 +116,12 @@
 									{#if u.role === 'admin'}
 										<Badge variant="lime">
 											<HugeiconsIcon icon={ShieldCheckIcon} size={14} />
-											<span>Admin</span>
+											<span>{t('admin.users.roleAdmin')}</span>
 										</Badge>
 									{:else}
 										<Badge variant="neutral">
 											<HugeiconsIcon icon={UserIcon} size={14} />
-											<span>Pengguna</span>
+											<span>{t('admin.users.roleUser')}</span>
 										</Badge>
 									{/if}
 								</td>
@@ -133,14 +133,14 @@
 											class="inline-flex items-center gap-1.5 text-xs font-semibold text-forest-ink dark:text-lime-voltage"
 										>
 											<HugeiconsIcon icon={CheckmarkCircle02Icon} size={15} />
-											<span>Selesai</span>
+											<span>{t('admin.users.statusDone')}</span>
 										</span>
 									{:else}
 										<span
 											class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate dark:text-pebble"
 										>
 											<HugeiconsIcon icon={Alert02Icon} size={15} />
-											<span>Belum Selesai</span>
+											<span>{t('admin.users.statusPending')}</span>
 										</span>
 									{/if}
 								</td>
@@ -162,9 +162,9 @@
 						<tr>
 							<td colspan="5" class="px-5 py-12 text-center text-sm text-slate dark:text-pebble">
 								{#if searchQuery}
-									Tidak ada pengguna yang cocok dengan kata kunci "{searchQuery}".
+									{t('admin.users.noUsersFound', { query: searchQuery })}
 								{:else}
-									Belum ada data pengguna terdaftar.
+									{t('admin.users.noUsersRegistered')}
 								{/if}
 							</td>
 						</tr>

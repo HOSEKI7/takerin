@@ -6,6 +6,7 @@
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
 	import { resolve } from '$app/paths';
 	import { formatRupiah, formatDateIndonesian } from '#lib/validation/onboarding.js';
+	import { t } from '#lib/i18n/index.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
@@ -49,7 +50,7 @@
 				<a
 					href={resolve('/dashboard')}
 					class="flex h-9 w-9 items-center justify-center rounded-xl border border-fog bg-paper text-slate transition hover:bg-fog hover:text-obsidian dark:border-dark-border dark:bg-dark-surface dark:text-pebble dark:hover:text-paper"
-					aria-label="Kembali ke Dashboard"
+					aria-label={t('common.back')}
 				>
 					<HugeiconsIcon icon={ArrowLeft02Icon} class="h-4 w-4" />
 				</a>
@@ -57,7 +58,7 @@
 				<span
 					class="rounded-full bg-linen-mist px-2.5 py-0.5 text-xs font-semibold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
 				>
-					Pengeluaran
+					{t('nav.expenses')}
 				</span>
 			</div>
 			<div class="flex items-center gap-2 sm:gap-3">
@@ -65,25 +66,25 @@
 					href={resolve('/categories')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Kategori
+					{t('nav.categories')}
 				</a>
 				<a
 					href={resolve('/history')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Riwayat
+					{t('nav.history')}
 				</a>
 				<a
 					href={resolve('/settings')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Pengaturan
+					{t('nav.settings')}
 				</a>
 				<ThemeToggle />
 				<a href={resolve('/expenses/new')}>
 					<Button variant="primary" size="sm" class="flex items-center gap-1.5 font-bold shadow-sm">
 						<HugeiconsIcon icon={PlusSignIcon} class="h-4 w-4" />
-						<span>Catat Pengeluaran</span>
+						<span>{t('expenses.newExpenseButton')}</span>
 					</Button>
 				</a>
 			</div>
@@ -95,10 +96,10 @@
 		<div class="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
 			<div>
 				<h1 class="text-2xl font-black text-obsidian sm:text-3xl dark:text-paper">
-					Daftar Pengeluaran
+					{t('expenses.title')}
 				</h1>
 				<p class="mt-1 text-xs text-slate sm:text-sm dark:text-pebble">
-					Semua riwayat pengeluaran yang tercatat pada Periode Bulan aktif Anda.
+					{t('expenses.subtitle')}
 				</p>
 			</div>
 
@@ -107,7 +108,7 @@
 					<div
 						class="rounded-xl border border-fog bg-fog/40 px-3.5 py-2 dark:border-dark-border dark:bg-dark-card"
 					>
-						<span class="text-slate dark:text-pebble">Total Terpakai: </span>
+						<span class="text-slate dark:text-pebble">{t('dashboard.totalSpent')}: </span>
 						<span class="font-extrabold text-obsidian dark:text-paper"
 							>{formatRupiah(data.summary.totalSpent)}</span
 						>
@@ -115,7 +116,7 @@
 					<div
 						class="rounded-xl border border-fog bg-fog/40 px-3.5 py-2 dark:border-dark-border dark:bg-dark-card"
 					>
-						<span class="text-slate dark:text-pebble">Sisa Saldo: </span>
+						<span class="text-slate dark:text-pebble">{t('dashboard.remainingBudget')}: </span>
 						<span
 							class="font-extrabold {data.summary.remaining < 0
 								? 'text-alarm-red'
@@ -132,7 +133,7 @@
 		<div
 			class="mb-6 flex scrollbar-none items-center gap-2 overflow-x-auto pb-2"
 			role="tablist"
-			aria-label="Filter Kategori"
+			aria-label={t('expenses.filterByCategory')}
 		>
 			<button
 				type="button"
@@ -144,7 +145,7 @@
 					: 'border border-fog bg-paper text-charcoal hover:bg-fog dark:border-dark-border dark:bg-dark-card dark:text-linen-mist'}"
 				onclick={() => handleCategoryFilter('')}
 			>
-				<span>Semua</span>
+				<span>{t('common.all')}</span>
 				<span class="py-0.2 rounded-full bg-paper/20 px-1.5 text-[10px] dark:bg-dark-surface/40">
 					{data.expenses.length}
 				</span>
@@ -182,16 +183,16 @@
 					/>
 				</div>
 				<h2 class="mt-4 text-lg font-bold text-forest-ink dark:text-linen-mist">
-					Belum Ada Pengeluaran {data.selectedCategory ? 'di Kategori Ini' : ''}
+					{t('expenses.noExpenses')}
 				</h2>
 				<p class="mx-auto mt-2 max-w-md text-xs text-charcoal sm:text-sm dark:text-pebble">
 					{data.selectedCategory
-						? 'Tidak ada pengeluaran yang tercatat pada filter kategori ini.'
-						: 'Anda belum mencatat pengeluaran di Periode Bulan ini. Gunakan numpad kalkulator untuk input dalam waktu kurang dari 5 detik!'}
+						? t('expenses.noExpenses')
+						: t('dashboard.noExpensesHelp')}
 				</p>
 				<div class="mt-5">
 					<a href={resolve('/expenses/new')}>
-						<Button variant="primary" size="md">Catat Pengeluaran Sekarang</Button>
+						<Button variant="primary" size="md">{t('expenses.newExpenseButton')}</Button>
 					</a>
 				</div>
 			</Card>
@@ -229,7 +230,7 @@
 										<span
 											class="rounded-full bg-spruce/10 px-2 py-0.5 text-[10px] font-bold text-spruce dark:bg-spruce/30 dark:text-lime-voltage"
 										>
-											Tabungan
+											{t('categories.savingsBadge')}
 										</span>
 									{/if}
 								</div>
@@ -272,7 +273,7 @@
 								<a
 									href={resolve('/expenses/[id]/edit', { id: exp.id })}
 									class="flex h-8 w-8 items-center justify-center rounded-full border border-fog bg-paper text-slate transition hover:border-forest-ink hover:text-forest-ink dark:border-dark-border dark:bg-dark-surface dark:text-pebble dark:hover:border-lime-voltage dark:hover:text-lime-voltage"
-									aria-label="Edit pengeluaran {exp.name}"
+									aria-label={t('common.edit')}
 								>
 									<HugeiconsIcon icon={Edit02Icon} class="h-4 w-4" />
 								</a>
@@ -280,7 +281,7 @@
 								<button
 									type="button"
 									class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-alarm-red/30 bg-alarm-red/10 text-alarm-red transition hover:bg-alarm-red/20"
-									aria-label="Hapus pengeluaran {exp.name}"
+									aria-label={t('common.delete')}
 									onclick={() => (deleteCandidateId = exp.id)}
 								>
 									<HugeiconsIcon icon={Delete02Icon} class="h-4 w-4" />
@@ -310,16 +311,13 @@
 						<HugeiconsIcon icon={Delete02Icon} class="h-5 w-5" />
 					</div>
 					<h3 id="modal-delete-title" class="text-lg font-bold text-obsidian dark:text-paper">
-						Hapus Pengeluaran?
+						{t('expenses.deleteConfirmTitle')}
 					</h3>
 				</div>
 
 				<p class="mt-3 text-xs text-charcoal sm:text-sm dark:text-pebble">
-					Apakah Anda yakin ingin menghapus catatan pengeluaran
-					<strong class="text-obsidian dark:text-paper">"{targetExp?.name}"</strong> sebesar
-					<strong class="text-obsidian dark:text-paper"
-						>{targetExp ? formatRupiah(targetExp.amount) : ''}</strong
-					>? Saldo kategori akan dikalkulasi ulang secara otomatis.
+					{t('expenses.deleteConfirmDesc')}
+					<strong class="text-obsidian dark:text-paper">"{targetExp?.name}"</strong> ({targetExp ? formatRupiah(targetExp.amount) : ''})
 				</p>
 
 				<form method="POST" action="?/delete" class="mt-6 flex items-center justify-end gap-3">
@@ -332,7 +330,7 @@
 						disabled={isDeleting}
 						onclick={() => (deleteCandidateId = null)}
 					>
-						Batal
+						{t('common.cancel')}
 					</Button>
 
 					<button
@@ -341,7 +339,7 @@
 						class="inline-flex cursor-pointer items-center justify-center rounded-full bg-alarm-red px-4 py-1.5 text-xs font-semibold text-paper transition hover:brightness-95 active:brightness-90 disabled:opacity-50"
 						onclick={() => (isDeleting = true)}
 					>
-						{isDeleting ? 'Menghapus...' : 'Ya, Hapus'}
+						{isDeleting ? t('common.deleting') : t('common.delete')}
 					</button>
 				</form>
 			</div>

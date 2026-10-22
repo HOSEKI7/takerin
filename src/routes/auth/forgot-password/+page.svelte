@@ -4,6 +4,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
+	import { t } from '#lib/i18n/index.js';
 	import { requestPasswordReset } from '#lib/auth-client.js';
 	import { validateForgotPasswordInput } from '#lib/validation/auth.js';
 	import { resolve } from '$app/paths';
@@ -68,27 +69,27 @@
 							<span class="text-2xl">📬</span>
 						</div>
 						<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
-							Periksa Email Anda
+							{t('auth.forgotPassword.checkEmailTitle')}
 						</h1>
 						<p class="text-sm leading-relaxed text-slate dark:text-stone-300">
-							Jika email <strong class="font-semibold text-forest-ink dark:text-lime-voltage"
-								>{email}</strong
-							> terdaftar di Takerin, tautan untuk mereset password telah dikirim ke email tersebut.
+							{t('auth.forgotPassword.checkEmailDesc', { email })}
 						</p>
 						<div class="pt-4">
 							<a
 								href={resolve('/auth/login')}
 								class="inline-block text-sm font-semibold text-forest-ink hover:underline dark:text-lime-voltage"
 							>
-								← Kembali ke Halaman Masuk
+								{t('auth.forgotPassword.backToLogin')}
 							</a>
 						</div>
 					</div>
 				{:else}
 					<div class="mb-6">
-						<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">Lupa Password?</h1>
+						<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
+							{t('auth.forgotPassword.title')}
+						</h1>
 						<p class="mt-1 text-sm text-slate dark:text-stone-300">
-							Masukkan alamat email Anda untuk menerima tautan pemulihan password akun Takerin.
+							{t('auth.forgotPassword.subtitle')}
 						</p>
 					</div>
 
@@ -104,9 +105,9 @@
 					<form onsubmit={handleSubmit} class="space-y-4">
 						<Input
 							id="forgot-email"
-							label="Alamat Email"
+							label={t('auth.forgotPassword.emailLabel')}
 							type="email"
-							placeholder="nama@email.com"
+							placeholder={t('auth.forgotPassword.emailPlaceholder')}
 							autocomplete="email"
 							required
 							bind:value={email}
@@ -115,7 +116,7 @@
 
 						<div class="pt-2">
 							<Button type="submit" variant="dark" size="md" class="w-full" disabled={isLoading}>
-								{isLoading ? 'Mengirim...' : 'Kirim Link Reset'}
+								{isLoading ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submitButton')}
 							</Button>
 						</div>
 					</form>
@@ -123,12 +124,12 @@
 					<div
 						class="mt-6 border-t border-fog pt-4 text-center text-sm text-slate dark:border-dark-border dark:text-stone-400"
 					>
-						Ingat password Anda?
+						{t('auth.forgotPassword.rememberPassword')}
 						<a
 							href={resolve('/auth/login')}
 							class="font-semibold text-forest-ink hover:underline dark:text-lime-voltage"
 						>
-							Masuk kembali
+							{t('auth.forgotPassword.loginAgain')}
 						</a>
 					</div>
 				{/if}

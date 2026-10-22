@@ -66,7 +66,7 @@ export const actions: Actions = {
 		};
 	},
 
-	updateSettings: async ({ request, locals, platform }) => {
+	updateSettings: async ({ request, locals, platform, cookies }) => {
 		if (!locals.user) {
 			throw redirect(303, '/auth/login');
 		}
@@ -111,6 +111,12 @@ export const actions: Actions = {
 				return fail(400, { settingsError: valLang.error });
 			}
 			payload.language = valLang.language;
+			cookies?.set?.('takerin_lang', valLang.language, {
+				path: '/',
+				maxAge: 31536000,
+				httpOnly: false,
+				sameSite: 'lax'
+			});
 		}
 
 		// 3. Theme update

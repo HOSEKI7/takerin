@@ -6,6 +6,7 @@
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
 	import { resolve } from '$app/paths';
 	import { formatRupiah, formatDateIndonesian } from '#lib/validation/onboarding.js';
+	import { t } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		Calendar01Icon,
@@ -29,7 +30,7 @@
 				<a
 					href={resolve('/dashboard')}
 					class="flex h-9 w-9 items-center justify-center rounded-xl border border-fog bg-paper text-slate transition hover:bg-fog hover:text-obsidian dark:border-dark-border dark:bg-dark-surface dark:text-pebble dark:hover:text-paper"
-					aria-label="Kembali ke Dashboard"
+					aria-label={t('common.back')}
 				>
 					<HugeiconsIcon icon={ArrowLeft02Icon} class="h-4 w-4" />
 				</a>
@@ -37,7 +38,7 @@
 				<span
 					class="rounded-full bg-linen-mist px-2.5 py-0.5 text-xs font-semibold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
 				>
-					Riwayat
+					{t('nav.history')}
 				</span>
 			</div>
 			<div class="flex items-center gap-2 sm:gap-4">
@@ -45,25 +46,25 @@
 					href={resolve('/dashboard')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Dashboard
+					{t('nav.dashboard')}
 				</a>
 				<a
 					href={resolve('/categories')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Kategori
+					{t('nav.categories')}
 				</a>
 				<a
 					href={resolve('/expenses')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Pengeluaran
+					{t('nav.expenses')}
 				</a>
 				<a
 					href={resolve('/settings')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Pengaturan
+					{t('nav.settings')}
 				</a>
 				<ThemeToggle />
 			</div>
@@ -74,11 +75,10 @@
 		<!-- Page Title -->
 		<div class="mb-6">
 			<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-				Riwayat Periode Bulan
+				{t('history.title')}
 			</h1>
 			<p class="mt-1 text-sm text-slate dark:text-pebble">
-				Daftar siklus Periode Bulan yang telah selesai beserta ringkasan keuangan dan catatan
-				kebiasaan finansial Anda.
+				{t('history.subtitle')}
 			</p>
 		</div>
 
@@ -90,14 +90,13 @@
 				>
 					<HugeiconsIcon icon={Invoice01Icon} class="h-7 w-7" />
 				</div>
-				<h2 class="text-lg font-bold text-obsidian dark:text-paper">Belum Ada Periode Selesai</h2>
+				<h2 class="text-lg font-bold text-obsidian dark:text-paper">{t('history.noHistory')}</h2>
 				<p class="mt-1.5 max-w-md text-sm text-slate dark:text-pebble">
-					Periode Bulan Anda saat ini masih berjalan. Ketika Tanggal Gajian berikutnya tiba, siklus
-					ini akan otomatis diselesaikan dan tercatat di sini.
+					{t('history.noHistoryDesc')}
 				</p>
 				<div class="mt-6">
 					<a href={resolve('/dashboard')}>
-						<Button variant="primary" size="sm">Kembali ke Dashboard</Button>
+						<Button variant="primary" size="sm">{t('common.back')}</Button>
 					</a>
 				</div>
 			</Card>
@@ -124,7 +123,7 @@
 										<span
 											class="rounded-full bg-fog px-2.5 py-0.5 text-[11px] font-semibold text-slate dark:bg-spruce/40 dark:text-linen-mist"
 										>
-											Selesai
+											{t('common.success')}
 										</span>
 									</div>
 
@@ -132,7 +131,7 @@
 									<div class="mt-3.5 grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-4">
 										<div>
 											<span class="text-[11px] font-medium text-slate dark:text-pebble">
-												Pemasukan Bulanan
+												{t('dashboard.totalIncome')}
 											</span>
 											<p class="text-sm font-bold text-obsidian dark:text-paper">
 												{formatRupiah(period.totalIncome)}
@@ -140,7 +139,7 @@
 										</div>
 										<div>
 											<span class="text-[11px] font-medium text-slate dark:text-pebble">
-												Total Pengeluaran
+												{t('dashboard.totalSpent')}
 											</span>
 											<p class="text-sm font-bold text-obsidian dark:text-paper">
 												{formatRupiah(period.totalSpent)}
@@ -151,7 +150,7 @@
 										</div>
 										<div>
 											<span class="text-[11px] font-medium text-slate dark:text-pebble">
-												Sisa Saldo
+												{t('dashboard.remainingBudget')}
 											</span>
 											<p
 												class={`text-sm font-bold ${
@@ -171,7 +170,7 @@
 									<span
 										class="flex items-center gap-1 text-xs font-bold text-forest-ink transition group-hover:underline dark:text-lime-voltage"
 									>
-										<span>Buka Detail Ringkasan</span>
+										<span>{t('history.openDetail')}</span>
 										<HugeiconsIcon icon={ArrowRight02Icon} class="h-4 w-4" />
 									</span>
 								</div>

@@ -4,6 +4,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
+	import { t } from '#lib/i18n/index.js';
 	import { authClient } from '#lib/auth-client.js';
 	import { validateLoginInput } from '#lib/validation/auth.js';
 	import { goto } from '$app/navigation';
@@ -65,9 +66,9 @@
 		<div class="w-full max-w-md">
 			<Card variant="default" padding="lg" class="shadow-lg">
 				<div class="mb-6">
-					<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">Masuk ke Takerin</h1>
+					<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">{t('auth.login.title')}</h1>
 					<p class="mt-1 text-sm text-slate dark:text-stone-300">
-						Kelola alokasi pemasukan dan catat pengeluaran Anda.
+						{t('auth.login.subtitle')}
 					</p>
 				</div>
 
@@ -83,9 +84,9 @@
 				<form onsubmit={handleSubmit} class="space-y-4">
 					<Input
 						id="login-email"
-						label="Alamat Email"
+						label={t('auth.login.emailLabel')}
 						type="email"
-						placeholder="nama@email.com"
+						placeholder={t('auth.login.emailPlaceholder')}
 						autocomplete="email"
 						required
 						bind:value={email}
@@ -95,9 +96,9 @@
 					<div class="space-y-1">
 						<Input
 							id="login-password"
-							label="Password"
+							label={t('auth.login.passwordLabel')}
 							type="password"
-							placeholder="Masukkan password"
+							placeholder={t('auth.login.passwordPlaceholder')}
 							autocomplete="current-password"
 							required
 							bind:value={password}
@@ -108,14 +109,14 @@
 								href={resolve('/auth/forgot-password')}
 								class="text-xs font-semibold text-forest-ink hover:underline dark:text-lime-voltage"
 							>
-								Lupa password?
+								{t('auth.login.forgotPasswordLink')}
 							</a>
 						</div>
 					</div>
 
 					<div class="pt-2">
 						<Button type="submit" variant="dark" size="md" class="w-full" disabled={isLoading}>
-							{isLoading ? 'Memproses...' : 'Masuk'}
+							{isLoading ? t('auth.login.submitting') : t('auth.login.submitButton')}
 						</Button>
 					</div>
 				</form>
@@ -123,12 +124,12 @@
 				<div
 					class="mt-6 border-t border-fog pt-4 text-center text-sm text-slate dark:border-dark-border dark:text-stone-400"
 				>
-					Belum punya akun?
+					{t('auth.login.noAccount')}
 					<a
 						href={resolve('/auth/register')}
 						class="font-semibold text-forest-ink hover:underline dark:text-lime-voltage"
 					>
-						Daftar sekarang
+						{t('auth.login.registerLink')}
 					</a>
 				</div>
 			</Card>

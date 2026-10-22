@@ -2,6 +2,7 @@
 	import type { PageProps } from './$types.js';
 	import Card from '#lib/components/Card.svelte';
 	import Badge from '#lib/components/Badge.svelte';
+	import { t } from '#lib/i18n/index.js';
 	import { formatRupiah } from '#lib/validation/onboarding.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
@@ -28,13 +29,12 @@
 		<div>
 			<div class="flex items-center gap-2">
 				<h1 class="text-2xl font-black tracking-tight text-obsidian sm:text-3xl dark:text-paper">
-					Dashboard Analytics
+					{t('admin.overview.title')}
 				</h1>
-				<Badge variant="lime">Ringkasan</Badge>
+				<Badge variant="lime">{t('admin.overview.badge')}</Badge>
 			</div>
 			<p class="mt-1 text-sm text-slate dark:text-pebble">
-				Pantau metrik utama pengguna, aktivitas harian, pengeluaran, dan tren kategori platform
-				Takerin.
+				{t('admin.overview.subtitle')}
 			</p>
 		</div>
 	</div>
@@ -45,7 +45,7 @@
 		<Card variant="default" class="p-5">
 			<div class="flex items-center justify-between">
 				<span class="text-xs font-bold tracking-wider text-slate uppercase dark:text-pebble">
-					Total Pengguna
+					{t('admin.overview.totalUsers')}
 				</span>
 				<div
 					class="rounded-lg bg-linen-mist p-2 text-forest-ink dark:bg-spruce dark:text-lime-voltage"
@@ -58,7 +58,7 @@
 					{analytics.totalUsers.toLocaleString('id-ID')}
 				</span>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
-					Pengguna yang telah terdaftar di database
+					{t('admin.overview.totalUsersDesc')}
 				</p>
 			</div>
 		</Card>
@@ -67,7 +67,7 @@
 		<Card variant="default" class="p-5">
 			<div class="flex items-center justify-between">
 				<span class="text-xs font-bold tracking-wider text-slate uppercase dark:text-pebble">
-					Pengguna Aktif (DAU)
+					{t('admin.overview.dau')}
 				</span>
 				<div
 					class="rounded-lg bg-linen-mist p-2 text-forest-ink dark:bg-spruce dark:text-lime-voltage"
@@ -80,7 +80,7 @@
 					{analytics.dau.toLocaleString('id-ID')}
 				</span>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
-					Aktif dalam 24 jam terakhir (sesi / login)
+					{t('admin.overview.dauDesc')}
 				</p>
 			</div>
 		</Card>
@@ -89,7 +89,7 @@
 		<Card variant="default" class="p-5">
 			<div class="flex items-center justify-between">
 				<span class="text-xs font-bold tracking-wider text-slate uppercase dark:text-pebble">
-					Total Catatan Pengeluaran
+					{t('admin.overview.totalExpenses')}
 				</span>
 				<div
 					class="rounded-lg bg-linen-mist p-2 text-forest-ink dark:bg-spruce dark:text-lime-voltage"
@@ -102,9 +102,7 @@
 					{analytics.totalExpenses.toLocaleString('id-ID')}
 				</span>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
-					Total nominal: <strong class="text-obsidian dark:text-paper"
-						>{formatRupiah(analytics.totalExpenseAmount || 0)}</strong
-					>
+					{t('admin.overview.totalAmount', { amount: formatRupiah(analytics.totalExpenseAmount || 0) })}
 				</p>
 			</div>
 		</Card>
@@ -121,14 +119,14 @@
 				</div>
 				<div>
 					<h2 class="text-lg font-bold text-obsidian dark:text-paper">
-						Top 10 Kategori Paling Populer
+						{t('admin.overview.top10Title')}
 					</h2>
 					<p class="text-xs text-slate dark:text-pebble">
-						Berdasarkan frekuensi nama kategori yang dibuat oleh pengguna
+						{t('admin.overview.top10Desc')}
 					</p>
 				</div>
 			</div>
-			<Badge variant="neutral">Frekuensi</Badge>
+			<Badge variant="neutral">{t('admin.overview.frequency')}</Badge>
 		</div>
 
 		{#if analytics.topCategories && analytics.topCategories.length > 0}
@@ -148,7 +146,7 @@
 								</span>
 							</div>
 							<span class="text-slate dark:text-pebble">
-								{cat.count.toLocaleString('id-ID')} kali
+								{t('admin.overview.frequencyTimes', { count: cat.count.toLocaleString('id-ID') })}
 							</span>
 						</div>
 						<!-- Visual Frequency Bar -->
@@ -163,7 +161,7 @@
 			</div>
 		{:else}
 			<div class="py-12 text-center">
-				<p class="text-sm text-slate dark:text-pebble">Belum ada kategori yang tercatat.</p>
+				<p class="text-sm text-slate dark:text-pebble">{t('admin.overview.noCategories')}</p>
 			</div>
 		{/if}
 	</Card>

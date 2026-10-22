@@ -5,6 +5,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
+	import { t } from '#lib/i18n/index.js';
 	import { authClient } from '#lib/auth-client.js';
 	import {
 		validateOTPInput,
@@ -138,12 +139,10 @@
 			<Card variant="default" padding="lg">
 				<div class="mb-6">
 					<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
-						{mode === 'otp' ? 'Verifikasi Email OTP' : 'Gunakan Kode Cadangan'}
+						{mode === 'otp' ? t('auth.twoFactor.otpTitle') : t('auth.twoFactor.backupTitle')}
 					</h1>
 					<p class="mt-1 text-sm text-slate dark:text-linen-mist/80">
-						{mode === 'otp'
-							? 'Masukkan 6 digit kode OTP yang kami kirimkan ke alamat email akun Anda.'
-							: 'Masukkan salah satu kode cadangan Anda untuk masuk ke akun Takerin.'}
+						{mode === 'otp' ? t('auth.twoFactor.otpDesc') : t('auth.twoFactor.backupDesc')}
 					</p>
 				</div>
 
@@ -168,7 +167,9 @@
 				{#if hasSessionError}
 					<div class="pt-2">
 						<a href={resolve('/auth/login')} class="block w-full">
-							<Button variant="dark" size="md" class="w-full">Kembali ke Halaman Masuk</Button>
+							<Button variant="dark" size="md" class="w-full">
+								{t('auth.twoFactor.backToLogin')}
+							</Button>
 						</a>
 					</div>
 				{:else}
@@ -176,9 +177,9 @@
 						{#if mode === 'otp'}
 							<Input
 								id="otp-code"
-								label="Kode OTP Email (6 digit)"
+								label={t('auth.twoFactor.otpLabel')}
 								type="text"
-								placeholder="123456"
+								placeholder={t('auth.twoFactor.otpPlaceholder')}
 								autocomplete="one-time-code"
 								maxlength={6}
 								required
@@ -194,10 +195,10 @@
 									class="cursor-pointer text-xs font-semibold text-forest-ink hover:underline disabled:cursor-not-allowed disabled:opacity-50 dark:text-lime-voltage"
 								>
 									{isResending
-										? 'Mengirim...'
+										? t('auth.twoFactor.resending')
 										: resendCountdown > 0
-											? `Kirim ulang OTP (${resendCountdown} detik)`
-											: 'Kirim Ulang Kode OTP'}
+											? t('auth.twoFactor.resendCountdown', { seconds: resendCountdown })
+											: t('auth.twoFactor.resendButton')}
 								</button>
 
 								<button
@@ -209,15 +210,15 @@
 									}}
 									class="cursor-pointer text-xs font-semibold text-slate hover:underline dark:text-linen-mist/80"
 								>
-									Gunakan Kode Cadangan
+									{t('auth.twoFactor.useBackupCode')}
 								</button>
 							</div>
 						{:else}
 							<Input
 								id="backup-code"
-								label="Kode Cadangan"
+								label={t('auth.twoFactor.backupCodeLabel')}
 								type="text"
-								placeholder="Contoh: a1b2c3d4e5"
+								placeholder={t('auth.twoFactor.backupCodePlaceholder')}
 								autocomplete="off"
 								required
 								bind:value={backupCode}
@@ -234,7 +235,7 @@
 									}}
 									class="cursor-pointer text-xs font-semibold text-forest-ink hover:underline dark:text-lime-voltage"
 								>
-									Kembali ke Verifikasi Email OTP
+									{t('auth.twoFactor.backToOtp')}
 								</button>
 							</div>
 						{/if}
@@ -242,10 +243,10 @@
 						<div class="pt-4">
 							<Button type="submit" variant="dark" size="md" class="w-full" disabled={isLoading}>
 								{isLoading
-									? 'Memverifikasi...'
+									? t('auth.twoFactor.submitting')
 									: mode === 'otp'
-										? 'Verifikasi OTP & Masuk'
-										: 'Masuk dengan Kode Cadangan'}
+										? t('auth.twoFactor.submitOtp')
+										: t('auth.twoFactor.submitBackup')}
 							</Button>
 						</div>
 					</form>
@@ -254,12 +255,12 @@
 				<div
 					class="mt-6 border-t border-fog pt-4 text-center text-sm text-slate dark:border-dark-border dark:text-pebble"
 				>
-					Bukan akun Anda?
+					{t('auth.twoFactor.notYourAccount')}
 					<a
 						href={resolve('/auth/login')}
 						class="font-semibold text-forest-ink hover:underline dark:text-lime-voltage"
 					>
-						Kembali ke halaman masuk
+						{t('auth.twoFactor.backToLogin')}
 					</a>
 				</div>
 			</Card>

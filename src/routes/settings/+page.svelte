@@ -9,6 +9,7 @@
 	import { formatAuthError } from '#lib/validation/auth.js';
 	import { formatDateIndonesian, formatDateISO } from '#lib/validation/onboarding.js';
 	import { setTheme } from '#lib/theme.js';
+	import { t, setLocale, type Locale } from '#lib/i18n/index.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
@@ -212,9 +213,16 @@
 
 	// 5. Language & Theme State
 	// svelte-ignore state_referenced_locally
-	let selectedLanguage = $state(data.settings.language);
+	let selectedLanguage = $state<Locale>(data.settings.language as Locale);
 	// svelte-ignore state_referenced_locally
 	let selectedTheme = $state(data.settings.theme);
+
+	function onLanguageChange(e: Event) {
+		const target = e.target as HTMLSelectElement;
+		const val = target.value as Locale;
+		selectedLanguage = val;
+		setLocale(val);
+	}
 
 	function onThemeChange(e: Event) {
 		const target = e.target as HTMLSelectElement;
@@ -230,9 +238,17 @@
 				selectedTheme = customEvent.detail.theme;
 			}
 		};
+		const handleLangChange = (e: Event) => {
+			const customEvent = e as CustomEvent<{ locale: Locale }>;
+			if (customEvent.detail?.locale) {
+				selectedLanguage = customEvent.detail.locale;
+			}
+		};
 		window.addEventListener('takerin:themechange', handleThemeChange);
+		window.addEventListener('takerin:langchange', handleLangChange);
 		return () => {
 			window.removeEventListener('takerin:themechange', handleThemeChange);
+			window.removeEventListener('takerin:langchange', handleLangChange);
 		};
 	});
 
@@ -247,7 +263,7 @@
 </script>
 
 <svelte:head>
-	<title>Pengaturan Akun & Profil - Takerin</title>
+	<title>{t('settings.title')} - {t('nav.brand')}</title>
 </svelte:head>
 
 <div
@@ -263,7 +279,7 @@
 				<span
 					class="rounded-full bg-linen-mist px-2.5 py-0.5 text-xs font-semibold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
 				>
-					Pengaturan
+					{t('nav.settings')}
 				</span>
 			</div>
 			<div class="flex items-center gap-3 sm:gap-4">
@@ -271,37 +287,37 @@
 					href={resolve('/dashboard')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Dashboard
+					{t('nav.dashboard')}
 				</a>
 				<a
 					href={resolve('/categories')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Kategori
+					{t('nav.categories')}
 				</a>
 				<a
 					href={resolve('/expenses')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Pengeluaran
+					{t('nav.expenses')}
 				</a>
 				<a
 					href={resolve('/history')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Riwayat
+					{t('nav.history')}
 				</a>
 				{#if data.user?.role === 'admin'}
 					<a
 						href={resolve('/admin')}
 						class="rounded-full bg-forest-ink/10 px-2.5 py-1 text-xs font-bold text-forest-ink transition hover:bg-forest-ink/20 dark:bg-lime-voltage/20 dark:text-lime-voltage"
 					>
-						Admin
+						{t('nav.admin')}
 					</a>
 				{/if}
 				<ThemeToggle />
 				<Button variant="secondary" size="sm" onclick={handleLogout} disabled={isLoggingOut}>
-					{isLoggingOut ? 'Mengeluarkan...' : 'Keluar'}
+					{isLoggingOut ? t('nav.loggingOut') : t('nav.logout')}
 				</Button>
 			</div>
 		</div>
@@ -313,11 +329,10 @@
 			<h1
 				class="text-2xl font-bold tracking-tight text-forest-ink sm:text-3xl dark:text-linen-mist"
 			>
-				Pengaturan Profil & Aplikasi
+				{t('settings.title')}
 			</h1>
 			<p class="mt-1 text-sm text-slate dark:text-linen-mist/70">
-				Kelola informasi profil, keamanan kata sandi, tanggal gajian, preferensi tampilan, dan
-				ekspor data keuangan Anda.
+				{t('settings.subtitle')}
 			</p>
 		</div>
 
@@ -341,9 +356,9 @@
 		<div class="space-y-8">
 			<!-- SECTION 1: PROFIL PENGGUNA -->
 			<Card variant="default" padding="lg">
-				<h2 class="text-lg font-bold text-obsidian dark:text-paper">Profil Pengguna</h2>
+				<h2 class="text-lg font-bold text-obsidian dark:text-paper">{t('settings.profileSection')}</h2>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
-					Pembaruan nama tampilan akan langsung terlihat di seluruh antarmuka aplikasi.
+					{t('settings.profileSaved')}
 				</p>
 
 				<form
@@ -363,8 +378,8 @@
 							<Input
 								id="profile-name"
 								name="name"
-								label="Nama Tampilan"
-								placeholder="Masukkan nama tampilan Anda"
+								label={t('settings.displayNameLabel')}
+								placeholder={t('settings.displayNamePlaceholder')}
 								required
 								bind:value={displayName}
 								disabled={isUpdatingProfile}
@@ -373,10 +388,9 @@
 						<div>
 							<Input
 								id="profile-email"
-								label="Email Terdaftar"
+								label={t('auth.login.emailLabel')}
 								value={data.profile.email}
 								disabled
-								hint="Email akun dikelola melalui sistem autentikasi."
 							/>
 						</div>
 					</div>
@@ -393,12 +407,12 @@
 							<span
 								class="rounded-full bg-fog px-2 py-0.5 font-semibold text-slate dark:bg-dark-border dark:text-pebble"
 							>
-								Peran: {data.profile.role === 'admin' ? 'Admin' : 'Pengguna'}
+								{t('admin.roleCol')}: {data.profile.role === 'admin' ? t('nav.admin') : 'User'}
 							</span>
 						</div>
 
 						<Button type="submit" variant="primary" size="sm" disabled={isUpdatingProfile}>
-							{isUpdatingProfile ? 'Menyimpan...' : 'Simpan Nama'}
+							{isUpdatingProfile ? t('common.saving') : t('settings.saveProfile')}
 						</Button>
 					</div>
 				</form>
@@ -406,10 +420,9 @@
 
 			<!-- SECTION 2: KEAMANAN & KATA SANDI -->
 			<Card variant="default" padding="lg">
-				<h2 class="text-lg font-bold text-obsidian dark:text-paper">Keamanan Akun</h2>
+				<h2 class="text-lg font-bold text-obsidian dark:text-paper">{t('settings.securitySection')}</h2>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
-					Kelola kata sandi masuk dan aktifkan verifikasi dua langkah (2FA) untuk perlindungan
-					ekstra.
+					{t('settings.subtitle')}
 				</p>
 
 				<div class="mt-6 grid gap-8 lg:grid-cols-2">
@@ -417,7 +430,7 @@
 					<div
 						class="border-b border-fog pb-6 lg:border-r lg:border-b-0 lg:pr-6 dark:border-dark-border"
 					>
-						<h3 class="text-sm font-bold text-obsidian dark:text-paper">Ubah Kata Sandi</h3>
+						<h3 class="text-sm font-bold text-obsidian dark:text-paper">{t('settings.changePassword')}</h3>
 
 						{#if passwordSuccess}
 							<div
@@ -438,7 +451,7 @@
 						<form onsubmit={handleChangePassword} class="mt-4 space-y-3">
 							<Input
 								id="current-password"
-								label="Kata Sandi Saat Ini"
+								label={t('settings.currentPasswordLabel')}
 								type="password"
 								placeholder="••••••••"
 								required
@@ -447,7 +460,7 @@
 							/>
 							<Input
 								id="new-password"
-								label="Kata Sandi Baru"
+								label={t('settings.newPasswordLabel')}
 								type="password"
 								placeholder="Minimal 8 karakter"
 								required
@@ -456,7 +469,7 @@
 							/>
 							<Input
 								id="confirm-password"
-								label="Konfirmasi Kata Sandi Baru"
+								label={t('settings.confirmPasswordLabel')}
 								type="password"
 								placeholder="Ketik ulang kata sandi baru"
 								required
@@ -466,7 +479,7 @@
 
 							<div class="pt-2">
 								<Button type="submit" variant="secondary" size="sm" disabled={isChangingPassword}>
-									{isChangingPassword ? 'Mengubah...' : 'Perbarui Kata Sandi'}
+									{isChangingPassword ? t('common.updating') : t('settings.savePassword')}
 								</Button>
 							</div>
 						</form>
@@ -476,21 +489,19 @@
 					<div>
 						<div class="flex items-center justify-between">
 							<h3 class="text-sm font-bold text-obsidian dark:text-paper">
-								Verifikasi Dua Langkah (2FA)
+								{t('settings.twoFactorTitle')}
 							</h3>
 							<span
 								class="rounded-full px-2.5 py-0.5 text-xs font-semibold {twoFactorEnabled
 									? 'bg-linen-mist text-forest-ink dark:bg-spruce dark:text-lime-voltage'
 									: 'bg-fog text-slate dark:bg-dark-border dark:text-pebble'}"
 							>
-								{twoFactorEnabled ? '2FA Aktif' : '2FA Nonaktif'}
+								{twoFactorEnabled ? t('settings.twoFactorEnabledBadge') : t('settings.twoFactorDisabledBadge')}
 							</span>
 						</div>
 
 						<p class="mt-2 text-xs text-slate dark:text-linen-mist/80">
-							{twoFactorEnabled
-								? 'Akun Anda diamankan dengan verifikasi kode OTP setiap kali masuk.'
-								: 'Tingkatkan keamanan akun Anda dengan mewajibkan kode verifikasi OTP saat masuk.'}
+							{t('settings.twoFactorDesc')}
 						</p>
 
 						{#if twoFactorSuccess}
@@ -521,7 +532,7 @@
 											twoFactorError = '';
 										}}
 									>
-										Aktifkan 2FA
+										{t('settings.enableTwoFactor')}
 									</Button>
 								{:else}
 									<form
@@ -533,7 +544,7 @@
 										</p>
 										<Input
 											id="enable-2fa-pwd"
-											label="Kata Sandi"
+											label={t('auth.login.passwordLabel')}
 											type="password"
 											placeholder="Kata sandi akun Anda"
 											required
@@ -542,7 +553,7 @@
 										/>
 										<div class="flex items-center gap-2 pt-1">
 											<Button type="submit" variant="primary" size="sm" disabled={twoFactorLoading}>
-												{twoFactorLoading ? 'Memproses...' : 'Konfirmasi Aktifkan'}
+												{twoFactorLoading ? t('common.processing') : t('common.confirm')}
 											</Button>
 											<Button
 												type="button"
@@ -551,7 +562,7 @@
 												onclick={resetTwoFactorForm}
 												disabled={twoFactorLoading}
 											>
-												Batal
+												{t('common.cancel')}
 											</Button>
 										</div>
 									</form>
@@ -568,7 +579,7 @@
 												twoFactorError = '';
 											}}
 										>
-											Nonaktifkan 2FA
+											{t('settings.disableTwoFactor')}
 										</Button>
 										<Button
 											variant="secondary"
@@ -579,7 +590,7 @@
 												twoFactorError = '';
 											}}
 										>
-											Buat Kode Cadangan Baru
+											{t('settings.generateBackupCodes')}
 										</Button>
 									{/if}
 								</div>
@@ -589,10 +600,10 @@
 										onsubmit={handleDisable2FA}
 										class="space-y-3 rounded-lg border border-alarm-red/30 bg-paper p-4 dark:border-alarm-red/40 dark:bg-dark-surface"
 									>
-										<p class="text-xs font-semibold text-alarm-red">Konfirmasi Nonaktifkan 2FA</p>
+										<p class="text-xs font-semibold text-alarm-red">{t('settings.disableTwoFactor')}</p>
 										<Input
 											id="disable-2fa-pwd"
-											label="Kata Sandi Akun"
+											label={t('auth.login.passwordLabel')}
 											type="password"
 											placeholder="Masukkan kata sandi akun Anda"
 											required
@@ -601,7 +612,7 @@
 										/>
 										<div class="flex items-center gap-2 pt-1">
 											<Button type="submit" variant="dark" size="sm" disabled={twoFactorLoading}>
-												{twoFactorLoading ? 'Memproses...' : 'Ya, Nonaktifkan'}
+												{twoFactorLoading ? t('common.processing') : t('settings.disableTwoFactor')}
 											</Button>
 											<Button
 												type="button"
@@ -610,7 +621,7 @@
 												onclick={resetTwoFactorForm}
 												disabled={twoFactorLoading}
 											>
-												Batal
+												{t('common.cancel')}
 											</Button>
 										</div>
 									</form>
@@ -622,11 +633,11 @@
 										class="space-y-3 rounded-lg border border-fog bg-fog/60 p-4 dark:border-dark-border dark:bg-dark-card"
 									>
 										<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
-											Masukkan Kata Sandi untuk Generate Kode Cadangan:
+											{t('settings.generateBackupCodes')}
 										</p>
 										<Input
 											id="gen-codes-pwd"
-											label="Kata Sandi Akun"
+											label={t('auth.login.passwordLabel')}
 											type="password"
 											placeholder="Masukkan kata sandi akun Anda"
 											required
@@ -635,7 +646,7 @@
 										/>
 										<div class="flex items-center gap-2 pt-1">
 											<Button type="submit" variant="primary" size="sm" disabled={twoFactorLoading}>
-												{twoFactorLoading ? 'Membuat...' : 'Buat Kode Baru'}
+												{twoFactorLoading ? t('common.processing') : t('settings.generateBackupCodes')}
 											</Button>
 											<Button
 												type="button"
@@ -644,7 +655,7 @@
 												onclick={resetTwoFactorForm}
 												disabled={twoFactorLoading}
 											>
-												Batal
+												{t('common.cancel')}
 											</Button>
 										</div>
 									</form>
@@ -665,11 +676,11 @@
 											onclick={copyBackupCodes}
 											class="cursor-pointer text-xs font-bold text-forest-ink hover:underline dark:text-lime-voltage"
 										>
-											{codesCopied ? 'Tersalin!' : 'Salin Semua'}
+											{codesCopied ? t('settings.codesCopied') : t('settings.copyCodes')}
 										</button>
 									</div>
 									<p class="mt-1 text-[11px] text-slate dark:text-pebble">
-										Simpan kode ini di tempat yang aman. Setiap kode hanya dapat dipakai 1 kali.
+										{t('settings.backupCodesWarning')}
 									</p>
 									<div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
 										{#each backupCodes as code (code)}
@@ -690,10 +701,10 @@
 			<!-- SECTION 3: PREFERENSI KEUANGAN (TANGGAL GAJIAN) & APLIKASI -->
 			<Card variant="default" padding="lg">
 				<h2 class="text-lg font-bold text-obsidian dark:text-paper">
-					Preferensi Keuangan & Tampilan
+					{t('settings.preferencesSection')}
 				</h2>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
-					Atur siklus Tanggal Gajian bulanan serta preferensi bahasa dan tema antarmuka Anda.
+					{t('settings.subtitle')}
 				</p>
 
 				<form method="POST" action="?/updateSettings" use:enhance class="mt-6 space-y-6">
@@ -710,7 +721,7 @@
 										class="text-forest-ink dark:text-lime-voltage"
 									/>
 									<h3 class="text-sm font-bold text-obsidian dark:text-paper">
-										Tanggal Gajian (Siklus Periode Bulan)
+										{t('settings.payDayLabel')}
 									</h3>
 								</div>
 								<p class="mt-1 text-xs text-slate dark:text-pebble">
@@ -718,7 +729,7 @@
 									<strong class="text-forest-ink dark:text-linen-mist">
 										{data.activePeriod
 											? `${formatDateIndonesian(data.activePeriod.startDate)} s/d ${formatDateIndonesian(data.activePeriod.endDate)}`
-											: 'Belum ada'}
+											: '-'}
 									</strong>
 									(Tanggal Gajian aktif: {data.settings.payDay}).
 								</p>
@@ -729,7 +740,7 @@
 									? 'bg-linen-mist text-forest-ink dark:bg-spruce dark:text-lime-voltage'
 									: 'bg-alarm-red/10 text-alarm-red'}"
 							>
-								{canChangePayDay ? 'Dapat Diubah' : 'Batas Waktu Tercapai'}
+								{canChangePayDay ? 'Dapat Diubah' : 'Batas Waktu'}
 							</span>
 						</div>
 
@@ -740,10 +751,9 @@
 								type="number"
 								min="1"
 								max="31"
-								label="Tanggal Gajian Baru"
+								label={t('settings.payDayLabel')}
 								bind:value={newPayDay}
 								disabled={!canChangePayDay}
-								hint="Angka tanggal 1 sampai 31."
 							/>
 						</div>
 
@@ -751,16 +761,12 @@
 							<div class="mt-3 flex items-center gap-2 text-xs font-medium text-alarm-red">
 								<HugeiconsIcon icon={Alert02Icon} size={14} />
 								<span>
-									Tanggal Gajian hanya boleh diubah sebelum 1 hari sebelum Tanggal Gajian aktif
-									berikutnya ({data.activePeriod?.endDate
-										? formatDateIndonesian(data.activePeriod.endDate)
-										: '-'}). Perubahan akan dibuka kembali saat periode baru dimulai.
+									{t('settings.payDayLockedHelp')}
 								</span>
 							</div>
 						{:else}
 							<p class="mt-2 text-[11px] text-slate dark:text-pebble">
-								* Catatan: Perubahan Tanggal Gajian akan mulai berlaku efektif pada Periode Bulan
-								berikutnya.
+								{t('settings.payDayHelp')}
 							</p>
 						{/if}
 					</div>
@@ -773,12 +779,13 @@
 								for="settings-language"
 								class="block text-sm font-medium text-charcoal dark:text-linen-mist"
 							>
-								Bahasa Antarmuka
+								{t('settings.languageLabel')}
 							</label>
 							<select
 								id="settings-language"
 								name="language"
 								bind:value={selectedLanguage}
+								onchange={onLanguageChange}
 								class="mt-1.5 w-full rounded-lg border border-pebble bg-paper px-4 py-2.5 text-sm text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
 							>
 								<option value="id">Bahasa Indonesia (ID)</option>
@@ -795,7 +802,7 @@
 								for="settings-theme"
 								class="block text-sm font-medium text-charcoal dark:text-linen-mist"
 							>
-								Tema Tampilan
+								{t('settings.themeLabel')}
 							</label>
 							<select
 								id="settings-theme"
@@ -804,8 +811,8 @@
 								onchange={onThemeChange}
 								class="mt-1.5 w-full rounded-lg border border-pebble bg-paper px-4 py-2.5 text-sm text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
 							>
-								<option value="light">Terang (Light)</option>
-								<option value="dark">Gelap (Dark)</option>
+								<option value="light">{t('settings.lightTheme')}</option>
+								<option value="dark">{t('settings.darkTheme')}</option>
 							</select>
 							<p class="mt-1 text-xs text-slate dark:text-pebble">
 								Tersinkronisasi langsung dengan toggle tema dan tersimpan di database.
@@ -814,16 +821,16 @@
 					</div>
 
 					<div class="flex justify-end pt-2">
-						<Button type="submit" variant="primary" size="sm">Simpan Preferensi</Button>
+						<Button type="submit" variant="primary" size="sm">{t('settings.savePreferences')}</Button>
 					</div>
 				</form>
 			</Card>
 
 			<!-- SECTION 4: EKSPOR DATA -->
 			<Card variant="default" padding="lg">
-				<h2 class="text-lg font-bold text-obsidian dark:text-paper">Ekspor Data Keuangan</h2>
+				<h2 class="text-lg font-bold text-obsidian dark:text-paper">{t('settings.exportSection')}</h2>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
-					Unduh salinan data keuangan Anda dalam format file CSV atau dokumen ringkasan PDF.
+					{t('settings.exportDesc')}
 				</p>
 
 				<div class="mt-6 grid gap-6 sm:grid-cols-2">
@@ -839,18 +846,17 @@
 									class="text-forest-ink dark:text-lime-voltage"
 								/>
 								<h3 class="text-sm font-bold text-obsidian dark:text-paper">
-									Ekspor Seluruh Pengeluaran (CSV)
+									{t('settings.exportCsvButton')}
 								</h3>
 							</div>
 							<p class="mt-2 text-xs text-slate dark:text-linen-mist/80">
-								Berisi seluruh catatan pengeluaran dari seluruh Periode Bulan (tanggal, jam, nama,
-								kategori, nominal, catatan, dan periode). Kompatibel dengan Excel dan spreadsheet.
+								{t('settings.exportDesc')}
 							</p>
 						</div>
 
 						<div class="pt-4">
 							<a href={resolve('/api/export/csv')} download class="inline-block">
-								<Button variant="secondary" size="sm">Unduh File CSV</Button>
+								<Button variant="secondary" size="sm">{t('settings.exportCsvButton')}</Button>
 							</a>
 						</div>
 					</div>
@@ -867,12 +873,11 @@
 									class="text-forest-ink dark:text-lime-voltage"
 								/>
 								<h3 class="text-sm font-bold text-obsidian dark:text-paper">
-									Ekspor Ringkasan Periode (PDF)
+									{t('settings.exportPdfButton')}
 								</h3>
 							</div>
 							<p class="mt-2 text-xs text-slate dark:text-linen-mist/80">
-								Dokumen PDF resmi berisi ringkasan finansial, alokasi vs terpakai per kategori, sisa
-								saldo, dan catatan AI untuk satu periode bulan yang dipilih.
+								{t('settings.exportDesc')}
 							</p>
 
 							<div class="mt-3">
@@ -880,7 +885,7 @@
 									for="select-pdf-period"
 									class="block text-xs font-semibold text-charcoal dark:text-pebble"
 								>
-									Pilih Periode Bulan:
+									{t('settings.selectPeriodForPdf')}
 								</label>
 								<select
 									id="select-pdf-period"
@@ -891,8 +896,8 @@
 										<option value={p.id}>
 											{formatDateIndonesian(p.startDate)} s/d {formatDateIndonesian(p.endDate)} ({p.status ===
 											'active'
-												? 'Aktif'
-												: 'Selesai'})
+												? t('common.active')
+												: t('common.success')})
 										</option>
 									{/each}
 								</select>
@@ -906,10 +911,10 @@
 									download
 									class="inline-block"
 								>
-									<Button variant="primary" size="sm">Unduh Dokumen PDF</Button>
+									<Button variant="primary" size="sm">{t('settings.exportPdfButton')}</Button>
 								</a>
 							{:else}
-								<Button variant="primary" size="sm" disabled>Pilih Periode</Button>
+								<Button variant="primary" size="sm" disabled>{t('history.selectPeriod')}</Button>
 							{/if}
 						</div>
 					</div>
@@ -922,11 +927,9 @@
 			>
 				<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<div>
-						<h2 class="text-base font-bold text-alarm-red">Zona Bahaya: Hapus Akun</h2>
+						<h2 class="text-base font-bold text-alarm-red">{t('settings.deleteAccountSection')}</h2>
 						<p class="mt-1 text-xs text-slate dark:text-linen-mist/80">
-							Menghapus akun akan melenyapkan seluruh data pengeluaran, kategori, ringkasan, dan
-							riwayat finansial Anda secara permanen dari basis data Cloudflare D1. Tindakan ini
-							tidak dapat dibatalkan.
+							{t('settings.deleteDesc')}
 						</p>
 					</div>
 
@@ -939,7 +942,7 @@
 							}}
 							class="cursor-pointer rounded-full bg-alarm-red px-5 py-2 text-xs font-bold text-paper transition hover:bg-alarm-red/90 active:scale-95"
 						>
-							Hapus Akun Saya
+							{t('settings.deleteButton')}
 						</button>
 					</div>
 				</div>
@@ -961,13 +964,12 @@
 				<div class="flex items-center gap-3 text-alarm-red">
 					<HugeiconsIcon icon={Alert02Icon} size={24} />
 					<h3 id="delete-modal-title" class="text-base font-bold text-alarm-red">
-						Konfirmasi Hapus Akun Permanen
+						{t('settings.deleteModalTitle')}
 					</h3>
 				</div>
 
 				<p class="mt-3 text-xs leading-relaxed text-charcoal dark:text-linen-mist/80">
-					Tindakan ini akan <strong>menghapus permanen seluruh data Anda</strong> dari Cloudflare D1 dan
-					mengakhiri seluruh sesi aktif. Anda akan segera dialihkan ke halaman utama.
+					{t('settings.deleteModalWarning')}
 				</p>
 
 				<form
@@ -987,7 +989,7 @@
 							for="delete-confirm-input"
 							class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
 						>
-							Ketik <span class="font-mono text-alarm-red select-all">HAPUS AKUN SAYA</span> untuk mengonfirmasi:
+							{t('settings.deleteModalTypeConfirm')}
 						</label>
 						<input
 							id="delete-confirm-input"
@@ -1012,7 +1014,7 @@
 							}}
 							disabled={isDeletingAccount}
 						>
-							Batal
+							{t('common.cancel')}
 						</Button>
 
 						<button
@@ -1020,7 +1022,7 @@
 							disabled={deleteConfirmText !== 'HAPUS AKUN SAYA' || isDeletingAccount}
 							class="cursor-pointer rounded-full bg-alarm-red px-5 py-1.5 text-xs font-bold text-paper transition hover:bg-alarm-red/90 disabled:cursor-not-allowed disabled:opacity-40"
 						>
-							{isDeletingAccount ? 'Menghapus...' : 'Ya, Hapus Permanen'}
+							{isDeletingAccount ? t('common.deleting') : t('settings.deleteModalConfirmButton')}
 						</button>
 					</div>
 				</form>

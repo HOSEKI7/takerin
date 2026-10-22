@@ -9,6 +9,7 @@
 	import { authClient } from '#lib/auth-client.js';
 	import { formatAuthError } from '#lib/validation/auth.js';
 	import { formatRupiah, formatDateIndonesian } from '#lib/validation/onboarding.js';
+	import { t } from '#lib/i18n/index.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
@@ -153,7 +154,7 @@
 				<span
 					class="rounded-full bg-linen-mist px-2.5 py-0.5 text-xs font-semibold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
 				>
-					Dashboard
+					{t('nav.dashboard')}
 				</span>
 			</div>
 			<div class="flex items-center gap-3 sm:gap-4">
@@ -161,37 +162,37 @@
 					href={resolve('/categories')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Kategori
+					{t('nav.categories')}
 				</a>
 				<a
 					href={resolve('/expenses')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Pengeluaran
+					{t('nav.expenses')}
 				</a>
 				<a
 					href={resolve('/history')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Riwayat
+					{t('nav.history')}
 				</a>
 				<a
 					href={resolve('/settings')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Pengaturan
+					{t('nav.settings')}
 				</a>
 				{#if data.user?.role === 'admin'}
 					<a
 						href={resolve('/admin')}
 						class="rounded-full bg-forest-ink/10 px-2.5 py-1 text-xs font-bold text-forest-ink transition hover:bg-forest-ink/20 dark:bg-lime-voltage/20 dark:text-lime-voltage"
 					>
-						Admin
+						{t('nav.admin')}
 					</a>
 				{/if}
 				<ThemeToggle />
 				<Button variant="secondary" size="sm" onclick={handleLogout} disabled={isLoggingOut}>
-					{isLoggingOut ? 'Mengeluarkan...' : 'Keluar'}
+					{isLoggingOut ? t('nav.loggingOut') : t('nav.logout')}
 				</Button>
 			</div>
 		</div>
@@ -202,10 +203,10 @@
 		<div class="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
 			<div>
 				<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-					Selamat datang, {data.user?.name ?? 'Pengguna'}!
+					{t('dashboard.welcome', { name: data.user?.name ?? 'Pengguna' })}
 				</h1>
 				<p class="mt-1 text-sm text-slate dark:text-pebble">
-					Overview pengelolaan alokasi budget dan pemantauan keuangan Periode Bulan aktif Anda.
+					{t('dashboard.overviewSubtitle')}
 				</p>
 			</div>
 
@@ -226,7 +227,7 @@
 					</div>
 					<a href={resolve('/expenses/new')}>
 						<Button variant="primary" size="sm" class="font-bold shadow-sm">
-							+ Catat Pengeluaran
+							{t('dashboard.addExpenseButton')}
 						</Button>
 					</a>
 				</div>
@@ -242,13 +243,13 @@
 			>
 				<HugeiconsIcon icon={Alert02Icon} class="mt-0.5 h-5 w-5 shrink-0 text-alarm-red" />
 				<div class="text-sm">
-					<p class="font-bold">Peringatan Anggaran: Pengeluaran Telah Melebihi 80%</p>
+					<p class="font-bold">{t('dashboard.warning80Title')}</p>
 					<p class="mt-0.5 text-xs text-alarm-red/90">
-						Total pengeluaran Anda telah mencapai
-						<span class="font-extrabold">{data.summary.spentPercentage}%</span>
-						dari Pemasukan Bulanan ({formatRupiah(data.summary.totalSpent)} dari {formatRupiah(
-							data.summary.totalIncome
-						)}). Harap kendalikan pengeluaran harian hingga Tanggal Gajian berikutnya.
+						{t('dashboard.warning80Desc', {
+							percent: data.summary.spentPercentage,
+							spent: formatRupiah(data.summary.totalSpent),
+							total: formatRupiah(data.summary.totalIncome)
+						})}
 					</p>
 				</div>
 			</div>
@@ -285,15 +286,14 @@
 					/>
 				</div>
 				<h2 class="mt-4 text-lg font-bold text-forest-ink dark:text-linen-mist">
-					Belum Ada Periode Bulan Aktif
+					{t('dashboard.emptyPeriodTitle')}
 				</h2>
 				<p class="mx-auto mt-2 max-w-md text-sm text-charcoal dark:text-pebble">
-					Anda belum memiliki konfigurasi budget bulanan yang aktif. Mulai atur Tanggal Gajian dan
-					alokasi kategori Anda untuk memulai pemantauan.
+					{t('dashboard.emptyPeriodDesc')}
 				</p>
 				<div class="mt-5">
 					<a href={resolve('/onboarding')}>
-						<Button variant="primary" size="md">Mulai Setup Periode</Button>
+						<Button variant="primary" size="md">{t('dashboard.startSetup')}</Button>
 					</a>
 				</div>
 			</Card>
@@ -308,15 +308,15 @@
 							<span
 								class="text-xs font-semibold tracking-wider text-slate uppercase dark:text-pebble"
 							>
-								Periode Bulan Aktif
+								{t('dashboard.periodTitle')}
 							</span>
 							<h2 class="text-lg font-bold text-obsidian sm:text-xl dark:text-paper">
-								Ringkasan Anggaran
+								{t('dashboard.budgetSummary')}
 							</h2>
 						</div>
 						<div class="flex items-center gap-2 text-xs font-semibold text-slate dark:text-pebble">
 							<span class="inline-block h-2 w-2 rounded-full bg-lime-voltage"></span>
-							<span>Tanggal Gajian: setiap tgl {data.period.payDay}</span>
+							<span>{t('dashboard.payDayPrefix', { day: data.period.payDay })}</span>
 						</div>
 					</div>
 
@@ -326,14 +326,14 @@
 						<div
 							class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
 						>
-							<span class="text-xs font-medium text-slate dark:text-pebble">Pemasukan Bulanan</span>
+							<span class="text-xs font-medium text-slate dark:text-pebble">{t('dashboard.totalIncome')}</span>
 							<p
 								class="mt-1.5 text-lg font-black tracking-tight text-forest-ink sm:text-2xl dark:text-paper"
 							>
 								{formatRupiah(data.summary.totalIncome)}
 							</p>
 							<span class="mt-1 block text-[11px] text-slate dark:text-pebble">
-								Basis alokasi 100% kategori
+								{t('dashboard.incomeHelp')}
 							</span>
 						</div>
 
@@ -341,7 +341,7 @@
 						<div
 							class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
 						>
-							<span class="text-xs font-medium text-slate dark:text-pebble">Total Terpakai</span>
+							<span class="text-xs font-medium text-slate dark:text-pebble">{t('dashboard.totalSpent')}</span>
 							<p
 								class="mt-1.5 text-lg font-black tracking-tight text-obsidian sm:text-2xl dark:text-paper"
 							>
@@ -352,7 +352,7 @@
 									? 'font-bold text-alarm-red'
 									: 'text-slate dark:text-pebble'}"
 							>
-								{data.summary.spentPercentage}% dari total pemasukan
+								{t('dashboard.spentHelp', { percent: data.summary.spentPercentage })}
 							</span>
 						</div>
 
@@ -360,7 +360,7 @@
 						<div
 							class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
 						>
-							<span class="text-xs font-medium text-slate dark:text-pebble">Sisa Saldo</span>
+							<span class="text-xs font-medium text-slate dark:text-pebble">{t('dashboard.remainingBudget')}</span>
 							<p
 								class="mt-1.5 text-lg font-black tracking-tight {data.summary.remaining < 0
 									? 'text-alarm-red'
@@ -369,7 +369,7 @@
 								{formatRupiah(data.summary.remaining)}
 							</p>
 							<span class="mt-1 block text-[11px] text-slate dark:text-pebble">
-								{Math.max(0, 100 - data.summary.spentPercentage)}% anggaran tersisa
+								{t('dashboard.remainingHelp', { percent: Math.max(0, 100 - data.summary.spentPercentage) })}
 							</span>
 						</div>
 
@@ -377,7 +377,7 @@
 						<div
 							class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
 						>
-							<span class="text-xs font-medium text-slate dark:text-pebble">Status Penggunaan</span>
+							<span class="text-xs font-medium text-slate dark:text-pebble">{t('dashboard.usageStatus')}</span>
 							<p
 								class="mt-1.5 text-lg font-black tracking-tight sm:text-2xl {data.summary
 									.isWarning80
@@ -405,22 +405,22 @@
 					<div class="mb-4 flex items-center justify-between">
 						<div>
 							<h2 class="text-lg font-extrabold text-obsidian sm:text-xl dark:text-paper">
-								Rincian Kategori
+								{t('dashboard.categoryBreakdown')}
 							</h2>
 							<p class="text-xs text-slate dark:text-pebble">
-								Alokasi budget dan sisa saldo untuk tiap kategori aktif.
+								{t('dashboard.categoryHelp')}
 							</p>
 						</div>
 						<div class="flex items-center gap-2">
 							<a href={resolve('/categories')}>
 								<Button variant="secondary" size="sm" class="text-xs font-semibold">
-									Kelola Kategori
+									{t('dashboard.manageCategories')}
 								</Button>
 							</a>
 							<span
 								class="rounded-full bg-fog px-2.5 py-0.5 text-xs font-semibold text-slate dark:bg-dark-border dark:text-linen-mist"
 							>
-								{data.categories.length} Kategori
+								{t('dashboard.categoriesCount', { count: data.categories.length })}
 							</span>
 						</div>
 					</div>
@@ -428,7 +428,7 @@
 					{#if data.categories.length === 0}
 						<Card variant="default" padding="md" class="text-center">
 							<p class="text-sm text-slate dark:text-pebble">
-								Belum ada kategori yang terhubung dengan Periode Bulan ini.
+								{t('dashboard.noCategories')}
 							</p>
 						</Card>
 					{:else}
@@ -464,7 +464,7 @@
 														<span
 															class="rounded-full bg-spruce/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-spruce dark:bg-lime-voltage/25 dark:text-lime-voltage"
 														>
-															Tabungan
+															{t('categories.savingsBadge')}
 														</span>
 													{/if}
 													{#if cat.status === 'frozen'}
@@ -472,12 +472,12 @@
 															data-testid="badge-frozen"
 															class="rounded-full bg-fog px-2 py-0.5 text-[10px] font-bold tracking-wide text-slate dark:bg-dark-border dark:text-pebble"
 														>
-															Dibekukan
+															{t('common.frozen')}
 														</span>
 													{/if}
 												</div>
 												<span class="text-xs text-slate dark:text-pebble">
-													Alokasi: {formatRupiah(cat.allocation)} ({cat.percentage}%)
+													{t('dashboard.allocationLabel', { amount: formatRupiah(cat.allocation), percent: cat.percentage })}
 												</span>
 											</div>
 										</div>
@@ -485,14 +485,14 @@
 										<!-- Balance / Spent display -->
 										<div class="text-right">
 											{#if cat.isSavings}
-												<span class="text-xs text-slate dark:text-pebble">Terkumpul</span>
+												<span class="text-xs text-slate dark:text-pebble">{t('dashboard.collected')}</span>
 												<p
 													class="text-sm font-black text-spruce sm:text-base dark:text-lime-voltage"
 												>
 													{formatRupiah(cat.spent)}
 												</p>
 											{:else}
-												<span class="text-xs text-slate dark:text-pebble">Saldo Sisa</span>
+												<span class="text-xs text-slate dark:text-pebble">{t('dashboard.balanceRemaining')}</span>
 												<p
 													class="text-sm font-black sm:text-base {cat.balance < 0
 														? 'text-alarm-red'
@@ -512,9 +512,9 @@
 											<div
 												class="mt-1.5 flex items-center justify-between text-[11px] text-slate dark:text-pebble"
 											>
-												<span>Tersisa: {formatRupiah(cat.balance)}</span>
+												<span>{t('dashboard.balanceLabel', { amount: formatRupiah(cat.balance) })}</span>
 												<span class="font-semibold text-spruce dark:text-lime-voltage">
-													{cat.spentPercentage}% tercapai
+													{t('dashboard.targetAchieved', { percent: cat.spentPercentage })}
 												</span>
 											</div>
 										{:else}
@@ -527,13 +527,13 @@
 											<div
 												class="mt-1.5 flex items-center justify-between text-[11px] text-slate dark:text-pebble"
 											>
-												<span>Terpakai: {formatRupiah(cat.spent)}</span>
+												<span>{t('dashboard.spentLabel', { amount: formatRupiah(cat.spent) })}</span>
 												<span
 													class="font-semibold {cat.remainingPercentage <= 20
 														? 'font-bold text-alarm-red'
 														: 'text-slate dark:text-linen-mist'}"
 												>
-													{cat.remainingPercentage}% saldo tersisa
+													{t('dashboard.balanceRemainingPercent', { percent: cat.remainingPercentage })}
 												</span>
 											</div>
 										{/if}
@@ -550,10 +550,10 @@
 						<div class="mb-4 flex items-center justify-between">
 							<div>
 								<h2 class="text-lg font-extrabold text-obsidian dark:text-paper">
-									Pengeluaran Terbaru
+									{t('dashboard.recentExpenses')}
 								</h2>
 								<p class="text-xs text-slate dark:text-pebble">
-									Catatan pengeluaran dalam Periode Bulan ini.
+									{t('dashboard.recentExpensesDesc')}
 								</p>
 							</div>
 							<div class="flex items-center gap-2">
@@ -561,7 +561,7 @@
 									href={resolve('/expenses')}
 									class="text-xs font-bold text-forest-ink hover:underline dark:text-lime-voltage"
 								>
-									Lihat Semua
+									{t('dashboard.viewAll')}
 								</a>
 								<HugeiconsIcon icon={Invoice01Icon} class="h-5 w-5 text-slate dark:text-pebble" />
 							</div>
@@ -578,16 +578,15 @@
 									<HugeiconsIcon icon={Coins01Icon} class="h-5 w-5" />
 								</div>
 								<h3 class="mt-3 text-sm font-bold text-obsidian dark:text-paper">
-									Belum Ada Pengeluaran
+									{t('dashboard.noExpenses')}
 								</h3>
 								<p class="mt-1 text-xs text-slate dark:text-pebble">
-									Belum ada pengeluaran yang dicatat pada periode ini. Seluruh saldo kategori Anda
-									masih utuh 100%.
+									{t('dashboard.noExpensesHelp')}
 								</p>
 								<div class="mt-4">
 									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 									<a href="/expenses/new">
-										<Button variant="primary" size="sm">Catat Pengeluaran</Button>
+										<Button variant="primary" size="sm">{t('expenses.newExpenseButton')}</Button>
 									</a>
 								</div>
 							</div>
@@ -616,7 +615,7 @@
 									href={resolve('/expenses')}
 									class="text-xs font-bold text-forest-ink hover:underline dark:text-lime-voltage"
 								>
-									Buka Halaman Pengeluaran Lengkap →
+									{t('dashboard.openAllExpenses')}
 								</a>
 							</div>
 						{/if}
@@ -625,15 +624,13 @@
 					<!-- Periode Detail Card -->
 					<Card variant="tinted" padding="md">
 						<h3 class="text-sm font-bold text-forest-ink dark:text-linen-mist">
-							Tentang Periode Bulan Ini
+							{t('dashboard.aboutPeriod')}
 						</h3>
 						<p class="mt-1.5 text-xs leading-relaxed text-charcoal dark:text-linen-mist/80">
-							Siklus budget berjalan dari tanggal <span class="font-bold"
-								>{formatDateIndonesian(data.period.startDate)}</span
-							>
-							hingga <span class="font-bold">{formatDateIndonesian(data.period.endDate)}</span>.
-							Saldo tidak carry-over ke periode berikutnya demi menjaga evaluasi bulanan yang
-							disiplin.
+							{t('dashboard.aboutPeriodDesc', {
+								startDate: formatDateIndonesian(data.period.startDate),
+								endDate: formatDateIndonesian(data.period.endDate)
+							})}
 						</p>
 					</Card>
 				</section>
@@ -653,16 +650,16 @@
 			>
 				<div>
 					<h3 class="text-base font-bold text-obsidian dark:text-paper">
-						Informasi Akun & Keamanan (2FA)
+						{t('dashboard.accountSecurity')}
 					</h3>
 					<p class="text-xs text-slate dark:text-pebble">
-						Pengaturan profil pengguna dan verifikasi dua langkah.
+						{t('dashboard.accountSecurityDesc')}
 					</p>
 				</div>
 				<span
 					class="rounded-lg border border-fog px-2.5 py-1 text-xs font-semibold text-slate dark:border-dark-border dark:text-pebble"
 				>
-					{showAccountSecurity ? 'Sembunyikan' : 'Buka Pengaturan'}
+					{showAccountSecurity ? t('dashboard.hideSettings') : t('dashboard.showSettings')}
 				</span>
 			</button>
 

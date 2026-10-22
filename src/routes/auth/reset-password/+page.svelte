@@ -4,6 +4,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
+	import { t } from '#lib/i18n/index.js';
 	import { resetPassword } from '#lib/auth-client.js';
 	import { validateResetPasswordInput } from '#lib/validation/auth.js';
 	import { page } from '$app/state';
@@ -77,10 +78,10 @@
 							<span class="text-2xl">⚠️</span>
 						</div>
 						<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
-							Tautan Tidak Valid
+							{t('auth.resetPassword.invalidTitle')}
 						</h1>
 						<p class="text-sm leading-relaxed text-slate dark:text-stone-300">
-							Tautan reset password ini tidak valid atau token tidak ditemukan di parameter URL.
+							{t('auth.resetPassword.invalidDesc')}
 						</p>
 						<div class="pt-4">
 							<Button
@@ -89,7 +90,7 @@
 								class="w-full"
 								onclick={() => goto(resolve('/auth/forgot-password'))}
 							>
-								Minta Tautan Baru
+								{t('auth.resetPassword.requestNewLink')}
 							</Button>
 						</div>
 					</div>
@@ -101,11 +102,10 @@
 							<span class="text-2xl">🎉</span>
 						</div>
 						<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
-							Password Berhasil Diubah!
+							{t('auth.resetPassword.successTitle')}
 						</h1>
 						<p class="text-sm leading-relaxed text-slate dark:text-stone-300">
-							Password akun Takerin Anda telah berhasil diperbarui. Silakan masuk menggunakan
-							password baru Anda.
+							{t('auth.resetPassword.successDesc')}
 						</p>
 						<div class="pt-4">
 							<Button
@@ -114,17 +114,17 @@
 								class="w-full"
 								onclick={() => goto(resolve('/auth/login'))}
 							>
-								Masuk Sekarang
+								{t('auth.resetPassword.loginNow')}
 							</Button>
 						</div>
 					</div>
 				{:else}
 					<div class="mb-6">
 						<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
-							Buat Password Baru
+							{t('auth.resetPassword.title')}
 						</h1>
 						<p class="mt-1 text-sm text-slate dark:text-stone-300">
-							Masukkan password baru untuk akun Takerin Anda.
+							{t('auth.resetPassword.subtitle')}
 						</p>
 					</div>
 
@@ -140,9 +140,9 @@
 					<form onsubmit={handleSubmit} class="space-y-4">
 						<Input
 							id="reset-new-password"
-							label="Password Baru"
+							label={t('auth.resetPassword.passwordLabel')}
 							type="password"
-							placeholder="Minimal 8 karakter"
+							placeholder={t('auth.resetPassword.passwordPlaceholder')}
 							autocomplete="new-password"
 							required
 							bind:value={newPassword}
@@ -151,9 +151,9 @@
 
 						<Input
 							id="reset-confirm-password"
-							label="Konfirmasi Password Baru"
+							label={t('auth.resetPassword.confirmPasswordLabel')}
 							type="password"
-							placeholder="Ulangi password baru"
+							placeholder={t('auth.resetPassword.confirmPasswordPlaceholder')}
 							autocomplete="new-password"
 							required
 							bind:value={confirmPassword}
@@ -162,7 +162,7 @@
 
 						<div class="pt-2">
 							<Button type="submit" variant="primary" size="md" class="w-full" disabled={isLoading}>
-								{isLoading ? 'Memperbarui...' : 'Simpan Password Baru'}
+								{isLoading ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submitButton')}
 							</Button>
 						</div>
 					</form>

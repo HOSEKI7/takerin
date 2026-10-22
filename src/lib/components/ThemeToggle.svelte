@@ -10,6 +10,7 @@
 		type Theme,
 		type ResolvedTheme
 	} from '../theme';
+	import { t } from '#lib/i18n/index.js';
 
 	interface Props {
 		class?: string;
@@ -49,8 +50,8 @@
 <button
 	type="button"
 	onclick={handleToggle}
-	aria-label={resolvedTheme === 'dark' ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'}
-	title={resolvedTheme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+	aria-label={resolvedTheme === 'dark' ? t('common.enableLightMode') : t('common.enableDarkMode')}
+	title={resolvedTheme === 'dark' ? t('common.switchToLightMode') : t('common.switchToDarkMode')}
 	class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-linen-mist/80 p-2.5 text-forest-ink transition hover:bg-linen-mist dark:border dark:border-dark-border dark:bg-dark-surface dark:text-lime-voltage dark:hover:bg-dark-card {className}"
 >
 	{#if resolvedTheme === 'dark'}
@@ -61,7 +62,7 @@
 
 	{#if showLabel}
 		<span class="font-sans text-xs font-medium">
-			{resolvedTheme === 'dark' ? 'Mode Terang' : 'Mode Gelap'}
+			{resolvedTheme === 'dark' ? t('settings.lightTheme') : t('settings.darkTheme')}
 		</span>
 	{/if}
 </button>

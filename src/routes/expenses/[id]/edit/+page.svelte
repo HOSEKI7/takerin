@@ -10,6 +10,7 @@
 	import { resolve } from '$app/paths';
 	import { formatDateIndonesian, formatRupiah } from '#lib/validation/onboarding.js';
 	import { isOverBudget } from '#lib/validation/expense.js';
+	import { t } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { ArrowLeft02Icon, Alert02Icon } from '@hugeicons/core-free-icons';
 
@@ -66,7 +67,7 @@
 				<a
 					href={resolve('/expenses')}
 					class="flex h-9 w-9 items-center justify-center rounded-xl border border-fog bg-paper text-slate transition hover:bg-fog hover:text-obsidian dark:border-dark-border dark:bg-dark-surface dark:text-pebble dark:hover:text-paper"
-					aria-label="Kembali ke Daftar Pengeluaran"
+					aria-label={t('common.back')}
 				>
 					<HugeiconsIcon icon={ArrowLeft02Icon} class="h-4 w-4" />
 				</a>
@@ -75,7 +76,7 @@
 			<div class="flex items-center gap-2">
 				<ThemeToggle />
 				<a href={resolve('/expenses')}>
-					<Button variant="secondary" size="sm">Batal</Button>
+					<Button variant="secondary" size="sm">{t('common.cancel')}</Button>
 				</a>
 			</div>
 		</div>
@@ -85,10 +86,10 @@
 		<div class="mb-6 flex flex-col justify-between gap-1 sm:flex-row sm:items-baseline">
 			<div>
 				<h1 class="text-2xl font-bold text-obsidian sm:text-3xl dark:text-paper">
-					Edit Pengeluaran
+					{t('expenses.editTitle')}
 				</h1>
 				<p class="mt-1 text-xs text-slate sm:text-sm dark:text-pebble">
-					Ubah detail nominal, kategori, nama, atau tanggal pengeluaran Anda.
+					{t('expenses.editSubtitle')}
 				</p>
 			</div>
 			{#if data.period}
@@ -160,8 +161,8 @@
 						<Input
 							id="edit-expense-name"
 							name="name"
-							label="Nama Pengeluaran *"
-							placeholder="Misal: Makan Siang Nasi Padang, Bensin, Kopi"
+							label={t('expenses.form.nameLabel')}
+							placeholder={t('expenses.form.namePlaceholder')}
 							bind:value={name}
 							required
 						/>
@@ -173,7 +174,7 @@
 							for="edit-expense-date"
 							class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
 						>
-							Tanggal Pengeluaran *
+							{t('expenses.form.dateLabel')}
 						</label>
 						<input
 							id="edit-expense-date"
@@ -194,14 +195,14 @@
 								for="edit-expense-notes"
 								class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
 							>
-								Catatan Tambahan (Opsional)
+								{t('expenses.form.notesLabel')}
 							</label>
 							<textarea
 								id="edit-expense-notes"
 								name="notes"
 								rows="2"
 								bind:value={notes}
-								placeholder="Detail tambahan mengenai pengeluaran ini..."
+								placeholder="{t('expenses.form.notesPlaceholder')}"
 								class="mt-1 w-full rounded-lg border border-fog bg-paper px-3.5 py-2 text-sm text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
 							></textarea>
 						</div>
@@ -211,7 +212,7 @@
 								for="edit-expense-time"
 								class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
 							>
-								Waktu / Jam (Opsional)
+								{t('expenses.form.timeLabel')}
 							</label>
 							<input
 								id="edit-expense-time"
@@ -230,7 +231,7 @@
 							href={resolve('/expenses')}
 							class="text-sm font-semibold text-charcoal underline underline-offset-4 hover:opacity-80 dark:text-linen-mist"
 						>
-							Batal
+							{t('common.cancel')}
 						</a>
 						<Button
 							type="submit"
@@ -239,7 +240,7 @@
 							class="font-bold"
 							disabled={!canSubmit}
 						>
-							Simpan Perubahan
+							{t('expenses.form.submitEdit')}
 						</Button>
 					</div>
 				</Card>

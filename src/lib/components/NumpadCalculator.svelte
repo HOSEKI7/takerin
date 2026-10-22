@@ -2,6 +2,7 @@
 	/* eslint-disable no-useless-assignment */
 	import { evaluateCalculatorExpression } from '#lib/validation/expense.js';
 	import { formatRupiah } from '#lib/validation/onboarding.js';
+	import { t } from '#lib/i18n/index.js';
 
 	interface Props {
 		expression?: string;
@@ -150,7 +151,7 @@
 		</button>
 		<button
 			type="button"
-			aria-label="Tambah"
+			aria-label={t('calculator.add')}
 			class="flex h-12 cursor-pointer items-center justify-center rounded-xl bg-linen-mist text-lg font-bold text-forest-ink transition hover:bg-linen-mist/80 active:scale-95 dark:bg-spruce/40 dark:text-lime-voltage dark:hover:bg-spruce/60"
 			onclick={() => handleOperator('+')}
 		>
@@ -181,7 +182,7 @@
 		</button>
 		<button
 			type="button"
-			aria-label="Kurang"
+			aria-label={t('calculator.subtract')}
 			class="flex h-12 cursor-pointer items-center justify-center rounded-xl bg-linen-mist text-lg font-bold text-forest-ink transition hover:bg-linen-mist/80 active:scale-95 dark:bg-spruce/40 dark:text-lime-voltage dark:hover:bg-spruce/60"
 			onclick={() => handleOperator('-')}
 		>
@@ -212,7 +213,7 @@
 		</button>
 		<button
 			type="button"
-			aria-label="Kali"
+			aria-label={t('calculator.multiply')}
 			class="flex h-12 cursor-pointer items-center justify-center rounded-xl bg-linen-mist text-lg font-bold text-forest-ink transition hover:bg-linen-mist/80 active:scale-95 dark:bg-spruce/40 dark:text-lime-voltage dark:hover:bg-spruce/60"
 			onclick={() => handleOperator('*')}
 		>
@@ -222,7 +223,7 @@
 		<!-- Row 4 -->
 		<button
 			type="button"
-			aria-label="Hapus semua"
+			aria-label={t('calculator.clear')}
 			class="flex h-12 cursor-pointer items-center justify-center rounded-xl border border-alarm-red/30 bg-alarm-red/10 text-sm font-bold text-alarm-red transition hover:bg-alarm-red/20 active:scale-95 dark:border-alarm-red/40 dark:bg-alarm-red/20"
 			onclick={handleClear}
 		>
@@ -244,7 +245,7 @@
 		</button>
 		<button
 			type="button"
-			aria-label="Bagi"
+			aria-label={t('calculator.divide')}
 			class="flex h-12 cursor-pointer items-center justify-center rounded-xl bg-linen-mist text-lg font-bold text-forest-ink transition hover:bg-linen-mist/80 active:scale-95 dark:bg-spruce/40 dark:text-lime-voltage dark:hover:bg-spruce/60"
 			onclick={() => handleOperator('/')}
 		>
@@ -254,19 +255,19 @@
 		<!-- Row 5 (Bottom Action Row) -->
 		<button
 			type="button"
-			aria-label="Hapus satu karakter"
+			aria-label={t('calculator.backspace')}
 			class="col-span-2 flex h-11 cursor-pointer items-center justify-center rounded-full border border-fog bg-fog/40 text-sm font-semibold text-charcoal transition hover:bg-fog/80 active:scale-95 dark:border-dark-border dark:bg-dark-surface dark:text-linen-mist"
 			onclick={handleBackspace}
 		>
-			⌫ Hapus
+			⌫ {t('common.delete')}
 		</button>
 		<button
 			type="button"
-			aria-label="Hitung hasil sama dengan"
+			aria-label={t('calculator.evaluate')}
 			class="col-span-2 flex h-11 cursor-pointer items-center justify-center rounded-full bg-lime-voltage text-base font-extrabold text-forest-ink transition hover:brightness-95 active:scale-95 dark:bg-lime-voltage dark:text-forest-ink"
 			onclick={handleEvaluate}
 		>
-			= Hitung
+			= {t('calculator.calculate')}
 		</button>
 	</div>
 </div>

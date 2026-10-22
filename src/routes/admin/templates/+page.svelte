@@ -5,6 +5,7 @@
 	import Button from '#lib/components/Button.svelte';
 	import Badge from '#lib/components/Badge.svelte';
 	import Input from '#lib/components/Input.svelte';
+	import { t } from '#lib/i18n/index.js';
 	import type { CategoryTemplateRecord } from '#lib/server/db/onboarding.js';
 	import type { CategoryTemplateInputItem } from '#lib/validation/admin.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
@@ -111,15 +112,14 @@
 		<div>
 			<div class="flex items-center gap-2">
 				<h1 class="text-2xl font-black tracking-tight text-obsidian sm:text-3xl dark:text-paper">
-					Template Kategori
+					{t('admin.templates.title')}
 				</h1>
 				<Badge variant="lime">
-					{templates.length} Template
+					{t('admin.templates.templateCount', { count: templates.length })}
 				</Badge>
 			</div>
 			<p class="mt-1 text-sm text-slate dark:text-pebble">
-				Kelola template kategori budget yang otomatis ditawarkan kepada pengguna pada langkah
-				Onboarding.
+				{t('admin.templates.subtitle')}
 			</p>
 		</div>
 
@@ -130,7 +130,7 @@
 			class="inline-flex items-center gap-2"
 		>
 			<HugeiconsIcon icon={Add01Icon} size={18} />
-			<span>Tambah Template Baru</span>
+			<span>{t('admin.templates.addNew')}</span>
 		</Button>
 	</div>
 
@@ -181,11 +181,11 @@
 						{#if tpl.isSystem}
 							<Badge variant="lime" class="shrink-0 text-[10px]">
 								<HugeiconsIcon icon={LockKeyIcon} size={12} />
-								<span>Template Sistem</span>
+								<span>{t('admin.templates.systemBadge')}</span>
 							</Badge>
 						{:else}
 							<Badge variant="neutral" class="shrink-0 text-[10px]">
-								<span>Kustom Admin</span>
+								<span>{t('admin.templates.customBadge')}</span>
 							</Badge>
 						{/if}
 					</div>
@@ -193,7 +193,7 @@
 					<!-- Categories List -->
 					<div class="mt-4 border-t border-fog pt-3 dark:border-dark-border">
 						<p class="text-[11px] font-bold tracking-wider text-slate uppercase dark:text-pebble">
-							Daftar Kategori ({tpl.categories?.length || 0})
+							{t('admin.templates.categoryListCount', { count: tpl.categories?.length || 0 })}
 						</p>
 						<div class="mt-2 flex flex-wrap gap-1.5">
 							{#each tpl.categories || [] as cat (`${tpl.id}-${cat.name}`)}
@@ -218,7 +218,7 @@
 				>
 					{#if tpl.isSystem}
 						<span class="text-xs font-semibold text-slate dark:text-pebble">
-							Template bawaan sistem (tetap)
+							{t('admin.templates.systemNote')}
 						</span>
 					{:else}
 						<Button
@@ -228,7 +228,7 @@
 							class="text-xs"
 						>
 							<HugeiconsIcon icon={Edit02Icon} size={14} />
-							<span>Edit</span>
+							<span>{t('common.edit')}</span>
 						</Button>
 
 						<Button
@@ -238,7 +238,7 @@
 							class="text-xs text-alarm-red hover:bg-alarm-red/10 dark:hover:bg-alarm-red/20"
 						>
 							<HugeiconsIcon icon={Delete02Icon} size={14} />
-							<span>Hapus</span>
+							<span>{t('common.delete')}</span>
 						</Button>
 					{/if}
 				</div>
@@ -261,13 +261,15 @@
 				class="flex items-center justify-between border-b border-fog pb-3 dark:border-dark-border"
 			>
 				<h3 class="text-lg font-bold text-obsidian dark:text-paper">
-					{modalMode === 'create' ? 'Tambah Template Kategori Baru' : 'Edit Template Kategori'}
+					{modalMode === 'create'
+						? t('admin.templates.modalAddTitle')
+						: t('admin.templates.modalEditTitle')}
 				</h3>
 				<button
 					type="button"
 					onclick={closeModal}
 					class="cursor-pointer text-slate hover:text-charcoal dark:text-pebble dark:hover:text-linen-mist"
-					aria-label="Tutup modal"
+					aria-label={t('admin.templates.closeModalAria')}
 				>
 					<HugeiconsIcon icon={Cancel01Icon} size={20} />
 				</button>
@@ -307,9 +309,9 @@
 				<Input
 					id="template-name"
 					name="name"
-					label="Nama Template"
+					label={t('admin.templates.nameLabel')}
 					type="text"
-					placeholder="contoh: 70/20/10 atau Living & Saving"
+					placeholder={t('admin.templates.namePlaceholder')}
 					required
 					bind:value={templateName}
 				/>
@@ -319,13 +321,13 @@
 						for="template-description"
 						class="block text-xs font-bold text-obsidian dark:text-linen-mist"
 					>
-						Deskripsi (Opsional)
+						{t('admin.templates.descLabel')}
 					</label>
 					<textarea
 						id="template-description"
 						name="description"
 						rows="2"
-						placeholder="contoh: Pembagian proporsional untuk pengeluaran bulanan..."
+						placeholder={t('admin.templates.descPlaceholder')}
 						bind:value={templateDescription}
 						class="w-full rounded-[10px] border border-fog bg-paper px-3 py-2 text-xs font-medium text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-linen-mist dark:focus:border-lime-voltage"
 					></textarea>
@@ -335,16 +337,16 @@
 				<div class="space-y-2 pt-2">
 					<div class="flex items-center justify-between">
 						<span class="text-xs font-bold tracking-wider text-obsidian uppercase dark:text-paper">
-							Daftar Kategori
+							{t('admin.templates.categoryList')}
 						</span>
 						<span
 							class="text-xs font-black {isPercentageValid
 								? 'text-forest-ink dark:text-lime-voltage'
 								: 'text-alarm-red'}"
 						>
-							Total: {totalPercentage}% {isPercentageValid
-								? '✓ Pas'
-								: `(${totalPercentage < 100 ? `Kurang ${Math.round((100 - totalPercentage) * 100) / 100}%` : `Lebih ${Math.round((totalPercentage - 100) * 100) / 100}%`})`}
+							{t('admin.templates.totalAlloc', { percent: totalPercentage })} {isPercentageValid
+								? t('admin.templates.exactFit')
+								: `(${totalPercentage < 100 ? t('admin.templates.underFit', { percent: Math.round((100 - totalPercentage) * 100) / 100 }) : t('admin.templates.overFit', { percent: Math.round((totalPercentage - 100) * 100) / 100 })})`}
 						</span>
 					</div>
 
@@ -356,7 +358,7 @@
 								<!-- Category Name -->
 								<input
 									type="text"
-									placeholder="Nama Kategori"
+									placeholder={t('admin.templates.categoryNamePlaceholder')}
 									required
 									bind:value={cat.name}
 									class="flex-1 rounded-[10px] border border-fog bg-paper px-2.5 py-1.5 text-xs text-obsidian focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-card dark:text-linen-mist dark:focus:border-lime-voltage"
@@ -386,7 +388,7 @@
 										bind:checked={cat.isSavings}
 										class="rounded border-fog text-forest-ink accent-forest-ink dark:accent-lime-voltage"
 									/>
-									<span class="hidden sm:inline">Tabungan</span>
+									<span class="hidden sm:inline">{t('admin.templates.savingsLabel')}</span>
 								</label>
 
 								<!-- Remove Button -->
@@ -395,7 +397,7 @@
 										type="button"
 										onclick={() => removeCategoryRow(cat.id)}
 										class="cursor-pointer p-1 text-slate hover:text-alarm-red dark:text-pebble"
-										aria-label="Hapus baris kategori"
+										aria-label={t('admin.templates.deleteRowAria')}
 									>
 										<HugeiconsIcon icon={Delete02Icon} size={16} />
 									</button>
@@ -410,7 +412,7 @@
 						class="mt-2 inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border border-dashed border-fog py-2 text-xs font-semibold text-forest-ink transition hover:border-forest-ink hover:bg-fog dark:border-dark-border dark:text-lime-voltage dark:hover:border-lime-voltage dark:hover:bg-dark-surface"
 					>
 						<HugeiconsIcon icon={Add01Icon} size={15} />
-						<span>Tambah Kategori Lain</span>
+						<span>{t('admin.templates.addCategoryRow')}</span>
 					</button>
 				</div>
 
@@ -425,7 +427,7 @@
 						onclick={closeModal}
 						disabled={isSubmitting}
 					>
-						Batal
+						{t('common.cancel')}
 					</Button>
 					<Button
 						type="submit"
@@ -433,7 +435,7 @@
 						size="md"
 						disabled={isSubmitting || !isPercentageValid || !templateName.trim()}
 					>
-						{isSubmitting ? 'Menyimpan...' : 'Simpan Template'}
+						{isSubmitting ? t('admin.templates.saving') : t('admin.templates.saveTemplate')}
 					</Button>
 				</div>
 			</form>
@@ -455,13 +457,11 @@
 				<div class="rounded-full bg-alarm-red/10 p-2 text-alarm-red dark:bg-alarm-red/20">
 					<HugeiconsIcon icon={Alert02Icon} size={24} />
 				</div>
-				<h3 class="text-lg font-bold text-obsidian dark:text-paper">Hapus Template Kategori</h3>
+				<h3 class="text-lg font-bold text-obsidian dark:text-paper">{t('admin.templates.deleteTitle')}</h3>
 			</div>
 
 			<p class="mt-3 text-xs leading-relaxed text-slate dark:text-pebble">
-				Apakah Anda yakin ingin menghapus template <strong class="text-obsidian dark:text-paper"
-					>{deletingTemplate.name}</strong
-				>? Template ini tidak akan lagi tersedia untuk pengguna baru saat Onboarding.
+				{t('admin.templates.deleteConfirm', { name: deletingTemplate.name })}
 			</p>
 
 			<form
@@ -487,7 +487,7 @@
 					onclick={closeModal}
 					disabled={isSubmitting}
 				>
-					Batal
+					{t('common.cancel')}
 				</Button>
 				<Button
 					type="submit"
@@ -496,7 +496,7 @@
 					disabled={isSubmitting}
 					class="bg-alarm-red text-paper hover:bg-alarm-red/90"
 				>
-					{isSubmitting ? 'Menghapus...' : 'Ya, Hapus'}
+					{isSubmitting ? t('admin.templates.deleting') : t('admin.templates.confirmDelete')}
 				</Button>
 			</form>
 		</div>

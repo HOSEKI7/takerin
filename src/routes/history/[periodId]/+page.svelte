@@ -7,6 +7,7 @@
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
 	import { resolve } from '$app/paths';
 	import { formatRupiah, formatDateIndonesian } from '#lib/validation/onboarding.js';
+	import { t } from '#lib/i18n/index.js';
 	import { onMount } from 'svelte';
 	import { untrack } from 'svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
@@ -72,7 +73,7 @@
 				<a
 					href={resolve('/history')}
 					class="flex h-9 w-9 items-center justify-center rounded-xl border border-fog bg-paper text-slate transition hover:bg-fog hover:text-obsidian dark:border-dark-border dark:bg-dark-surface dark:text-pebble dark:hover:text-paper"
-					aria-label="Kembali ke Riwayat"
+					aria-label={t('common.back')}
 				>
 					<HugeiconsIcon icon={ArrowLeft02Icon} class="h-4 w-4" />
 				</a>
@@ -80,7 +81,7 @@
 				<span
 					class="rounded-full bg-linen-mist px-2.5 py-0.5 text-xs font-semibold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
 				>
-					Ringkasan Bulanan
+					{t('history.detailTitle', { startDate: '', endDate: '' }).trim()}
 				</span>
 			</div>
 			<div class="flex items-center gap-2 sm:gap-4">
@@ -88,19 +89,19 @@
 					href={resolve('/dashboard')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Dashboard
+					{t('nav.dashboard')}
 				</a>
 				<a
 					href={resolve('/history')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Riwayat
+					{t('nav.history')}
 				</a>
 				<a
 					href={resolve('/settings')}
 					class="hidden text-xs font-semibold text-charcoal transition hover:text-forest-ink sm:inline-block dark:text-linen-mist dark:hover:text-lime-voltage"
 				>
-					Pengaturan
+					{t('nav.settings')}
 				</a>
 				<ThemeToggle />
 			</div>
@@ -115,10 +116,10 @@
 					<span
 						class="rounded-full bg-fog px-2.5 py-0.5 text-xs font-semibold text-slate dark:bg-spruce/40 dark:text-linen-mist"
 					>
-						Periode Selesai
+						{t('common.success')}
 					</span>
 					<span class="text-xs text-slate dark:text-pebble">
-						Tanggal Gajian: {data.period.payDay}
+						{t('dashboard.payDayPrefix', { day: data.period.payDay })}
 					</span>
 				</div>
 				<h1 class="mt-1 text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
@@ -131,7 +132,7 @@
 			<a href={resolve('/history')}>
 				<Button variant="secondary" size="sm" class="flex items-center gap-1.5 self-start">
 					<HugeiconsIcon icon={ArrowLeft02Icon} class="h-4 w-4" />
-					<span>Daftar Riwayat</span>
+					<span>{t('history.periodList')}</span>
 				</Button>
 			</a>
 		</div>
@@ -208,7 +209,7 @@
 						<HugeiconsIcon icon={Wallet01Icon} class="h-5 w-5" />
 					</div>
 					<div>
-						<p class="text-xs font-semibold text-slate dark:text-pebble">Pemasukan Bulanan</p>
+						<p class="text-xs font-semibold text-slate dark:text-pebble">{t('dashboard.totalIncome')}</p>
 						<p class="text-lg font-extrabold text-obsidian sm:text-xl dark:text-paper">
 							{formatRupiah(data.summary.totalIncome)}
 						</p>
@@ -224,7 +225,7 @@
 						<HugeiconsIcon icon={Coins01Icon} class="h-5 w-5" />
 					</div>
 					<div>
-						<p class="text-xs font-semibold text-slate dark:text-pebble">Total Pengeluaran</p>
+						<p class="text-xs font-semibold text-slate dark:text-pebble">{t('dashboard.totalSpent')}</p>
 						<p class="text-lg font-extrabold text-obsidian sm:text-xl dark:text-paper">
 							{formatRupiah(data.summary.totalSpent)}
 							<span class="text-xs font-semibold text-slate dark:text-pebble">
@@ -243,7 +244,7 @@
 						<HugeiconsIcon icon={PiggyBankIcon} class="h-5 w-5" />
 					</div>
 					<div>
-						<p class="text-xs font-semibold text-slate dark:text-pebble">Sisa Saldo</p>
+						<p class="text-xs font-semibold text-slate dark:text-pebble">{t('dashboard.remainingBudget')}</p>
 						<p
 							class={`text-lg font-extrabold sm:text-xl ${
 								data.summary.remaining >= 0
@@ -262,11 +263,10 @@
 		<div class="mb-8">
 			<div class="mb-4">
 				<h2 class="text-lg font-bold text-obsidian sm:text-xl dark:text-paper">
-					Rincian Kategori & Saldo
+					{t('history.categoryBreakdown')}
 				</h2>
 				<p class="text-xs text-slate dark:text-pebble">
-					Alokasi nominal, total terpakai, dan sisa saldo pada masing-masing kategori (termasuk
-					kategori yang sempat dibekukan).
+					{t('history.summaryTitle')}
 				</p>
 			</div>
 
@@ -284,24 +284,24 @@
 											class="flex items-center gap-1 rounded-full bg-lime-voltage/20 px-2 py-0.5 text-[10px] font-bold text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage"
 										>
 											<HugeiconsIcon icon={PiggyBankIcon} class="h-3 w-3" />
-											Tabungan
+											{t('categories.savingsBadge')}
 										</span>
 									{/if}
 									{#if cat.status === 'frozen'}
 										<span
 											class="rounded-full bg-fog px-2 py-0.5 text-[10px] font-bold text-slate dark:bg-dark-surface dark:text-pebble"
 										>
-											Dibekukan
+											{t('common.frozen')}
 										</span>
 									{/if}
 								</div>
 								<p class="mt-0.5 text-xs text-slate dark:text-pebble">
-									Alokasi: {cat.percentage}% ({formatRupiah(cat.allocation)})
+									{t('dashboard.allocationLabel', { amount: formatRupiah(cat.allocation), percent: cat.percentage })}
 								</p>
 							</div>
 
 							<div class="text-right">
-								<p class="text-xs font-semibold text-slate dark:text-pebble">Sisa Saldo</p>
+								<p class="text-xs font-semibold text-slate dark:text-pebble">{t('dashboard.balanceRemaining')}</p>
 								<p
 									class={`text-sm font-bold ${
 										cat.balance >= 0 ? 'text-forest-ink dark:text-lime-voltage' : 'text-alarm-red'
@@ -315,7 +315,7 @@
 						<div class="mt-4">
 							<div class="mb-1.5 flex justify-between text-xs font-semibold">
 								<span class="text-slate dark:text-pebble">
-									Terpakai: {formatRupiah(cat.spent)}
+									{t('dashboard.spentLabel', { amount: formatRupiah(cat.spent) })}
 								</span>
 								<span
 									class={cat.spentPercentage > 100
