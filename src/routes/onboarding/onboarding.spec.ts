@@ -58,6 +58,47 @@ describe('Onboarding Route Server (+page.server.ts)', () => {
 		expect(result.categoryTemplates[0].name).toBe('50/30/20');
 	});
 
+	it('loads admin-created custom category templates for Onboarding step 3 selection', async () => {
+		mockGetCategoryTemplates.mockResolvedValueOnce([
+			{
+				id: 'tpl_50_30_20',
+				name: '50/30/20',
+				description: 'Klasik',
+				categories: [{ name: 'Kebutuhan', percentage: 50, isSavings: false }],
+				isSystem: true,
+				createdAt: new Date(),
+				updatedAt: new Date()
+			},
+			{
+				id: 'tpl_custom_admin_1',
+				name: '80/20 Minimalis',
+				description: 'Template kustom dari Admin',
+				categories: [
+					{ name: 'Living', percentage: 80, isSavings: false },
+					{ name: 'Savings', percentage: 20, isSavings: true }
+				],
+				isSystem: false,
+				createdAt: new Date(),
+				updatedAt: new Date()
+			}
+		]);
+
+		const mockEvent = {
+			locals: {
+				user: { id: 'u1', name: 'User 1', email: 'u1@test.com', onboardingCompleted: false }
+			},
+			platform: { env: { DB: {} as unknown as D1Database } }
+		} as unknown as Parameters<typeof load>[0];
+
+		const result = (await load(mockEvent)) as {
+			categoryTemplates: Array<{ id: string; name: string; isSystem: boolean }>;
+		};
+
+		expect(result.categoryTemplates).toHaveLength(2);
+		expect(result.categoryTemplates[1].name).toBe('80/20 Minimalis');
+		expect(result.categoryTemplates[1].isSystem).toBe(false);
+	});
+
 	it('validates and rejects invalid payDay in form action', async () => {
 		const formData = new FormData();
 		formData.append('payDay', '35'); // Invalid > 31

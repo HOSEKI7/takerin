@@ -10,7 +10,8 @@ const PROTECTED_PREFIXES = [
 	'/history',
 	'/settings',
 	'/categories',
-	'/onboarding'
+	'/onboarding',
+	'/admin'
 ];
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -49,10 +50,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	if (event.locals.user) {
+		const isAdminRoute = event.url.pathname.startsWith('/admin');
+		if (isAdminRoute && event.locals.user.role !== 'admin') {
+			throw redirect(303, '/dashboard');
+		}
+
 		const isOnboardingRoute = event.url.pathname.startsWith('/onboarding');
 		const hasCompletedOnboarding = Boolean(event.locals.user.onboardingCompleted);
 
-		if (!hasCompletedOnboarding && isProtected && !isOnboardingRoute) {
+		if (!hasCompletedOnboarding && isProtected && !isOnboardingRoute && !isAdminRoute) {
 			throw redirect(303, '/onboarding');
 		}
 
@@ -65,6 +71,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			typeof (d1 as { prepare?: unknown }).prepare === 'function' &&
 			isProtected &&
 			!isOnboardingRoute &&
+			!isAdminRoute &&
 			hasCompletedOnboarding
 		) {
 			try {

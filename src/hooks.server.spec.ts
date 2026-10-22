@@ -273,4 +273,87 @@ describe('Server Hooks & Route Protection', () => {
 		expect(response.status).toBe(200);
 		expect(mockEnsureActivePeriod).toHaveBeenCalledWith(mockDb, 'user_active');
 	});
+
+	it('redirects unauthenticated requests targeting /admin to /auth/login', async () => {
+		mockGetSession.mockResolvedValue(null);
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/admin'),
+			request: new Request('http://localhost:5173/admin'),
+			platform: { env: { DB: {} as unknown as D1Database } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('OK'));
+
+		await expect(handle({ event: mockEvent, resolve: mockResolve })).rejects.toMatchObject({
+			status: 303,
+			location: '/auth/login'
+		});
+		expect(mockResolve).not.toHaveBeenCalled();
+	});
+
+	it('redirects non-admin authenticated users targeting /admin or /admin/* to /dashboard', async () => {
+		const regularUser = {
+			id: 'user_reg',
+			name: 'Regular User',
+			email: 'reg@example.com',
+			role: 'user',
+			emailVerified: true,
+			onboardingCompleted: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: regularUser,
+			session: { id: 'sess_reg', userId: 'user_reg' }
+		});
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/admin/users'),
+			request: new Request('http://localhost:5173/admin/users'),
+			platform: { env: { DB: {} as unknown as D1Database } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('Admin content'));
+
+		await expect(handle({ event: mockEvent, resolve: mockResolve })).rejects.toMatchObject({
+			status: 303,
+			location: '/dashboard'
+		});
+		expect(mockResolve).not.toHaveBeenCalled();
+	});
+
+	it('allows admin users to access /admin routes', async () => {
+		const adminUser = {
+			id: 'user_admin',
+			name: 'Admin Boss',
+			email: 'admin@example.com',
+			role: 'admin',
+			emailVerified: true,
+			onboardingCompleted: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: adminUser,
+			session: { id: 'sess_admin', userId: 'user_admin' }
+		});
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/admin/templates'),
+			request: new Request('http://localhost:5173/admin/templates'),
+			platform: { env: { DB: {} as unknown as D1Database } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('Admin content'));
+
+		const response = await handle({ event: mockEvent, resolve: mockResolve });
+		expect(response.status).toBe(200);
+		expect(mockResolve).toHaveBeenCalled();
+	});
 });

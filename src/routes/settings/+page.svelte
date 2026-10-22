@@ -291,6 +291,14 @@
 				>
 					Riwayat
 				</a>
+				{#if data.user?.role === 'admin'}
+					<a
+						href={resolve('/admin')}
+						class="rounded-full bg-forest-ink/10 px-2.5 py-1 text-xs font-bold text-forest-ink transition hover:bg-forest-ink/20 dark:bg-lime-voltage/20 dark:text-lime-voltage"
+					>
+						Admin
+					</a>
+				{/if}
 				<ThemeToggle />
 				<Button variant="secondary" size="sm" onclick={handleLogout} disabled={isLoggingOut}>
 					{isLoggingOut ? 'Mengeluarkan...' : 'Keluar'}
