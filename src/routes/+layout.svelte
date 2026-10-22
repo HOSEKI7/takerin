@@ -3,6 +3,7 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import type { LayoutProps } from './$types.js';
 	import { initI18n, setLocale } from '#lib/i18n/index.js';
+	import PwaInstallPrompt from '#lib/components/PwaInstallPrompt.svelte';
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 
@@ -49,3 +50,5 @@
 </svelte:head>
 
 {@render children()}
+
+<PwaInstallPrompt />
