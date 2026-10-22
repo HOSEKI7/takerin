@@ -127,7 +127,7 @@ describe('AI Summary Generator (Seam 1)', () => {
 
 		const [geminiUrl, geminiOptions] = mockFetch.mock.calls[1];
 		expect(geminiUrl).toContain('generativelanguage.googleapis.com');
-		expect(geminiUrl).toMatch(/gemini-(3\.8|2\.5)-flash|gemini-flash/);
+		expect(geminiUrl).toContain('gemini-1.5-flash');
 		expect(geminiOptions.headers['x-goog-api-key']).toBe('gemini_mock_test');
 	});
 

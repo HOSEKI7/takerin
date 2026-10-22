@@ -64,7 +64,15 @@ export function formatAggregatePrompt(data: AiAggregateData): string {
 }
 
 /**
- * Calls Groq API using Llama 3.3 70B model (with automatic fallback to available Groq models if needed).
+ * Strips wrapping quotes and whitespace from AI model output.
+ */
+function cleanAiResponse(raw: string | undefined): string {
+	if (!raw) return '';
+	return raw.replace(/^["'“”]+|["'“”]+$/g, '').trim();
+}
+
+/**
+ * Calls Groq API using Llama 3.3 70B model.
  */
 export async function callGroq(
 	data: AiAggregateData,
@@ -73,66 +81,49 @@ export async function callGroq(
 ): Promise<string> {
 	const prompt = formatAggregatePrompt(data);
 
-	const modelsToTry = ['llama-3.3-70b-versatile', 'openai/gpt-oss-120b'];
-	let lastError: Error | null = null;
+	const response = await fetchFn('https://api.groq.com/openai/v1/chat/completions', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${apiKey}`
+		},
+		body: JSON.stringify({
+			model: 'llama-3.3-70b-versatile',
+			messages: [
+				{ role: 'system', content: SYSTEM_INSTRUCTION },
+				{ role: 'user', content: prompt }
+			],
+			temperature: 0.7,
+			max_tokens: 300
+		}),
+		signal: AbortSignal.timeout(8000)
+	});
 
-	for (const model of modelsToTry) {
-		try {
-			const response = await fetchFn('https://api.groq.com/openai/v1/chat/completions', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${apiKey}`
-				},
-				body: JSON.stringify({
-					model,
-					messages: [
-						{ role: 'system', content: SYSTEM_INSTRUCTION },
-						{ role: 'user', content: prompt }
-					],
-					temperature: 0.7,
-					max_tokens: 400
-				}),
-				signal: AbortSignal.timeout(8000)
-			});
-
-			if (!response.ok) {
-				const errText = await response.text();
-				throw new Error(`Groq API error (${response.status}): ${errText}`);
-			}
-
-			const result = (await response.json()) as {
-				choices?: Array<{
-					message?: {
-						content?: string;
-						reasoning?: string;
-						reasoning_content?: string;
-					};
-				}>;
-			};
-
-			const message = result.choices?.[0]?.message;
-			const rawContent = (
-				message?.content ||
-				message?.reasoning_content ||
-				message?.reasoning ||
-				''
-			).trim();
-			if (!rawContent) {
-				throw new Error('Groq returned empty response');
-			}
-
-			return rawContent.replace(/^["'“”]+|["'“”]+$/g, '').trim();
-		} catch (err: unknown) {
-			lastError = err instanceof Error ? err : new Error(String(err));
-			// If it's 404 model not found, try the next model; otherwise rethrow
-			if (!lastError.message.includes('404')) {
-				throw lastError;
-			}
-		}
+	if (!response.ok) {
+		const errText = await response.text();
+		throw new Error(`Groq API error (${response.status}): ${errText}`);
 	}
 
-	throw lastError ?? new Error('Groq API call failed');
+	const result = (await response.json()) as {
+		choices?: Array<{
+			message?: {
+				content?: string;
+				reasoning_content?: string;
+				reasoning?: string;
+			};
+		}>;
+	};
+
+	const message = result.choices?.[0]?.message;
+	const rawContent = cleanAiResponse(
+		message?.content || message?.reasoning_content || message?.reasoning
+	);
+
+	if (!rawContent) {
+		throw new Error('Groq returned empty response');
+	}
+
+	return rawContent;
 }
 
 /**
@@ -144,72 +135,56 @@ export async function callGemini(
 	fetchFn: typeof fetch = fetch
 ): Promise<string> {
 	const prompt = formatAggregatePrompt(data);
+	const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
 
-	const modelsToTry = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
-	let lastError: Error | null = null;
-
-	for (const model of modelsToTry) {
-		try {
-			const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-
-			const response = await fetchFn(url, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-goog-api-key': apiKey
-				},
-				body: JSON.stringify({
-					systemInstruction: {
-						parts: [{ text: SYSTEM_INSTRUCTION }]
-					},
-					contents: [
-						{
-							role: 'user',
-							parts: [{ text: prompt }]
-						}
-					],
-					generationConfig: {
-						temperature: 0.7,
-						maxOutputTokens: 150
-					}
-				}),
-				signal: AbortSignal.timeout(8000)
-			});
-
-			if (!response.ok) {
-				const errText = await response.text();
-				throw new Error(`Gemini API error (${response.status}): ${errText}`);
+	const response = await fetchFn(url, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'x-goog-api-key': apiKey
+		},
+		body: JSON.stringify({
+			systemInstruction: {
+				parts: [{ text: SYSTEM_INSTRUCTION }]
+			},
+			contents: [
+				{
+					role: 'user',
+					parts: [{ text: prompt }]
+				}
+			],
+			generationConfig: {
+				temperature: 0.7,
+				maxOutputTokens: 200
 			}
+		}),
+		signal: AbortSignal.timeout(8000)
+	});
 
-			const result = (await response.json()) as {
-				candidates?: Array<{
-					content?: {
-						parts?: Array<{ text?: string }>;
-					};
-				}>;
-			};
-
-			const rawContent = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-			if (!rawContent) {
-				throw new Error('Gemini returned empty response');
-			}
-
-			return rawContent.replace(/^["'“”]+|["'“”]+$/g, '').trim();
-		} catch (err: unknown) {
-			lastError = err instanceof Error ? err : new Error(String(err));
-			if (!lastError.message.includes('404')) {
-				throw lastError;
-			}
-		}
+	if (!response.ok) {
+		const errText = await response.text();
+		throw new Error(`Gemini API error (${response.status}): ${errText}`);
 	}
 
-	throw lastError ?? new Error('Gemini API call failed');
+	const result = (await response.json()) as {
+		candidates?: Array<{
+			content?: {
+				parts?: Array<{ text?: string }>;
+			};
+		}>;
+	};
+
+	const rawContent = cleanAiResponse(result.candidates?.[0]?.content?.parts?.[0]?.text);
+	if (!rawContent) {
+		throw new Error('Gemini returned empty response');
+	}
+
+	return rawContent;
 }
 
 /**
  * Generates an AI summary phrase based on aggregate financial data.
- * Tries Groq Llama 3.3 70B first, falls back to Gemini Flash,
- * and falls back to a deterministic supportive Indonesian phrase if both fail.
+ * Tries Groq Llama 3.3 70B first, falls back to Gemini Flash if Groq fails.
  */
 export async function generateAiSummary(data: AiAggregateData, env: AiEnvConfig): Promise<string> {
 	const fetchFn = env.fetchFn ?? fetch;

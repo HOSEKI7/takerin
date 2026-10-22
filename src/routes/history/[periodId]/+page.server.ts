@@ -21,7 +21,6 @@ export const load: PageServerLoad = async ({ locals, platform, params }) => {
 		user: locals.user,
 		period: detail.period,
 		summary: detail.summary,
-		categories: detail.categories,
-		expenses: detail.expenses
+		categories: detail.categories
 	};
 };

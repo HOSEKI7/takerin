@@ -3,15 +3,18 @@ import { getDb } from './index.js';
 import * as schema from './schema.js';
 import type { AiAggregateData } from '#lib/server/ai/summary.js';
 
-export interface CompletedPeriodListItem {
-	id: string;
-	startDate: string;
-	endDate: string;
-	payDay: number;
+export interface PeriodFinancialMetrics {
 	totalIncome: number;
 	totalSpent: number;
 	remaining: number;
 	spentPercentage: number;
+}
+
+export interface CompletedPeriodListItem extends PeriodFinancialMetrics {
+	id: string;
+	startDate: string;
+	endDate: string;
+	payDay: number;
 	aiSummary: string | null;
 	createdAt: Date;
 }
@@ -24,22 +27,8 @@ export interface CompletedCategoryDetail {
 	spent: number;
 	balance: number;
 	spentPercentage: number;
-	remainingPercentage: number;
 	isSavings: boolean;
 	status: 'active' | 'frozen';
-}
-
-export interface CompletedExpenseDetail {
-	id: string;
-	categoryId: string;
-	categoryName: string;
-	isSavings: boolean;
-	name: string;
-	amount: number;
-	date: string;
-	time: string | null;
-	notes: string | null;
-	createdAt: Date;
 }
 
 export interface CompletedPeriodDetail {
@@ -52,14 +41,8 @@ export interface CompletedPeriodDetail {
 		status: string;
 		aiSummary: string | null;
 	};
-	summary: {
-		totalIncome: number;
-		totalSpent: number;
-		remaining: number;
-		spentPercentage: number;
-	};
+	summary: PeriodFinancialMetrics;
 	categories: CompletedCategoryDetail[];
-	expenses: CompletedExpenseDetail[];
 	aiAggregateData: AiAggregateData;
 }
 
@@ -128,7 +111,6 @@ export async function getCompletedPeriods(
  * Fetches the complete details of a single completed monthly period:
  * - Period info & summary metrics
  * - All categories for that period (both active and frozen categories)
- * - All expense entries
  * - Aggregate data formatted for AI summary generation
  */
 export async function getCompletedPeriodDetail(
@@ -138,7 +120,7 @@ export async function getCompletedPeriodDetail(
 ): Promise<CompletedPeriodDetail | null> {
 	const db = getDb(d1);
 
-	// 1. Fetch completed period
+	// 1. Fetch completed period (strictly completed)
 	const periods = await db
 		.select()
 		.from(schema.monthlyPeriod)
@@ -162,24 +144,14 @@ export async function getCompletedPeriodDetail(
 		.from(schema.category)
 		.where(and(eq(schema.category.userId, userId), eq(schema.category.periodId, periodId)));
 
-	// 3. Fetch expenses with category details
+	// 3. Fetch expenses amount grouped by category
 	const expenses = await db
 		.select({
-			id: schema.expense.id,
 			categoryId: schema.expense.categoryId,
-			categoryName: schema.category.name,
-			isSavings: schema.category.isSavings,
-			name: schema.expense.name,
-			amount: schema.expense.amount,
-			date: schema.expense.date,
-			time: schema.expense.time,
-			notes: schema.expense.notes,
-			createdAt: schema.expense.createdAt
+			amount: schema.expense.amount
 		})
 		.from(schema.expense)
-		.innerJoin(schema.category, eq(schema.expense.categoryId, schema.category.id))
-		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, periodId)))
-		.orderBy(desc(schema.expense.date), desc(schema.expense.createdAt));
+		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, periodId)));
 
 	// Group spent by category
 	const spentByCat = new Map<string, number>();
@@ -196,8 +168,6 @@ export async function getCompletedPeriodDetail(
 		const spent = spentByCat.get(cat.id) ?? 0;
 		const balance = allocation - spent;
 		const spentPercentage = allocation > 0 ? Math.round((spent / allocation) * 100) : 0;
-		const remainingPercentage =
-			allocation > 0 ? Math.max(0, Math.min(100, Math.round((balance / allocation) * 100))) : 0;
 
 		return {
 			id: cat.id,
@@ -207,7 +177,6 @@ export async function getCompletedPeriodDetail(
 			spent,
 			balance,
 			spentPercentage,
-			remainingPercentage,
 			isSavings: Boolean(cat.isSavings),
 			status: cat.status as 'active' | 'frozen'
 		};
@@ -216,6 +185,13 @@ export async function getCompletedPeriodDetail(
 	const remaining = period.totalIncome - totalSpent;
 	const spentPercentage =
 		period.totalIncome > 0 ? Math.round((totalSpent / period.totalIncome) * 100) : 0;
+
+	const summary: PeriodFinancialMetrics = {
+		totalIncome: period.totalIncome,
+		totalSpent,
+		remaining,
+		spentPercentage
+	};
 
 	const aiAggregateData: AiAggregateData = {
 		totalIncome: period.totalIncome,
@@ -243,17 +219,8 @@ export async function getCompletedPeriodDetail(
 			status: period.status,
 			aiSummary: period.aiSummary
 		},
-		summary: {
-			totalIncome: period.totalIncome,
-			totalSpent,
-			remaining,
-			spentPercentage
-		},
+		summary,
 		categories: detailedCategories,
-		expenses: expenses.map((e) => ({
-			...e,
-			isSavings: Boolean(e.isSavings)
-		})),
 		aiAggregateData
 	};
 }

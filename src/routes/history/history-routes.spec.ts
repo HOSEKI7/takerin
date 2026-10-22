@@ -131,12 +131,10 @@ describe('History Routes & API Handlers (Seam 3)', () => {
 						spent: 4000000,
 						balance: 1000000,
 						spentPercentage: 80,
-						remainingPercentage: 20,
 						isSavings: false,
 						status: 'active'
 					}
 				],
-				expenses: [],
 				aiAggregateData: {
 					totalIncome: 10000000,
 					totalSpent: 5000000,

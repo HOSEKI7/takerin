@@ -328,57 +328,5 @@
 				{/each}
 			</div>
 		</div>
-
-		<!-- Expense List Section -->
-		<div>
-			<div class="mb-4">
-				<h2 class="text-lg font-bold text-obsidian sm:text-xl dark:text-paper">
-					Daftar Pengeluaran ({data.expenses.length})
-				</h2>
-				<p class="text-xs text-slate dark:text-pebble">
-					Semua entri pengeluaran yang tercatat pada periode ini.
-				</p>
-			</div>
-
-			{#if data.expenses.length === 0}
-				<Card class="p-6 text-center">
-					<p class="text-sm text-slate dark:text-pebble">
-						Tidak ada pengeluaran yang tercatat dalam periode ini.
-					</p>
-				</Card>
-			{:else}
-				<Card class="divide-y divide-fog overflow-hidden p-0 dark:divide-dark-border">
-					{#each data.expenses as exp (exp.id)}
-						<div
-							class="flex items-center justify-between p-4 transition-colors hover:bg-fog/30 dark:hover:bg-dark-border/20"
-						>
-							<div>
-								<p class="font-bold text-obsidian dark:text-paper">{exp.name}</p>
-								<div
-									class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate dark:text-pebble"
-								>
-									<span class="font-medium text-forest-ink dark:text-lime-voltage">
-										{exp.categoryName}
-									</span>
-									<span>•</span>
-									<span>{formatDateIndonesian(exp.date)}</span>
-									{#if exp.time}
-										<span>•</span>
-										<span>{exp.time}</span>
-									{/if}
-									{#if exp.notes}
-										<span>•</span>
-										<span class="italic">"{exp.notes}"</span>
-									{/if}
-								</div>
-							</div>
-							<p class="text-sm font-bold text-obsidian dark:text-paper">
-								{formatRupiah(exp.amount)}
-							</p>
-						</div>
-					{/each}
-				</Card>
-			{/if}
-		</div>
 	</main>
 </div>
