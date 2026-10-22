@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Button, BrandLogo, ThemeToggle, Badge } from '#lib';
+	import { Button, BrandLogo, ThemeToggle, Badge, formatBlogDate } from '#lib';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		ArrowLeft01Icon,
@@ -13,25 +13,13 @@
 
 	let { data }: { data: PageData } = $props();
 
-	function formatDate(dateStr: string) {
-		try {
-			const date = new Date(dateStr);
-			return new Intl.DateTimeFormat('id-ID', {
-				day: 'numeric',
-				month: 'long',
-				year: 'numeric'
-			}).format(date);
-		} catch {
-			return dateStr;
-		}
-	}
-
 	const articleSchema = $derived({
 		'@context': 'https://schema.org',
 		'@type': 'Article',
 		headline: data.post.title,
 		description: data.post.excerpt,
 		datePublished: data.post.date,
+		image: data.post.image ?? 'https://takerin.my.id/brand/takerin-wordmark.webp',
 		author: {
 			'@type': 'Organization',
 			name: data.post.author,
@@ -43,7 +31,7 @@
 			url: 'https://takerin.my.id',
 			logo: {
 				'@type': 'ImageObject',
-				url: 'https://takerin.my.id/logo.png'
+				url: 'https://takerin.my.id/brand/takerin-logo.webp'
 			}
 		},
 		mainEntityOfPage: {
@@ -78,15 +66,11 @@
 	});
 
 	const jsonLdArticle = $derived(
-		`<script type="application/ld+json">${JSON.stringify(articleSchema)}` +
-			'</' +
-			'script>'
+		`<script type="application/ld+json">${JSON.stringify(articleSchema)}` + '</' + 'script>'
 	);
 
 	const jsonLdBreadcrumb = $derived(
-		`<script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}` +
-			'</' +
-			'script>'
+		`<script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}` + '</' + 'script>'
 	);
 </script>
 
@@ -205,7 +189,7 @@
 					<span>•</span>
 					<span class="inline-flex items-center gap-1.5">
 						<HugeiconsIcon icon={Calendar03Icon} size={14} />
-						{formatDate(data.post.date)}
+						{formatBlogDate(data.post.date)}
 					</span>
 					<span>•</span>
 					<span class="inline-flex items-center gap-1.5">
@@ -225,7 +209,7 @@
 
 			<!-- In-article Conversion / CTA Box -->
 			<div
-				class="mt-12 rounded-2xl border border-forest-ink/20 bg-linen-mist/40 p-6 sm:p-8 dark:border-dark-border dark:bg-dark-surface"
+				class="mt-12 rounded-lg border border-forest-ink/20 bg-linen-mist/40 p-6 sm:p-8 dark:border-dark-border dark:bg-dark-surface"
 			>
 				<div class="flex items-center gap-2 text-forest-ink dark:text-lime-voltage">
 					<HugeiconsIcon icon={SparklesIcon} size={20} />

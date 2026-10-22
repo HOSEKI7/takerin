@@ -21,11 +21,11 @@ Memilih kamar kos dengan fasilitas mewah di awal karier sering kali menjadi jeba
 
 ## 2. Bedakan "Makan Kenyang" dan "Makan Hiburan"
 
-Pos pengeluaran terbesar anak kos biasanya berasal dari makanan. Untuk mengendalikannya, buat dua takaran terpisah:
+Pengeluaran terbesar anak kos biasanya berasal dari makanan. Untuk mengendalikannya, buat dua takaran terpisah:
 - **Jatah Makan Harian**: Uang makan pokok sehari-hari (sarapan, makan siang di warteg sekitar kantor, dan makan malam sederhana).
 - **Jatah Nongkrong & Kafe**: Anggaran khusus untuk ngopi bareng teman atau pesan makanan via aplikasi online di akhir pekan.
 
-Dengan memisahkan dua pos ini, kamu tidak akan merasa bersalah saat sesekali membeli minuman boba atau nongkrong di coffee shop, karena dananya sudah disiapkan sejak awal dan tidak mengganggu jatah makan wajibmu.
+Dengan memisahkan dua kategori ini, kamu tidak akan merasa bersalah saat sesekali membeli minuman boba atau nongkrong di coffee shop, karena dananya sudah disiapkan sejak awal dan tidak mengganggu jatah makan wajibmu.
 
 ## 3. Manfaatkan Fasilitas Bersama di Kos
 
@@ -44,7 +44,7 @@ Sebagian besar keinginan impulsif akan mereda setelah kamu tidur cukup, dan kamu
 
 Pengelolaan uang anak kos tidak butuh rumus spreadsheet rumit yang bikin pusing kepala. Yang kamu butuhkan adalah kejelasan: berapa jatah makan yang tersisa untuk minggu ini?
 
-Aplikasi web [Takerin](/) membantu membagi gaji anak kos ke dalam pos-pos persentase yang jelas. Setiap kali kamu selesai makan atau bayar laundry, catat nominalnya dalam waktu 5 detik langsung dari smartphone.
+Aplikasi web [Takerin](/) membantu membagi gaji anak kos ke dalam kategori-kategori persentase yang jelas. Setiap kali kamu selesai makan atau bayar laundry, catat nominalnya dalam waktu 5 detik langsung dari smartphone.
 
 ## Mulai Langkah Finansial Pertamamu
 

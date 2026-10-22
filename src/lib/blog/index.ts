@@ -102,43 +102,47 @@ export function parseArticle(raw: string, slugFallback?: string): BlogPost {
 	};
 }
 
-// Statically load all markdown files in src/content/blog at compile/bundle time
+// Statically load and pre-parse all markdown files at compile/bundle time
 const rawArticles = import.meta.glob('/src/content/blog/*.md', {
 	query: '?raw',
 	import: 'default',
 	eager: true
 }) as Record<string, string>;
 
-export function getAllBlogPosts(): BlogPostSummary[] {
-	const posts: BlogPostSummary[] = [];
-
-	for (const [path, rawContent] of Object.entries(rawArticles)) {
+const parsedArticles: BlogPost[] = Object.entries(rawArticles)
+	.map(([path, rawContent]) => {
 		const filenameSlug = path.split('/').pop()?.replace(/\.md$/, '');
-		const post = parseArticle(rawContent, filenameSlug);
-		posts.push({
-			title: post.title,
-			slug: post.slug || (filenameSlug ?? ''),
-			excerpt: post.excerpt,
-			date: post.date,
-			author: post.author,
-			targetKeyword: post.targetKeyword,
-			keywords: post.keywords,
-			readingTime: post.readingTime,
-			image: post.image
-		});
-	}
+		return parseArticle(rawContent, filenameSlug);
+	})
+	.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-	// Sort posts descending by publication date
-	return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+export function getAllBlogPosts(): BlogPostSummary[] {
+	return parsedArticles.map((post) => ({
+		title: post.title,
+		slug: post.slug,
+		excerpt: post.excerpt,
+		date: post.date,
+		author: post.author,
+		targetKeyword: post.targetKeyword,
+		keywords: post.keywords,
+		readingTime: post.readingTime,
+		image: post.image
+	}));
 }
 
 export function getBlogPostBySlug(slug: string): BlogPost | null {
-	for (const [path, rawContent] of Object.entries(rawArticles)) {
-		const filenameSlug = path.split('/').pop()?.replace(/\.md$/, '');
-		const post = parseArticle(rawContent, filenameSlug);
-		if (post.slug === slug || filenameSlug === slug) {
-			return post;
-		}
+	return parsedArticles.find((post) => post.slug === slug) ?? null;
+}
+
+export function formatBlogDate(dateStr: string): string {
+	try {
+		const date = new Date(dateStr);
+		return new Intl.DateTimeFormat('id-ID', {
+			day: 'numeric',
+			month: 'long',
+			year: 'numeric'
+		}).format(date);
+	} catch {
+		return dateStr;
 	}
-	return null;
 }

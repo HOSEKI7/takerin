@@ -13,9 +13,9 @@ import * as path from 'node:path';
 describe('Blog Routes, Prerendering & SEO (Seams 2 & 3)', () => {
 	it('exports prerender = true in /blog/+page.ts and loads posts', async () => {
 		expect(blogIndexPrerender).toBe(true);
-		const data = (await blogIndexLoad(
-			{} as unknown as Parameters<typeof blogIndexLoad>[0]
-		)) as { posts: BlogPostSummary[] };
+		const data = (await blogIndexLoad({} as unknown as Parameters<typeof blogIndexLoad>[0])) as {
+			posts: BlogPostSummary[];
+		};
 		expect(data).toHaveProperty('posts');
 		expect(Array.isArray(data.posts)).toBe(true);
 		expect(data.posts.length).toBeGreaterThanOrEqual(3);
@@ -81,6 +81,7 @@ describe('Blog Routes, Prerendering & SEO (Seams 2 & 3)', () => {
 
 		expect(blogSlugContent).toContain("'@type': 'Article'");
 		expect(blogSlugContent).toContain('headline: data.post.title');
+		expect(blogSlugContent).toContain('image: data.post.image');
 		expect(blogSlugContent).toMatch(/property="og:type"[^>]*content="article"/);
 		expect(blogSlugContent).toMatch(/<link[^>]*rel="canonical"/);
 		expect(blogSlugContent).toContain('/auth/register');

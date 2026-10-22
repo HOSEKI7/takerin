@@ -25,21 +25,21 @@ Karena mencatat pengeluaran setelah uang dibelanjakan adalah tindakan **reaktif*
 
 Kunci agar tidak boncos adalah menentukan peran setiap rupiah segera setelah kamu menerima gaji. Metode ini dikenal dengan sistem **menakar jatah** berdasarkan persentase pemasukan bulanan:
 
-### 1. Pos Kebutuhan Pokok (50% - 60%)
+### 1. Kategori Kebutuhan Pokok (50% - 60%)
 Alokasikan jatah ini untuk hal-hal wajib yang tidak bisa kamu tunda:
 - Sewa kamar / kos / cicilan tempat tinggal
 - Makan sehari-hari
 - Biaya transportasi harian dan bensin
 - Tagihan listrik, air, dan internet bulanan
 
-### 2. Pos Masa Depan & Tabungan (20%)
+### 2. Kategori Masa Depan & Tabungan (20%)
 Begitu gajian tiba, segera pisahkan bagian ini sebelum digunakan untuk hal lain:
 - Dana darurat (minimal 3x pengeluaran bulanan)
 - Tabungan jangka pendek atau investasi berkala
 - Asuransi kesehatan jika belum tercover penuh
 
-### 3. Pos Keinginan & Hiburan (20% - 30%)
-Kamu bekerja keras untuk menikmati hidup. Jangan hilangkan pos hiburan, tetapi batasi jatahnya dengan tegas:
+### 3. Kategori Keinginan & Hiburan (20% - 30%)
+Kamu bekerja keras untuk menikmati hidup. Jangan hilangkan kategori hiburan, tetapi batasi jatahnya dengan tegas:
 - Makan di luar bersama teman di akhir pekan
 - Belanja hobi atau pakaian
 - Berlangganan streaming musik dan film

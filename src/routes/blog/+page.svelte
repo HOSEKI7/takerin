@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Button, BrandLogo, ThemeToggle, Badge } from '#lib';
+	import { Button, BrandLogo, ThemeToggle, Badge, formatBlogDate } from '#lib';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		SparklesIcon,
@@ -12,19 +12,6 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
-
-	function formatDate(dateStr: string) {
-		try {
-			const date = new Date(dateStr);
-			return new Intl.DateTimeFormat('id-ID', {
-				day: 'numeric',
-				month: 'long',
-				year: 'numeric'
-			}).format(date);
-		} catch {
-			return dateStr;
-		}
-	}
 </script>
 
 <svelte:head>
@@ -140,7 +127,7 @@
 				<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
 					{#each data.posts as post (post.slug)}
 						<article
-							class="flex flex-col justify-between rounded-2xl border border-fog bg-paper p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-forest-ink/30 hover:shadow-md dark:border-dark-border dark:bg-dark-surface dark:hover:border-lime-voltage/40"
+							class="flex flex-col justify-between rounded-lg border border-fog bg-paper p-6 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-forest-ink/30 hover:shadow-md dark:border-dark-border dark:bg-dark-surface dark:hover:border-lime-voltage/40"
 						>
 							<div>
 								<div class="flex items-center justify-between gap-2">
@@ -171,7 +158,7 @@
 							>
 								<span class="inline-flex items-center gap-1.5 text-pebble dark:text-pebble">
 									<HugeiconsIcon icon={Calendar03Icon} size={13} />
-									{formatDate(post.date)}
+									{formatBlogDate(post.date)}
 								</span>
 
 								<a

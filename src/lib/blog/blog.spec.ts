@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { parseFrontmatter, parseArticle, getAllBlogPosts, getBlogPostBySlug } from './index.js';
+import {
+	parseFrontmatter,
+	parseArticle,
+	getAllBlogPosts,
+	getBlogPostBySlug,
+	formatBlogDate
+} from './index.js';
 
 describe('Blog Content & Markdown Parsing (Seam 1)', () => {
 	const sampleMarkdown = `---
@@ -94,5 +100,10 @@ Satu dua tiga empat lima enam tujuh delapan sembilan sepuluh.
 
 		const notFound = getBlogPostBySlug('artikel-yang-tidak-pernah-ada');
 		expect(notFound).toBeNull();
+	});
+
+	it('formats ISO date to Indonesian readable format', () => {
+		const formatted = formatBlogDate('2026-10-22');
+		expect(formatted).toContain('Oktober 2026');
 	});
 });
