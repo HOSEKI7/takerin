@@ -22,6 +22,7 @@
 		{ label: 'Masalah', href: '#masalah' },
 		{ label: 'Fitur', href: '#fitur' },
 		{ label: 'Cara Kerja', href: '#cara-kerja' },
+		{ label: 'Blog', href: '/blog' },
 		{ label: 'Tanya Jawab', href: '#faq' }
 	];
 

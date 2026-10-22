@@ -23,6 +23,7 @@ describe('Landing Page & SEO (+page.svelte & routes)', () => {
 		expect(response.headers.get('Content-Type')).toContain('application/xml');
 		const body = await response.text();
 		expect(body).toContain('<loc>https://takerin.my.id/</loc>');
+		expect(body).toContain('<loc>https://takerin.my.id/blog</loc>');
 		expect(body).toContain('<loc>https://takerin.my.id/auth/register</loc>');
 		expect(body).toContain('<loc>https://takerin.my.id/auth/login</loc>');
 	});

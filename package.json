@@ -54,6 +54,7 @@
 	"dependencies": {
 		"@better-auth/drizzle-adapter": "^1.7.11",
 		"better-auth": "^1.7.11",
+		"marked": "^18.1.1",
 		"pdf-lib": "^1.17.1",
 		"resend": "^6.34.1",
 		"sveltekit-i18n": "^3.4.1"

@@ -10,3 +10,6 @@ export { default as BrandLogo } from './components/BrandLogo.svelte';
 
 // Theme Utilities
 export * from './theme';
+
+// Blog Content & SEO
+export * from './blog/index.js';
