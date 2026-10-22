@@ -18,6 +18,13 @@
 
 	let mobileMenuOpen = $state(false);
 
+	const navLinks = [
+		{ label: 'Masalah', href: '#masalah' },
+		{ label: 'Fitur', href: '#fitur' },
+		{ label: 'Cara Kerja', href: '#cara-kerja' },
+		{ label: 'Tanya Jawab', href: '#faq' }
+	];
+
 	const softwareApplicationSchema = {
 		'@context': 'https://schema.org',
 		'@type': 'SoftwareApplication',
@@ -46,8 +53,8 @@
 			after: 'Gaji langsung dibagi ke persentase kategori di awal bulan.'
 		},
 		{
-			before: 'Satu pos pengeluaran menyedot jatah tabungan tanpa disadari.',
-			after: 'Batas jatah per pos jelas, menjaga total tetap seimbang 100%.'
+			before: 'Satu kategori pengeluaran menyedot jatah tabungan tanpa disadari.',
+			after: 'Batas jatah per kategori jelas, menjaga total tetap seimbang 100%.'
 		},
 		{
 			before: 'Aplikasi pencatat lain rumit, berbayar langganan, dan penuh iklan.',
@@ -88,7 +95,7 @@
 		},
 		{
 			q: 'Apakah pengeluaran boleh melebihi jatah yang ditentukan?',
-			a: 'Boleh. Takerin tidak pernah memblokir atau menghakimi pengeluaranmu. Kamu tetap bisa mencatat transaksi, dan Takerin akan mengingatkan dengan ramah bahwa batas takaran kategori tersebut telah terlampaui.'
+			a: 'Boleh. Takerin tidak pernah memblokir atau menghakimi pengeluaranmu. Kamu tetap bisa mencatat pengeluaran, dan Takerin akan mengingatkan dengan ramah bahwa batas takaran kategori tersebut telah terlampaui.'
 		},
 		{
 			q: 'Bagaimana jika ingin menambah atau mengubah kategori di tengah bulan?',
@@ -109,6 +116,8 @@
 		'</' +
 		'script>';
 </script>
+
+<!-- eslint-disable svelte/no-navigation-without-resolve -->
 
 <svelte:head>
 	<title>Takerin - Takerin Gajimu, Tenangin Bulanmu | Aplikasi Keuangan Gratis</title>
@@ -155,7 +164,7 @@
 >
 	<!-- Navigation Bar -->
 	<header
-		class="sticky top-0 z-50 h-16 border-b border-fog bg-paper/90 backdrop-blur-md transition-colors dark:border-dark-border dark:bg-dark-surface/90"
+		class="sticky top-0 z-50 h-16 border-b border-fog bg-paper transition-colors dark:border-dark-border dark:bg-dark-surface"
 	>
 		<div class="mx-auto flex h-full max-w-6xl items-center justify-between px-4 sm:px-6">
 			<div class="flex items-center gap-8">
@@ -163,30 +172,14 @@
 				<nav
 					class="hidden items-center gap-6 text-sm font-medium text-charcoal md:flex dark:text-fog"
 				>
-					<a
-						href="#masalah"
-						class="transition-colors hover:text-forest-ink dark:hover:text-lime-voltage"
-					>
-						Masalah
-					</a>
-					<a
-						href="#fitur"
-						class="transition-colors hover:text-forest-ink dark:hover:text-lime-voltage"
-					>
-						Fitur
-					</a>
-					<a
-						href="#cara-kerja"
-						class="transition-colors hover:text-forest-ink dark:hover:text-lime-voltage"
-					>
-						Cara Kerja
-					</a>
-					<a
-						href="#faq"
-						class="transition-colors hover:text-forest-ink dark:hover:text-lime-voltage"
-					>
-						Tanya Jawab
-					</a>
+					{#each navLinks as link (link.href)}
+						<a
+							href={link.href}
+							class="transition-colors hover:text-forest-ink dark:hover:text-lime-voltage"
+						>
+							{link.label}
+						</a>
+					{/each}
 				</nav>
 			</div>
 
@@ -222,37 +215,18 @@
 		<!-- Mobile Navigation Dropdown -->
 		{#if mobileMenuOpen}
 			<div
-				class="border-b border-fog bg-paper px-4 py-4 shadow-lg md:hidden dark:border-dark-border dark:bg-dark-surface"
+				class="border-b border-fog bg-paper px-4 py-4 md:hidden dark:border-dark-border dark:bg-dark-surface"
 			>
 				<nav class="flex flex-col gap-3 text-sm font-medium text-charcoal dark:text-fog">
-					<a
-						href="#masalah"
-						onclick={() => (mobileMenuOpen = false)}
-						class="py-1 hover:text-forest-ink dark:hover:text-lime-voltage"
-					>
-						Masalah
-					</a>
-					<a
-						href="#fitur"
-						onclick={() => (mobileMenuOpen = false)}
-						class="py-1 hover:text-forest-ink dark:hover:text-lime-voltage"
-					>
-						Fitur
-					</a>
-					<a
-						href="#cara-kerja"
-						onclick={() => (mobileMenuOpen = false)}
-						class="py-1 hover:text-forest-ink dark:hover:text-lime-voltage"
-					>
-						Cara Kerja
-					</a>
-					<a
-						href="#faq"
-						onclick={() => (mobileMenuOpen = false)}
-						class="py-1 hover:text-forest-ink dark:hover:text-lime-voltage"
-					>
-						Tanya Jawab
-					</a>
+					{#each navLinks as link (link.href)}
+						<a
+							href={link.href}
+							onclick={() => (mobileMenuOpen = false)}
+							class="py-1 hover:text-forest-ink dark:hover:text-lime-voltage"
+						>
+							{link.label}
+						</a>
+					{/each}
 					<div class="mt-2 flex flex-col gap-2 border-t border-fog pt-2 dark:border-dark-border">
 						<a href={resolve('/auth/login')} class="w-full">
 							<Button variant="secondary" size="sm" class="w-full">Masuk</Button>
@@ -271,7 +245,7 @@
 		<section class="relative overflow-hidden pt-12 pb-16 sm:pt-16 sm:pb-20 lg:pt-20 lg:pb-24">
 			<div class="mx-auto max-w-6xl px-4 sm:px-6">
 				<div class="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8">
-					<!-- Hero Text Stack (Strictly max 4 text elements) -->
+					<!-- Hero Text Stack (Strictly 4 text elements) -->
 					<div class="space-y-6 lg:col-span-7">
 						<!-- Element 1: Eyebrow badge -->
 						<div class="inline-flex items-center gap-2">
@@ -281,19 +255,12 @@
 							</Badge>
 						</div>
 
-						<!-- Element 2: Headline & Tagline -->
-						<div class="space-y-2">
-							<h1
-								class="font-display text-4xl font-extrabold tracking-tight text-forest-ink sm:text-5xl lg:text-6xl lg:leading-[1.08] dark:text-paper"
-							>
-								Atur Pengeluaran & Jatah Gaji
-							</h1>
-							<p
-								class="font-display text-2xl font-extrabold text-spruce sm:text-3xl dark:text-lime-voltage"
-							>
-								"Takerin gajimu, tenangin bulanmu."
-							</p>
-						</div>
+						<!-- Element 2: Headline -->
+						<h1
+							class="font-display text-4xl font-extrabold tracking-tight text-forest-ink sm:text-5xl lg:text-6xl lg:leading-[1.08] dark:text-paper"
+						>
+							Takerin gajimu, tenangin bulanmu.
+						</h1>
 
 						<!-- Element 3: Subtext (Max 20 words) -->
 						<p class="max-w-xl text-lg text-charcoal sm:text-xl dark:text-fog">
@@ -320,7 +287,7 @@
 					<!-- Hero Visual Preview: Budgeting Simulation Card -->
 					<div class="lg:col-span-5">
 						<div
-							class="relative rounded-2xl border border-fog bg-fog/30 p-5 shadow-lg backdrop-blur-xs sm:p-6 dark:border-dark-border dark:bg-dark-surface/90"
+							class="relative rounded-2xl border border-fog bg-fog/30 p-5 sm:p-6 dark:border-dark-border dark:bg-dark-surface"
 						>
 							<!-- Header of Preview Card -->
 							<div
@@ -344,7 +311,7 @@
 							<!-- Category Progress Visuals -->
 							<div class="space-y-4">
 								<div
-									class="rounded-xl border border-fog bg-paper p-3 shadow-xs dark:border-dark-border dark:bg-dark-card"
+									class="rounded-xl border border-fog bg-paper p-3 dark:border-dark-border dark:bg-dark-card"
 								>
 									<div class="flex items-center justify-between text-xs">
 										<span class="font-semibold text-forest-ink dark:text-paper"
@@ -367,7 +334,7 @@
 								</div>
 
 								<div
-									class="rounded-xl border border-fog bg-paper p-3 shadow-xs dark:border-dark-border dark:bg-dark-card"
+									class="rounded-xl border border-fog bg-paper p-3 dark:border-dark-border dark:bg-dark-card"
 								>
 									<div class="flex items-center justify-between text-xs">
 										<span class="font-semibold text-forest-ink dark:text-paper"
@@ -390,7 +357,7 @@
 								</div>
 
 								<div
-									class="rounded-xl border border-fog bg-paper p-3 shadow-xs dark:border-dark-border dark:bg-dark-card"
+									class="rounded-xl border border-fog bg-paper p-3 dark:border-dark-border dark:bg-dark-card"
 								>
 									<div class="flex items-center justify-between text-xs">
 										<span class="font-semibold text-forest-ink dark:text-paper"
@@ -448,7 +415,7 @@
 				<div class="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
 					<!-- Cara Lama -->
 					<div
-						class="rounded-2xl border border-alarm-red/20 bg-paper p-6 shadow-xs dark:border-alarm-red/30 dark:bg-dark-card"
+						class="rounded-2xl border border-alarm-red/20 bg-paper p-6 dark:border-alarm-red/30 dark:bg-dark-card"
 					>
 						<div class="flex items-center gap-3">
 							<div
@@ -472,7 +439,7 @@
 
 					<!-- Dengan Takerin -->
 					<div
-						class="rounded-2xl border border-forest-ink/20 bg-paper p-6 shadow-xs dark:border-lime-voltage/30 dark:bg-dark-card"
+						class="rounded-2xl border border-forest-ink/20 bg-paper p-6 dark:border-lime-voltage/30 dark:bg-dark-card"
 					>
 						<div class="flex items-center gap-3">
 							<div
@@ -642,7 +609,7 @@
 				<div class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
 					{#each steps as step (step.number)}
 						<div
-							class="relative rounded-2xl border border-fog bg-paper p-6 shadow-xs dark:border-dark-border dark:bg-dark-card"
+							class="relative rounded-2xl border border-fog bg-paper p-6 dark:border-dark-border dark:bg-dark-card"
 						>
 							<div
 								class="flex h-10 w-10 items-center justify-center rounded-full bg-forest-ink font-display text-base font-bold text-lime-voltage"
@@ -703,10 +670,10 @@
 		<section class="py-12 sm:py-16">
 			<div class="mx-auto max-w-5xl px-4 sm:px-6">
 				<div
-					class="relative overflow-hidden rounded-3xl bg-forest-ink px-6 py-12 text-center text-paper shadow-xl sm:px-12 sm:py-16 dark:border dark:border-dark-border dark:bg-dark-surface"
+					class="relative overflow-hidden rounded-3xl bg-forest-ink px-6 py-12 text-center text-paper sm:px-12 sm:py-16 dark:border dark:border-dark-border dark:bg-dark-surface"
 				>
 					<h2 class="font-display text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
-						Mulai atur keuanganmu sekarang - gratis selamanya
+						Mulai atur keuanganmu sekarang — gratis selamanya
 					</h2>
 					<p class="mx-auto mt-4 max-w-xl text-base text-linen-mist sm:text-lg dark:text-fog">
 						Takerin gajimu, tentukan jatahmu, dan rasakan ketenangan mengendalikan pengeluaran
@@ -714,7 +681,7 @@
 					</p>
 					<div class="mt-8 flex justify-center">
 						<a href={resolve('/auth/register')}>
-							<Button variant="primary" size="lg" class="shadow-md">
+							<Button variant="primary" size="lg">
 								<span>Mulai Gratis</span>
 								<HugeiconsIcon icon={ArrowRight01Icon} size={18} />
 							</Button>
@@ -757,26 +724,13 @@
 							Navigasi
 						</h3>
 						<ul class="mt-3 space-y-2 text-sm">
-							<li>
-								<a href="#masalah" class="hover:text-forest-ink dark:hover:text-lime-voltage"
-									>Masalah</a
-								>
-							</li>
-							<li>
-								<a href="#fitur" class="hover:text-forest-ink dark:hover:text-lime-voltage"
-									>Fitur Utama</a
-								>
-							</li>
-							<li>
-								<a href="#cara-kerja" class="hover:text-forest-ink dark:hover:text-lime-voltage"
-									>Cara Kerja</a
-								>
-							</li>
-							<li>
-								<a href="#faq" class="hover:text-forest-ink dark:hover:text-lime-voltage"
-									>Tanya Jawab</a
-								>
-							</li>
+							{#each navLinks as link (link.href)}
+								<li>
+									<a href={link.href} class="hover:text-forest-ink dark:hover:text-lime-voltage">
+										{link.label}
+									</a>
+								</li>
+							{/each}
 						</ul>
 					</div>
 
@@ -788,14 +742,14 @@
 						</h3>
 						<ul class="mt-3 space-y-2 text-sm">
 							<li>
-								<a href="#faq" class="hover:text-forest-ink dark:hover:text-lime-voltage"
-									>Kebijakan Privasi</a
-								>
+								<a href="#faq" class="hover:text-forest-ink dark:hover:text-lime-voltage">
+									Kebijakan Privasi
+								</a>
 							</li>
 							<li>
-								<a href="#faq" class="hover:text-forest-ink dark:hover:text-lime-voltage"
-									>Syarat & Ketentuan</a
-								>
+								<a href="#faq" class="hover:text-forest-ink dark:hover:text-lime-voltage">
+									Syarat & Ketentuan
+								</a>
 							</li>
 						</ul>
 					</div>

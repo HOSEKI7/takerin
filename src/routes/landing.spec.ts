@@ -1,8 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 describe('Landing Page & SEO (+page.svelte & routes)', () => {
+	let pageContent: string;
+
+	beforeAll(() => {
+		const pagePath = path.resolve('src/routes/+page.svelte');
+		pageContent = fs.readFileSync(pagePath, 'utf-8');
+	});
+
 	it('exports prerender = true in +page.ts', async () => {
 		const pageModule = await import('./+page.js');
 		expect(pageModule.prerender).toBe(true);
@@ -35,73 +42,66 @@ describe('Landing Page & SEO (+page.svelte & routes)', () => {
 	});
 
 	it('contains required SEO meta tags, Open Graph, Twitter Cards, and JSON-LD SoftwareApplication in +page.svelte', () => {
-		const pagePath = path.resolve('src/routes/+page.svelte');
-		const content = fs.readFileSync(pagePath, 'utf-8');
-
 		// SEO Meta Tags
-		expect(content).toMatch(/<meta[^>]*name="description"/);
-		expect(content).toMatch(/<meta[^>]*name="keywords"/);
-		expect(content).toContain('atur pengeluaran');
-		expect(content).toContain('catat keuangan');
-		expect(content).toContain('atur gaji');
-		expect(content).toContain('aplikasi keuangan gratis');
-		expect(content).toMatch(/<link[^>]*rel="canonical"/);
+		expect(pageContent).toMatch(/<meta[^>]*name="description"/);
+		expect(pageContent).toMatch(/<meta[^>]*name="keywords"/);
+		expect(pageContent).toContain('atur pengeluaran');
+		expect(pageContent).toContain('catat keuangan');
+		expect(pageContent).toContain('atur gaji');
+		expect(pageContent).toContain('aplikasi keuangan gratis');
+		expect(pageContent).toMatch(/<link[^>]*rel="canonical"/);
 
 		// Open Graph
-		expect(content).toMatch(/property="og:title"/);
-		expect(content).toMatch(/property="og:description"/);
-		expect(content).toMatch(/property="og:url"/);
-		expect(content).toMatch(/property="og:image"/);
-		expect(content).toMatch(/property="og:type"/);
+		expect(pageContent).toMatch(/property="og:title"/);
+		expect(pageContent).toMatch(/property="og:description"/);
+		expect(pageContent).toMatch(/property="og:url"/);
+		expect(pageContent).toMatch(/property="og:image"/);
+		expect(pageContent).toMatch(/property="og:type"/);
 
 		// Twitter Cards
-		expect(content).toMatch(/name="twitter:card"/);
-		expect(content).toMatch(/name="twitter:title"/);
-		expect(content).toMatch(/name="twitter:description"/);
-		expect(content).toMatch(/name="twitter:image"/);
+		expect(pageContent).toMatch(/name="twitter:card"/);
+		expect(pageContent).toMatch(/name="twitter:title"/);
+		expect(pageContent).toMatch(/name="twitter:description"/);
+		expect(pageContent).toMatch(/name="twitter:image"/);
 
 		// JSON-LD SoftwareApplication
-		expect(content).toContain('application/ld+json');
-		expect(content).toContain("'SoftwareApplication'");
-		expect(content).toContain("'FinanceApplication'");
-		expect(content).toContain("'0'");
+		expect(pageContent).toContain('application/ld+json');
+		expect(pageContent).toContain("'SoftwareApplication'");
+		expect(pageContent).toContain("'FinanceApplication'");
+		expect(pageContent).toContain("'0'");
 	});
 
 	it('renders all required landing page sections and copy', () => {
-		const pagePath = path.resolve('src/routes/+page.svelte');
-		const content = fs.readFileSync(pagePath, 'utf-8');
-
 		// Hero Section
-		expect(content).toContain('Atur Pengeluaran & Jatah Gaji');
-		expect(content).toContain('Takerin gajimu, tenangin bulanmu');
-		expect(content).toContain('Mulai Gratis');
-		expect(content).toContain('/auth/register');
+		expect(pageContent).toContain('Takerin gajimu, tenangin bulanmu');
+		expect(pageContent).toContain('Mulai Gratis');
+		expect(pageContent).toContain('/auth/register');
 
 		// Problem Statement
-		expect(content).toContain('Gaji habis sebelum akhir bulan?');
+		expect(pageContent).toContain('Gaji habis sebelum akhir bulan?');
 
 		// Features Showcase (3 main features)
-		expect(content).toContain('Bagi Jatah di Awal');
-		expect(content).toContain('Pencatatan Cepat & Sederhana');
-		expect(content).toContain('Pengingat Ramah');
+		expect(pageContent).toContain('Bagi Jatah di Awal');
+		expect(pageContent).toContain('Pencatatan Cepat & Sederhana');
+		expect(pageContent).toContain('Pengingat Ramah');
 
 		// How it Works (3 steps)
-		expect(content).toContain('Set Pemasukan');
-		expect(content).toContain('Atur Kategori');
-		expect(content).toContain('Catat Pengeluaran');
+		expect(pageContent).toContain('Set Pemasukan');
+		expect(pageContent).toContain('Atur Kategori');
+		expect(pageContent).toContain('Catat Pengeluaran');
 
 		// FAQ Section
-		expect(content).toContain('Mengapa dinamakan Takerin?');
-		expect(content).toContain('Apa bedanya Takerin dengan aplikasi');
+		expect(pageContent).toContain('Mengapa dinamakan Takerin?');
+		expect(pageContent).toContain('Apa bedanya Takerin dengan aplikasi');
 
 		// Bottom CTA
-		expect(content).toMatch(/Mulai atur keuanganmu sekarang (—|-) gratis selamanya/);
+		expect(pageContent).toMatch(/Mulai atur keuanganmu sekarang (—|-) gratis selamanya/);
 
 		// Footer
-		expect(content).toContain('https://github.com/HOSEKI7/takerin');
+		expect(pageContent).toContain('https://github.com/HOSEKI7/takerin');
 
 		// Dark Mode Support
-		expect(content).toContain('dark:bg-dark-canvas');
-		expect(content).toContain('dark:text-paper');
+		expect(pageContent).toContain('dark:bg-dark-canvas');
+		expect(pageContent).toContain('dark:text-paper');
 	});
 });
