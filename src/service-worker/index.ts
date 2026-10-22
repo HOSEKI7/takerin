@@ -47,6 +47,14 @@ self.addEventListener('activate', (event) => {
 	event.waitUntil(cleanupOldCaches());
 });
 
+async function fetchAndCache(request: Request, cache: Cache): Promise<Response> {
+	const networkResponse = await fetch(request);
+	if (networkResponse.status === 200) {
+		void cache.put(request, networkResponse.clone());
+	}
+	return networkResponse;
+}
+
 self.addEventListener('fetch', (event) => {
 	// Only handle GET requests
 	if (event.request.method !== 'GET') return;
@@ -56,8 +64,8 @@ self.addEventListener('fetch', (event) => {
 	// Only handle same-origin requests
 	if (url.origin !== self.location.origin) return;
 
-	// Do not intercept authentication or server export endpoints
-	if (url.pathname.startsWith('/api/auth') || url.pathname.startsWith('/api/export')) {
+	// Do not intercept authentication endpoints
+	if (url.pathname.startsWith('/api/auth')) {
 		return;
 	}
 
@@ -72,17 +80,27 @@ self.addEventListener('fetch', (event) => {
 			}
 		}
 
+		// Cache dashboard shell in background when any dashboard data or page is requested
+		if (url.pathname.startsWith('/dashboard')) {
+			void fetch(resolveUrl('/dashboard'), { headers: { Accept: 'text/html' } })
+				.then((htmlRes) => {
+					if (htmlRes.status === 200) {
+						void cache.put(resolveUrl('/dashboard'), htmlRes);
+					}
+				})
+				.catch(() => {});
+		}
+
 		// 2. Navigation requests (HTML document views e.g. /dashboard)
 		if (event.request.mode === 'navigate') {
 			try {
-				const networkResponse = await fetch(event.request);
-				if (networkResponse.status === 200) {
-					void cache.put(event.request, networkResponse.clone());
-				}
-				return networkResponse;
+				return await fetchAndCache(event.request, cache);
 			} catch (err) {
-				// Fall back to previously cached page if available
-				const cachedPage = await cache.match(event.request);
+				// Fall back to previously cached page if available (or cached dashboard shell)
+				const cachedPage =
+					(await cache.match(event.request)) ||
+					(url.pathname === '/dashboard' ? await cache.match(resolveUrl('/dashboard')) : undefined);
+
 				if (cachedPage) {
 					return cachedPage;
 				}
@@ -98,13 +116,8 @@ self.addEventListener('fetch', (event) => {
 		}
 
 		// 3. For SvelteKit data endpoints (__data.json) & other assets: Network-First with cache fallback
-		// Note: SvelteKit responses often have cache-control: no-store; we cache them for offline viewing
 		try {
-			const networkResponse = await fetch(event.request);
-			if (networkResponse.status === 200) {
-				void cache.put(event.request, networkResponse.clone());
-			}
-			return networkResponse;
+			return await fetchAndCache(event.request, cache);
 		} catch (err) {
 			const cachedResponse = await cache.match(event.request);
 			if (cachedResponse) {

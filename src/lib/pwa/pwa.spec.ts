@@ -4,7 +4,6 @@ import {
 	isIOS,
 	isInstallPromptDismissed,
 	dismissInstallPrompt,
-	resetInstallPromptDismissal,
 	DISMISS_STORAGE_KEY
 } from './index.js';
 
@@ -116,10 +115,6 @@ describe('PWA Utility Functions', () => {
 			dismissInstallPrompt();
 			expect(isInstallPromptDismissed()).toBe(true);
 			expect(storage.get(DISMISS_STORAGE_KEY)).toBe('true');
-
-			resetInstallPromptDismissal();
-			expect(isInstallPromptDismissed()).toBe(false);
-			expect(storage.has(DISMISS_STORAGE_KEY)).toBe(false);
 		});
 
 		it('handles storage errors gracefully', () => {
@@ -139,7 +134,6 @@ describe('PWA Utility Functions', () => {
 
 			expect(isInstallPromptDismissed()).toBe(false);
 			expect(() => dismissInstallPrompt()).not.toThrow();
-			expect(() => resetInstallPromptDismissal()).not.toThrow();
 		});
 	});
 });

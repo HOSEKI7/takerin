@@ -64,7 +64,7 @@
 				showPrompt = false;
 				deferredPrompt = null;
 			} else {
-				handleDismiss();
+				showPrompt = false;
 			}
 		}
 	}
@@ -132,25 +132,25 @@
 				<button
 					type="button"
 					onclick={handleDismiss}
-					class="inline-flex cursor-pointer items-center justify-center rounded-full bg-[var(--color-forest-ink)] px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:opacity-90 dark:bg-[var(--color-lime-voltage)] dark:text-[var(--color-forest-ink)]"
+					class="inline-flex cursor-pointer items-center justify-center rounded-full bg-[var(--color-forest-ink)] px-4 py-1.5 text-xs font-semibold text-[var(--color-paper)] transition hover:opacity-90 dark:bg-[var(--color-lime-voltage)] dark:text-[var(--color-forest-ink)]"
 				>
 					Mengerti
 				</button>
 			</div>
 		{:else}
 			<!-- Android / Desktop Chromium direct install button -->
-			<div class="mt-3 flex items-center justify-end gap-2">
+			<div class="mt-3 flex items-center justify-end gap-3">
 				<button
 					type="button"
 					onclick={handleDismiss}
-					class="cursor-pointer px-3 py-1.5 text-xs font-medium text-[var(--color-slate)] transition hover:text-[var(--color-charcoal)] dark:text-[var(--color-pebble)] dark:hover:text-white"
+					class="cursor-pointer text-xs font-medium text-[var(--color-slate)] underline underline-offset-4 transition hover:text-[var(--color-charcoal)] dark:text-[var(--color-pebble)] dark:hover:text-[var(--color-paper)]"
 				>
 					Nanti
 				</button>
 				<button
 					type="button"
 					onclick={handleInstall}
-					class="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-[var(--color-lime-voltage)] px-4 py-1.5 text-xs font-bold text-[var(--color-forest-ink)] shadow-sm transition hover:brightness-95 active:brightness-90"
+					class="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-[var(--color-lime-voltage)] px-4 py-1.5 text-xs font-bold text-[var(--color-forest-ink)] transition hover:brightness-95 active:brightness-90"
 				>
 					<HugeiconsIcon icon={Download01Icon} size={14} />
 					<span>Pasang</span>

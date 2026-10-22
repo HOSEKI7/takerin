@@ -5,12 +5,9 @@
 	"start_url": "/dashboard",
 	"scope": "/",
 	"display": "standalone",
-	"orientation": "portrait",
 	"background_color": "#ffffff",
 	"theme_color": "#163300",
-	"categories": ["finance", "productivity", "utilities"],
 	"lang": "id",
-	"dir": "ltr",
 	"icons": [
 		{
 			"src": "/icons/icon-192.png",

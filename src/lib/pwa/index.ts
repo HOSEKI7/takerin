@@ -73,16 +73,3 @@ export function dismissInstallPrompt(): void {
 		// Ignore storage quota/permission errors
 	}
 }
-
-/**
- * Resets dismissal status so install prompt can appear again
- */
-export function resetInstallPromptDismissal(): void {
-	if (typeof window === 'undefined') return;
-
-	try {
-		window.localStorage.removeItem(DISMISS_STORAGE_KEY);
-	} catch {
-		// Ignore storage quota/permission errors
-	}
-}

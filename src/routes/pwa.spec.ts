@@ -26,6 +26,10 @@ describe('PWA Manifest, Icons & Offline Fallback', () => {
 		const purposes = content.icons.map((i: { purpose?: string }) => i.purpose);
 		expect(purposes).toContain('maskable');
 		expect(purposes).toContain('any');
+
+		// Verify minimal manifest without scope creep
+		expect(content.categories).toBeUndefined();
+		expect(content.orientation).toBeUndefined();
 	});
 
 	it('has all generated PWA and Apple touch icon files in static/icons/', () => {
@@ -85,6 +89,7 @@ describe('PWA Manifest, Icons & Offline Fallback', () => {
 		expect(swContent).toContain("addEventListener('fetch'");
 		expect(swContent).toContain("'/offline'");
 		expect(swContent).toContain("request.mode === 'navigate'");
+		expect(swContent).toContain("url.pathname.startsWith('/dashboard')");
 		expect(swContent).toContain('caches.open');
 
 		const tsconfigContent = JSON.parse(fs.readFileSync(tsconfigPath, 'utf-8'));

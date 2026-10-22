@@ -44,7 +44,7 @@
 		<div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
 			<a
 				href={resolve('/dashboard')}
-				class="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-lime-voltage)] px-6 py-2.5 text-sm font-semibold text-[var(--color-forest-ink)] shadow-sm transition hover:brightness-95 active:brightness-90"
+				class="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-lime-voltage)] px-6 py-2.5 text-sm font-semibold text-[var(--color-forest-ink)] transition hover:brightness-95 active:brightness-90"
 			>
 				<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
 				Buka Dashboard
