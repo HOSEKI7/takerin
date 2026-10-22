@@ -1,5 +1,6 @@
 import type { Handle } from '@sveltejs/kit/hooks';
 import { redirect } from '@sveltejs/kit';
+import { building } from '$app/env';
 import { getAuth } from '#lib/server/auth/index.js';
 import { ensureActivePeriod } from '#lib/server/db/period.js';
 import { env } from 'cloudflare:workers';
@@ -15,6 +16,12 @@ const PROTECTED_PREFIXES = [
 ];
 
 export const handle: Handle = async ({ event, resolve }) => {
+	if (building) {
+		event.locals.user = null;
+		event.locals.session = null;
+		return resolve(event);
+	}
+
 	const d1 = event.platform?.env?.DB ?? env?.DB;
 
 	if (d1) {
