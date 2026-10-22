@@ -26,7 +26,11 @@ export const load: PageServerLoad = async ({ platform }) => {
 };
 
 export const actions: Actions = {
-	createTemplate: async ({ request, platform }) => {
+	createTemplate: async ({ request, locals, platform }) => {
+		if (!locals.user || locals.user.role !== 'admin') {
+			return fail(403, { error: 'Akses ditolak. Hanya admin yang diizinkan.' });
+		}
+
 		if (!platform?.env?.DB) {
 			return fail(500, { error: 'Database tidak tersedia.' });
 		}
@@ -56,7 +60,11 @@ export const actions: Actions = {
 		}
 	},
 
-	updateTemplate: async ({ request, platform }) => {
+	updateTemplate: async ({ request, locals, platform }) => {
+		if (!locals.user || locals.user.role !== 'admin') {
+			return fail(403, { error: 'Akses ditolak. Hanya admin yang diizinkan.' });
+		}
+
 		if (!platform?.env?.DB) {
 			return fail(500, { error: 'Database tidak tersedia.' });
 		}
@@ -91,7 +99,11 @@ export const actions: Actions = {
 		}
 	},
 
-	deleteTemplate: async ({ request, platform }) => {
+	deleteTemplate: async ({ request, locals, platform }) => {
+		if (!locals.user || locals.user.role !== 'admin') {
+			return fail(403, { error: 'Akses ditolak. Hanya admin yang diizinkan.' });
+		}
+
 		if (!platform?.env?.DB) {
 			return fail(500, { error: 'Database tidak tersedia.' });
 		}

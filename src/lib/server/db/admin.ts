@@ -12,6 +12,7 @@ export interface AdminAnalyticsData {
 	totalUsers: number;
 	dau: number;
 	totalExpenses: number;
+	totalExpenseAmount: number;
 	topCategories: Array<{ name: string; count: number }>;
 }
 
@@ -61,14 +62,20 @@ export async function getAdminAnalytics(
 	const userCountRes = await db.select({ count: sql<number>`count(*)` }).from(schema.user);
 	const totalUsers = Number(userCountRes[0]?.count ?? 0);
 
-	// 2. Total Expenses Recorded
-	const expenseCountRes = await db.select({ count: sql<number>`count(*)` }).from(schema.expense);
+	// 2. Total Expenses Recorded & Total Expense Amount
+	const expenseCountRes = await db
+		.select({
+			count: sql<number>`count(*)`,
+			totalAmount: sql<number>`coalesce(sum(${schema.expense.amount}), 0)`
+		})
+		.from(schema.expense);
 	const totalExpenses = Number(expenseCountRes[0]?.count ?? 0);
+	const totalExpenseAmount = Number(expenseCountRes[0]?.totalAmount ?? 0);
 
 	// 3. DAU (Daily Active Users in the last 24 hours)
 	const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-	// Collect active user IDs from sessions & user record update
+	// Collect active user IDs from sessions, user record updates, and recorded expenses
 	const activeSessions = await db
 		.select({ userId: schema.session.userId })
 		.from(schema.session)
@@ -89,12 +96,25 @@ export async function getAdminAnalytics(
 			)
 		);
 
+	const activeExpenses = await db
+		.select({ userId: schema.expense.userId })
+		.from(schema.expense)
+		.where(
+			or(
+				gte(schema.expense.updatedAt, twentyFourHoursAgo),
+				gte(schema.expense.createdAt, twentyFourHoursAgo)
+			)
+		);
+
 	const activeIdSet = new Set<string>();
 	for (const s of activeSessions) {
 		activeIdSet.add(s.userId);
 	}
 	for (const u of activeUsers) {
 		activeIdSet.add(u.id);
+	}
+	for (const e of activeExpenses) {
+		activeIdSet.add(e.userId);
 	}
 	const dau = activeIdSet.size;
 
@@ -118,6 +138,7 @@ export async function getAdminAnalytics(
 		totalUsers,
 		dau,
 		totalExpenses,
+		totalExpenseAmount,
 		topCategories
 	};
 }
@@ -154,6 +175,16 @@ export async function getAdminUsers(d1: D1Database): Promise<AdminUserRecord[]> 
 		.from(schema.session)
 		.groupBy(schema.session.userId);
 
+	// Get latest expense creation per user
+	const expenseDates = await db
+		.select({
+			userId: schema.expense.userId,
+			maxUpdated: sql<number>`max(${schema.expense.updatedAt})`,
+			maxCreated: sql<number>`max(${schema.expense.createdAt})`
+		})
+		.from(schema.expense)
+		.groupBy(schema.expense.userId);
+
 	const lastSessionMap = new Map<string, Date>();
 	for (const s of sessionDates) {
 		const updatedMs = Number(s.maxUpdated ?? 0);
@@ -164,11 +195,25 @@ export async function getAdminUsers(d1: D1Database): Promise<AdminUserRecord[]> 
 		}
 	}
 
+	const lastExpenseMap = new Map<string, Date>();
+	for (const e of expenseDates) {
+		const updatedMs = Number(e.maxUpdated ?? 0);
+		const createdMs = Number(e.maxCreated ?? 0);
+		const latestMs = Math.max(updatedMs, createdMs);
+		if (latestMs > 0) {
+			lastExpenseMap.set(e.userId, new Date(latestMs));
+		}
+	}
+
 	return users.map((u) => {
 		const sessionDate = lastSessionMap.get(u.id);
+		const expenseDate = lastExpenseMap.get(u.id);
 		let lastActiveAt = u.updatedAt ?? u.createdAt;
 		if (sessionDate && sessionDate.getTime() > lastActiveAt.getTime()) {
 			lastActiveAt = sessionDate;
+		}
+		if (expenseDate && expenseDate.getTime() > lastActiveAt.getTime()) {
+			lastActiveAt = expenseDate;
 		}
 
 		return {

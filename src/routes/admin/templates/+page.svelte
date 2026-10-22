@@ -30,13 +30,26 @@
 	let isSubmitting = $state(false);
 
 	// Form values for Create / Edit
+	interface CategoryTemplateItemWithId extends CategoryTemplateInputItem {
+		id: string;
+	}
+
+	let nextRowId = 0;
+	function makeCategoryItem(
+		name = '',
+		percentage = 10,
+		isSavings = false
+	): CategoryTemplateItemWithId {
+		return { id: `row-${Date.now()}-${nextRowId++}`, name, percentage, isSavings };
+	}
+
 	let editingId = $state('');
 	let templateName = $state('');
 	let templateDescription = $state('');
-	let templateCategories = $state<CategoryTemplateInputItem[]>([
-		{ name: 'Kebutuhan', percentage: 50, isSavings: false },
-		{ name: 'Keinginan', percentage: 30, isSavings: false },
-		{ name: 'Tabungan', percentage: 20, isSavings: true }
+	let templateCategories = $state<CategoryTemplateItemWithId[]>([
+		makeCategoryItem('Kebutuhan', 50, false),
+		makeCategoryItem('Keinginan', 30, false),
+		makeCategoryItem('Tabungan', 20, true)
 	]);
 
 	// Delete Confirmation state
@@ -55,9 +68,9 @@
 		templateName = '';
 		templateDescription = '';
 		templateCategories = [
-			{ name: 'Kebutuhan', percentage: 50, isSavings: false },
-			{ name: 'Keinginan', percentage: 30, isSavings: false },
-			{ name: 'Tabungan', percentage: 20, isSavings: true }
+			makeCategoryItem('Kebutuhan', 50, false),
+			makeCategoryItem('Keinginan', 30, false),
+			makeCategoryItem('Tabungan', 20, true)
 		];
 		modalMode = 'create';
 	}
@@ -66,11 +79,9 @@
 		editingId = tpl.id;
 		templateName = tpl.name;
 		templateDescription = tpl.description || '';
-		templateCategories = (tpl.categories || []).map((c) => ({
-			name: c.name,
-			percentage: c.percentage,
-			isSavings: Boolean(c.isSavings)
-		}));
+		templateCategories = (tpl.categories || []).map((c) =>
+			makeCategoryItem(c.name, c.percentage, Boolean(c.isSavings))
+		);
 		modalMode = 'edit';
 	}
 
@@ -85,12 +96,12 @@
 	}
 
 	function addCategoryRow() {
-		templateCategories = [...templateCategories, { name: '', percentage: 10, isSavings: false }];
+		templateCategories = [...templateCategories, makeCategoryItem('', 10, false)];
 	}
 
-	function removeCategoryRow(index: number) {
+	function removeCategoryRow(id: string) {
 		if (templateCategories.length <= 1) return;
-		templateCategories = templateCategories.filter((_, i) => i !== index);
+		templateCategories = templateCategories.filter((cat) => cat.id !== id);
 	}
 </script>
 
@@ -135,7 +146,7 @@
 
 	{#if form?.error}
 		<div
-			class="flex items-center gap-2.5 rounded-lg border border-alarm-red/20 bg-red-50 p-4 text-xs font-semibold text-alarm-red dark:border-alarm-red/40 dark:bg-red-950/40 dark:text-red-300"
+			class="flex items-center gap-2.5 rounded-xl border border-alarm-red/20 bg-alarm-red/10 p-4 text-xs font-semibold text-alarm-red dark:border-alarm-red/40 dark:bg-alarm-red/20"
 		>
 			<HugeiconsIcon icon={Alert02Icon} size={18} />
 			<span>{form.error}</span>
@@ -185,9 +196,9 @@
 							Daftar Kategori ({tpl.categories?.length || 0})
 						</p>
 						<div class="mt-2 flex flex-wrap gap-1.5">
-							{#each tpl.categories || [] as cat (cat.name)}
+							{#each tpl.categories || [] as cat (`${tpl.id}-${cat.name}`)}
 								<span
-									class="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold {cat.isSavings
+									class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold {cat.isSavings
 										? 'bg-linen-mist text-forest-ink dark:bg-spruce/80 dark:text-lime-voltage'
 										: 'bg-fog text-charcoal dark:bg-dark-card dark:text-linen-mist'}"
 								>
@@ -224,7 +235,7 @@
 							variant="secondary"
 							size="sm"
 							onclick={() => openDeleteModal(tpl)}
-							class="text-xs text-alarm-red hover:bg-red-50 dark:hover:bg-red-950/40"
+							class="text-xs text-alarm-red hover:bg-alarm-red/10 dark:hover:bg-alarm-red/20"
 						>
 							<HugeiconsIcon icon={Delete02Icon} size={14} />
 							<span>Hapus</span>
@@ -281,7 +292,17 @@
 					<input type="hidden" name="id" value={editingId} />
 				{/if}
 
-				<input type="hidden" name="categories" value={JSON.stringify(templateCategories)} />
+				<input
+					type="hidden"
+					name="categories"
+					value={JSON.stringify(
+						templateCategories.map(({ name, percentage, isSavings }) => ({
+							name,
+							percentage,
+							isSavings
+						}))
+					)}
+				/>
 
 				<Input
 					id="template-name"
@@ -306,7 +327,7 @@
 						rows="2"
 						placeholder="contoh: Pembagian proporsional untuk pengeluaran bulanan..."
 						bind:value={templateDescription}
-						class="w-full rounded-lg border border-fog bg-paper px-3 py-2 text-xs font-medium text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-linen-mist dark:focus:border-lime-voltage"
+						class="w-full rounded-[10px] border border-fog bg-paper px-3 py-2 text-xs font-medium text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-linen-mist dark:focus:border-lime-voltage"
 					></textarea>
 				</div>
 
@@ -328,9 +349,9 @@
 					</div>
 
 					<div class="space-y-2">
-						{#each templateCategories as cat, idx (idx)}
+						{#each templateCategories as cat (cat.id)}
 							<div
-								class="flex items-center gap-2 rounded-lg border border-fog bg-paper/60 p-2.5 dark:border-dark-border dark:bg-dark-surface/60"
+								class="flex items-center gap-2 rounded-xl border border-fog bg-paper/60 p-2.5 dark:border-dark-border dark:bg-dark-surface/60"
 							>
 								<!-- Category Name -->
 								<input
@@ -338,7 +359,7 @@
 									placeholder="Nama Kategori"
 									required
 									bind:value={cat.name}
-									class="flex-1 rounded-md border border-fog bg-paper px-2.5 py-1.5 text-xs text-obsidian focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-card dark:text-linen-mist dark:focus:border-lime-voltage"
+									class="flex-1 rounded-[10px] border border-fog bg-paper px-2.5 py-1.5 text-xs text-obsidian focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-card dark:text-linen-mist dark:focus:border-lime-voltage"
 								/>
 
 								<!-- Category Percentage -->
@@ -351,7 +372,7 @@
 										required
 										placeholder="%"
 										bind:value={cat.percentage}
-										class="w-full rounded-md border border-fog bg-paper px-2 py-1.5 text-right text-xs font-bold text-obsidian focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-card dark:text-linen-mist dark:focus:border-lime-voltage"
+										class="w-full rounded-[10px] border border-fog bg-paper px-2 py-1.5 text-right text-xs font-bold text-obsidian focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-card dark:text-linen-mist dark:focus:border-lime-voltage"
 									/>
 									<span class="text-xs font-bold text-slate dark:text-pebble">%</span>
 								</div>
@@ -372,7 +393,7 @@
 								{#if templateCategories.length > 1}
 									<button
 										type="button"
-										onclick={() => removeCategoryRow(idx)}
+										onclick={() => removeCategoryRow(cat.id)}
 										class="cursor-pointer p-1 text-slate hover:text-alarm-red dark:text-pebble"
 										aria-label="Hapus baris kategori"
 									>
@@ -386,7 +407,7 @@
 					<button
 						type="button"
 						onclick={addCategoryRow}
-						class="mt-2 inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-dashed border-fog py-2 text-xs font-semibold text-forest-ink transition hover:border-forest-ink hover:bg-fog dark:border-dark-border dark:text-lime-voltage dark:hover:border-lime-voltage dark:hover:bg-dark-surface"
+						class="mt-2 inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border border-dashed border-fog py-2 text-xs font-semibold text-forest-ink transition hover:border-forest-ink hover:bg-fog dark:border-dark-border dark:text-lime-voltage dark:hover:border-lime-voltage dark:hover:bg-dark-surface"
 					>
 						<HugeiconsIcon icon={Add01Icon} size={15} />
 						<span>Tambah Kategori Lain</span>
@@ -431,7 +452,7 @@
 			class="w-full max-w-md rounded-2xl border border-alarm-red/30 bg-paper p-6 shadow-2xl dark:border-alarm-red/40 dark:bg-dark-card"
 		>
 			<div class="flex items-center gap-3">
-				<div class="rounded-full bg-red-100 p-2 text-alarm-red dark:bg-red-950/60">
+				<div class="rounded-full bg-alarm-red/10 p-2 text-alarm-red dark:bg-alarm-red/20">
 					<HugeiconsIcon icon={Alert02Icon} size={24} />
 				</div>
 				<h3 class="text-lg font-bold text-obsidian dark:text-paper">Hapus Template Kategori</h3>
@@ -473,7 +494,7 @@
 					variant="dark"
 					size="sm"
 					disabled={isSubmitting}
-					class="bg-alarm-red text-white hover:bg-red-700"
+					class="bg-alarm-red text-paper hover:bg-alarm-red/90"
 				>
 					{isSubmitting ? 'Menghapus...' : 'Ya, Hapus'}
 				</Button>

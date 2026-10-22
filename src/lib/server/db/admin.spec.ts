@@ -198,6 +198,7 @@ describe('Admin D1 Database Operations (Seam 2)', () => {
 			expect(analytics.totalUsers).toBe(2);
 			expect(analytics.dau).toBe(1); // Only u1 was active within 24 hours
 			expect(analytics.totalExpenses).toBe(2);
+			expect(analytics.totalExpenseAmount).toBe(75000);
 			expect(analytics.topCategories).toEqual([
 				{ name: 'makanan', count: 2 },
 				{ name: 'transportasi', count: 1 }

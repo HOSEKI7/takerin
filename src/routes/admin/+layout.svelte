@@ -79,7 +79,7 @@
 					{@const active = isNavActive(item.href, item.exact)}
 					<a
 						href={item.href}
-						class="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition {active
+						class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition {active
 							? 'bg-forest-ink text-lime-voltage dark:bg-lime-voltage dark:text-forest-ink'
 							: 'text-charcoal hover:bg-fog hover:text-forest-ink dark:text-pebble dark:hover:bg-dark-card dark:hover:text-linen-mist'}"
 					>
@@ -93,7 +93,7 @@
 			<div class="flex items-center gap-2 sm:gap-3">
 				<a
 					href={resolve('/dashboard')}
-					class="inline-flex items-center gap-1.5 rounded-lg border border-fog px-2.5 py-1 text-xs font-semibold text-charcoal transition hover:border-pebble hover:text-forest-ink dark:border-dark-border dark:text-linen-mist dark:hover:border-lime-voltage dark:hover:text-lime-voltage"
+					class="inline-flex items-center gap-1.5 rounded-full border border-fog px-3 py-1 text-xs font-semibold text-charcoal transition hover:border-pebble hover:text-forest-ink dark:border-dark-border dark:text-linen-mist dark:hover:border-lime-voltage dark:hover:text-lime-voltage"
 				>
 					<HugeiconsIcon icon={ArrowLeft02Icon} size={14} />
 					<span class="hidden sm:inline">Ke Aplikasi</span>
@@ -121,7 +121,7 @@
 					{@const active = isNavActive(item.href, item.exact)}
 					<a
 						href={item.href}
-						class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition {active
+						class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap transition {active
 							? 'bg-forest-ink text-lime-voltage dark:bg-lime-voltage dark:text-forest-ink'
 							: 'text-slate hover:bg-fog hover:text-charcoal dark:text-pebble dark:hover:bg-dark-card'}"
 					>

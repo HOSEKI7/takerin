@@ -6,6 +6,7 @@ export const load: PageServerLoad = async ({ platform }) => {
 		totalUsers: 0,
 		dau: 0,
 		totalExpenses: 0,
+		totalExpenseAmount: 0,
 		topCategories: []
 	};
 

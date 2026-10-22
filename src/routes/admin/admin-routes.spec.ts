@@ -72,6 +72,7 @@ describe('Admin Routes Server Logic (Seam 4)', () => {
 				totalUsers: 42,
 				dau: 12,
 				totalExpenses: 350,
+				totalExpenseAmount: 15000000,
 				topCategories: [{ name: 'makanan', count: 28 }]
 			};
 
@@ -201,6 +202,23 @@ describe('Admin Routes Server Logic (Seam 4)', () => {
 
 			expect(deleteSpy).toHaveBeenCalledWith(expect.anything(), 'tpl-to-delete');
 			expect(actionResult).toEqual({ success: true, message: 'Template berhasil dihapus.' });
+		});
+
+		it('rejects non-admin users attempting template actions with 403', async () => {
+			const mockRequest = {
+				formData: vi.fn().mockResolvedValue(new FormData())
+			} as unknown as Request;
+
+			const result = await templateActions.createTemplate({
+				request: mockRequest,
+				locals: { user: regularUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof templateActions.createTemplate>[0]);
+
+			expect(result).toMatchObject({
+				status: 403,
+				data: { error: 'Akses ditolak. Hanya admin yang diizinkan.' }
+			});
 		});
 	});
 

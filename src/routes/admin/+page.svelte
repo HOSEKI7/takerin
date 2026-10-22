@@ -2,6 +2,7 @@
 	import type { PageProps } from './$types.js';
 	import Card from '#lib/components/Card.svelte';
 	import Badge from '#lib/components/Badge.svelte';
+	import { formatRupiah } from '#lib/validation/onboarding.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		UserGroupIcon,
@@ -101,7 +102,9 @@
 					{analytics.totalExpenses.toLocaleString('id-ID')}
 				</span>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
-					Total entri pengeluaran yang dicatat semua pengguna
+					Total nominal: <strong class="text-obsidian dark:text-paper"
+						>{formatRupiah(analytics.totalExpenseAmount || 0)}</strong
+					>
 				</p>
 			</div>
 		</Card>
