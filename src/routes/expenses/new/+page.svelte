@@ -252,11 +252,11 @@
 						{#if !canSubmit}
 							<p class="mt-2 text-center text-[11px] text-slate dark:text-pebble">
 								{#if amount <= 0}
-									Masukkan nominal terlebih dahulu
+									{t('expenses.form.amountRequired')}
 								{:else if !selectedCategoryId}
-									Pilih salah satu kategori
+									{t('expenses.form.categoryRequired')}
 								{:else if name.trim().length === 0}
-									Isi nama pengeluaran
+									{t('expenses.form.nameRequired')}
 								{/if}
 							</p>
 						{/if}

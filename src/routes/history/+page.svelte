@@ -123,7 +123,7 @@
 										<span
 											class="rounded-full bg-fog px-2.5 py-0.5 text-[11px] font-semibold text-slate dark:bg-spruce/40 dark:text-linen-mist"
 										>
-											{t('common.success')}
+											{t('history.periodCompleted')}
 										</span>
 									</div>
 

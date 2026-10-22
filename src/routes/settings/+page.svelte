@@ -728,7 +728,7 @@
 									Menandai hari dimulainya Periode Bulan baru (1–31). Periode saat ini:
 									<strong class="text-forest-ink dark:text-linen-mist">
 										{data.activePeriod
-											? `${formatDateIndonesian(data.activePeriod.startDate)} s/d ${formatDateIndonesian(data.activePeriod.endDate)}`
+											? `${formatDateIndonesian(data.activePeriod.startDate)} ${t('common.to')} ${formatDateIndonesian(data.activePeriod.endDate)}`
 											: '-'}
 									</strong>
 									(Tanggal Gajian aktif: {data.settings.payDay}).
@@ -792,7 +792,7 @@
 								<option value="en">English (EN)</option>
 							</select>
 							<p class="mt-1 text-xs text-slate dark:text-pebble">
-								Tersimpan di preferensi profil pengguna.
+								{t('settings.languageSyncHelp')}
 							</p>
 						</div>
 
@@ -815,7 +815,7 @@
 								<option value="dark">{t('settings.darkTheme')}</option>
 							</select>
 							<p class="mt-1 text-xs text-slate dark:text-pebble">
-								Tersinkronisasi langsung dengan toggle tema dan tersimpan di database.
+								{t('settings.themeSyncHelp')}
 							</p>
 						</div>
 					</div>
@@ -850,7 +850,7 @@
 								</h3>
 							</div>
 							<p class="mt-2 text-xs text-slate dark:text-linen-mist/80">
-								{t('settings.exportDesc')}
+								{t('settings.exportCsvDesc')}
 							</p>
 						</div>
 
@@ -877,7 +877,7 @@
 								</h3>
 							</div>
 							<p class="mt-2 text-xs text-slate dark:text-linen-mist/80">
-								{t('settings.exportDesc')}
+								{t('settings.exportPdfDesc')}
 							</p>
 
 							<div class="mt-3">
@@ -894,10 +894,10 @@
 								>
 									{#each data.periods as p (p.id)}
 										<option value={p.id}>
-											{formatDateIndonesian(p.startDate)} s/d {formatDateIndonesian(p.endDate)} ({p.status ===
+											{formatDateIndonesian(p.startDate)} {t('common.to')} {formatDateIndonesian(p.endDate)} ({p.status ===
 											'active'
-												? t('common.active')
-												: t('common.success')})
+												? t('history.periodActive')
+												: t('history.periodCompleted')})
 										</option>
 									{/each}
 								</select>

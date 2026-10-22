@@ -98,12 +98,12 @@
 		class="mb-4 rounded-xl border border-fog/80 bg-fog/30 p-4 text-right dark:border-dark-border/60 dark:bg-dark-surface/60"
 	>
 		<div class="flex items-center justify-between text-xs text-slate dark:text-pebble">
-			<span class="font-medium tracking-wide uppercase">Nominal Pengeluaran</span>
+			<span class="font-medium tracking-wide uppercase">{t('calculator.expenseAmount')}</span>
 			{#if hasOperator}
 				<span
 					class="rounded bg-lime-voltage/30 px-1.5 py-0.5 text-[11px] font-bold text-forest-ink dark:bg-lime-voltage/20 dark:text-lime-voltage"
 				>
-					Kalkulator Aktif
+					{t('calculator.active')}
 				</span>
 			{/if}
 		</div>
@@ -259,7 +259,7 @@
 			class="col-span-2 flex h-11 cursor-pointer items-center justify-center rounded-full border border-fog bg-fog/40 text-sm font-semibold text-charcoal transition hover:bg-fog/80 active:scale-95 dark:border-dark-border dark:bg-dark-surface dark:text-linen-mist"
 			onclick={handleBackspace}
 		>
-			⌫ {t('common.delete')}
+			⌫ {t('calculator.backspaceButton')}
 		</button>
 		<button
 			type="button"

@@ -461,13 +461,13 @@
 			/>
 
 			<!-- ACTIVE CATEGORIES LIST -->
-			<section aria-label="Daftar Kategori Aktif" class="space-y-4">
+			<section aria-label={t('categories.activeCategories', { count: categories.length })} class="space-y-4">
 				<div class="flex items-center justify-between">
 					<h2 class="text-base font-extrabold text-obsidian sm:text-lg dark:text-paper">
-						Kategori Aktif ({categories.length})
+						{t('categories.activeCategories', { count: categories.length })}
 					</h2>
 					<span class="text-xs text-slate dark:text-pebble">
-						Pemasukan Bulanan: {formatRupiah(data.period?.totalIncome ?? 0)}
+						{t('categories.monthlyIncome', { amount: formatRupiah(data.period?.totalIncome ?? 0) })}
 					</span>
 				</div>
 
@@ -501,8 +501,8 @@
 										<input
 											type="text"
 											bind:value={cat.name}
-											placeholder="Nama Kategori"
-											aria-label="Nama Kategori"
+											placeholder={t('categories.namePlaceholder')}
+											aria-label={t('categories.nameLabel')}
 											required
 											class="w-full rounded-lg border border-fog bg-paper px-3 py-1.5 text-sm font-bold text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
 										/>
@@ -518,7 +518,7 @@
 												bind:checked={cat.isSavings}
 												class="h-4 w-4 rounded border-fog text-forest-ink focus:ring-forest-ink dark:border-dark-border dark:text-lime-voltage"
 											/>
-											<span>Kategori Tabungan</span>
+											<span>{t('categories.isSavingsLabel')}</span>
 										</label>
 									</div>
 								</div>
@@ -532,7 +532,7 @@
 											<div
 												class="flex items-center justify-between text-[10px] font-semibold text-slate dark:text-pebble"
 											>
-												<label for={`pct-${cat.id || idx}`}>Persentase</label>
+												<label for={`pct-${cat.id || idx}`}>{t('categories.percentageLabel')}</label>
 												<div class="relative w-14">
 													<input
 														id={`pct-${cat.id || idx}`}
@@ -563,13 +563,13 @@
 
 										<div class="space-y-0.5 text-right text-xs">
 											<div>
-												<span class="text-[10px] text-slate dark:text-pebble">Alokasi: </span>
+												<span class="text-[10px] text-slate dark:text-pebble">{t('categories.allocationLabel')}: </span>
 												<span class="font-mono font-bold text-obsidian dark:text-paper">
 													{formatRupiah(currentAllocation)}
 												</span>
 											</div>
 											<div>
-												<span class="text-[10px] text-slate dark:text-pebble">Saldo: </span>
+												<span class="text-[10px] text-slate dark:text-pebble">{t('categories.balanceLabel')}: </span>
 												<span
 													class="font-mono font-bold {currentBalance < 0
 														? 'text-alarm-red'
@@ -580,7 +580,7 @@
 											</div>
 											{#if cat.spent !== undefined && cat.spent > 0}
 												<div class="text-[10px] text-slate/80 dark:text-pebble/80">
-													Terpakai: {formatRupiah(cat.spent)}
+													{t('categories.spentLabel', { amount: formatRupiah(cat.spent) })}
 												</div>
 											{/if}
 										</div>
@@ -588,7 +588,7 @@
 
 									<button
 										type="button"
-										aria-label={`Bekukan kategori ${cat.name}`}
+										aria-label={t('categories.freezeAria', { name: cat.name })}
 										onclick={() => openFreezeModal(cat)}
 										disabled={categories.length <= 1}
 										class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-alarm-red/30 bg-alarm-red/10 text-alarm-red transition hover:bg-alarm-red/20 disabled:cursor-not-allowed disabled:opacity-40"
@@ -605,17 +605,16 @@
 			<!-- FROZEN CATEGORIES SECTION -->
 			{#if frozenCategories.length > 0}
 				<section
-					aria-label="Kategori Dibekukan"
+					aria-label={t('categories.frozenBadge')}
 					class="mt-8 border-t border-fog pt-6 dark:border-dark-border"
 				>
 					<div class="mb-3 flex items-center justify-between">
 						<div>
 							<h3 class="text-sm font-bold text-slate dark:text-pebble">
-								Kategori Dibekukan ({frozenCategories.length})
+								{t('categories.frozenSectionTitle', { count: frozenCategories.length })}
 							</h3>
 							<p class="text-xs text-slate/80 dark:text-pebble/80">
-								Kategori ini dinonaktifkan di tengah periode. Saldo Kategori tetap tercatat namun
-								tidak dapat menerima pengeluaran baru.
+								{t('categories.frozenSectionDesc')}
 							</p>
 						</div>
 					</div>
@@ -630,18 +629,18 @@
 										data-testid="badge-frozen"
 										class="rounded-full bg-fog px-2 py-0.5 text-[10px] font-bold text-slate dark:bg-dark-border dark:text-pebble"
 									>
-										Dibekukan
+										{t('categories.frozenBadge')}
 									</span>
 									<input
 										type="text"
 										bind:value={fCat.name}
-										aria-label={`Ubah nama kategori dibekukan ${fCat.name}`}
+										aria-label={fCat.name}
 										class="rounded-lg border border-fog/80 bg-paper px-2.5 py-1 text-sm font-bold text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
 									/>
 								</div>
 
 								<div class="text-right text-xs">
-									<span class="text-slate dark:text-pebble">Saldo Kategori: </span>
+									<span class="text-slate dark:text-pebble">{t('categories.balanceLabel')}: </span>
 									<span
 										class="font-mono font-bold {fCat.balance < 0
 											? 'text-alarm-red'
@@ -651,7 +650,7 @@
 									</span>
 									{#if fCat.spent > 0}
 										<span class="ml-2 text-[11px] text-slate dark:text-pebble">
-											(Terpakai: {formatRupiah(fCat.spent)})
+											({t('categories.spentLabel', { amount: formatRupiah(fCat.spent) })})
 										</span>
 									{/if}
 								</div>
@@ -668,15 +667,15 @@
 				<div>
 					{#if !isExactly100}
 						<p class="text-xs font-semibold text-alarm-red">
-							Total persentase harus tepat 100% untuk menyimpan (saat ini {totalPercentage}%).
+							{t('categories.validationExact100', { total: totalPercentage })}
 						</p>
 					{:else if hasEmptyNames}
 						<p class="text-xs font-semibold text-alarm-red">
-							Semua nama kategori harus terisi tidak boleh kosong.
+							{t('categories.validationEmptyNames')}
 						</p>
 					{:else}
 						<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
-							✓ Konfigurasi alokasi valid dan siap disimpan.
+							{t('categories.validationReady')}
 						</p>
 					{/if}
 				</div>
@@ -711,10 +710,10 @@
 				class="w-full max-w-md rounded-2xl border border-fog bg-paper p-6 shadow-xl dark:border-dark-border dark:bg-dark-card"
 			>
 				<h3 id="modal-add-title" class="text-lg font-bold text-obsidian dark:text-paper">
-					Tambah Kategori Baru
+					{t('categories.addModalTitle')}
 				</h3>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
-					Persentase kategori lain harus dikurangi agar total alokasi tetap 100%.
+					{t('categories.addModalDesc')}
 				</p>
 
 				{#if addErrorMessage}
@@ -732,13 +731,13 @@
 							for="new-cat-name"
 							class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
 						>
-							Nama Kategori *
+							{t('categories.categoryNameRequired')}
 						</label>
 						<input
 							id="new-cat-name"
 							type="text"
 							bind:value={newCatName}
-							placeholder="Misal: Investasi, Kado & Donasi"
+							placeholder={t('categories.namePlaceholder')}
 							class="mt-1 w-full rounded-lg border border-fog bg-paper px-3 py-2 text-sm text-obsidian focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
 						/>
 					</div>
@@ -748,7 +747,7 @@
 							for="new-cat-pct"
 							class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
 						>
-							Persentase Alokasi (%) *
+							{t('categories.percentageAllocRequired')}
 						</label>
 						<div class="relative mt-1">
 							<input
@@ -765,9 +764,11 @@
 							>
 						</div>
 						<span class="mt-1 block text-[11px] text-slate dark:text-pebble">
-							Estimasi Alokasi: {formatRupiah(
-								Math.round((data.period?.totalIncome ?? 0) * (newCatPercentage / 100))
-							)}
+							{t('categories.estimatedAlloc', {
+								amount: formatRupiah(
+									Math.round((data.period?.totalIncome ?? 0) * (newCatPercentage / 100))
+								)
+							})}
 						</span>
 					</div>
 
@@ -780,7 +781,7 @@
 								bind:checked={newCatIsSavings}
 								class="h-4 w-4 rounded border-fog text-forest-ink focus:ring-forest-ink dark:border-dark-border dark:text-lime-voltage"
 							/>
-							<span>Kategori Tabungan</span>
+							<span>{t('categories.isSavingsLabel')}</span>
 						</label>
 					</div>
 
@@ -788,7 +789,7 @@
 					{#if categories.length > 0}
 						<div class="border-t border-fog pt-3 dark:border-dark-border">
 							<span class="block text-xs font-bold text-obsidian dark:text-paper">
-								Metode Pengurangan Kategori Lain:
+								{t('categories.reductionMethod')}
 							</span>
 							<div class="mt-2 flex items-center gap-4 text-xs font-semibold">
 								<label class="flex cursor-pointer items-center gap-1.5">
@@ -799,7 +800,7 @@
 										bind:group={addReductionMode}
 										class="text-forest-ink focus:ring-forest-ink"
 									/>
-									<span>Potong Proporsional Otomatis</span>
+									<span>{t('categories.reductionAuto')}</span>
 								</label>
 								<label class="flex cursor-pointer items-center gap-1.5">
 									<input
@@ -809,7 +810,7 @@
 										bind:group={addReductionMode}
 										class="text-forest-ink focus:ring-forest-ink"
 									/>
-									<span>Pilih Manual</span>
+									<span>{t('categories.reductionManual')}</span>
 								</label>
 							</div>
 
@@ -830,7 +831,7 @@
 													max={c.percentage - 0.5}
 													step="0.5"
 													bind:value={manualReductions[key]}
-													aria-label={`Kurangi persentase ${c.name}`}
+													aria-label={c.name}
 													class="h-1.5 w-20 cursor-pointer accent-forest-ink dark:accent-lime-voltage"
 												/>
 												<div class="flex items-center gap-1">
@@ -861,10 +862,10 @@
 						size="sm"
 						onclick={() => (showAddModal = false)}
 					>
-						Batal
+						{t('common.cancel')}
 					</Button>
 					<Button type="button" variant="primary" size="sm" onclick={confirmAddCategory}>
-						Tambahkan Kategori
+						{t('categories.confirmAdd')}
 					</Button>
 				</div>
 			</div>
@@ -885,16 +886,15 @@
 				<div class="flex items-center gap-2.5 text-alarm-red">
 					<HugeiconsIcon icon={Delete02Icon} class="h-5 w-5" />
 					<h3 id="modal-freeze-title" class="text-lg font-bold text-obsidian dark:text-paper">
-						Bekukan Kategori?
+						{t('categories.freezeModalTitle')}
 					</h3>
 				</div>
 
 				<p class="mt-2 text-xs leading-relaxed text-charcoal dark:text-pebble">
-					Kategori <strong class="text-obsidian dark:text-paper">"{candidateToFreeze.name}"</strong>
-					memiliki alokasi
-					<strong class="text-obsidian dark:text-paper">{candidateToFreeze.percentage}%</strong>.
-					Kategori ini akan dibekukan (Frozen) sehingga tidak bisa menerima pengeluaran baru.
-					Pindahkan alokasi {candidateToFreeze.percentage}% ini ke kategori aktif lainnya:
+					{t('categories.freezeModalDesc', {
+						name: candidateToFreeze.name,
+						percentage: candidateToFreeze.percentage
+					})}
 				</p>
 
 				{#if freezeErrorMessage}
@@ -916,7 +916,7 @@
 								bind:group={freezeRedistributeMode}
 								class="text-forest-ink focus:ring-forest-ink"
 							/>
-							<span>Bagi Proporsional Otomatis</span>
+							<span>{t('categories.redistributeAuto')}</span>
 						</label>
 						<label class="flex cursor-pointer items-center gap-1.5">
 							<input
@@ -926,7 +926,7 @@
 								bind:group={freezeRedistributeMode}
 								class="text-forest-ink focus:ring-forest-ink"
 							/>
-							<span>Pilih Manual</span>
+							<span>{t('categories.redistributeManual')}</span>
 						</label>
 					</div>
 
@@ -945,7 +945,7 @@
 											max="100"
 											step="0.5"
 											bind:value={manualAllocations[key]}
-											aria-label={`Tambah persentase ke ${remCat.name}`}
+											aria-label={remCat.name}
 											class="h-1.5 w-20 cursor-pointer accent-forest-ink dark:accent-lime-voltage"
 										/>
 										<div class="flex items-center gap-1">
@@ -974,10 +974,10 @@
 						size="sm"
 						onclick={() => (showFreezeModal = false)}
 					>
-						Batal
+						{t('common.cancel')}
 					</Button>
 					<Button type="button" variant="primary" size="sm" onclick={confirmFreezeCategory}>
-						Konfirmasi & Bekukan
+						{t('categories.confirmFreeze')}
 					</Button>
 				</div>
 			</div>

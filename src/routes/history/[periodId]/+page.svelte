@@ -81,7 +81,7 @@
 				<span
 					class="rounded-full bg-linen-mist px-2.5 py-0.5 text-xs font-semibold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
 				>
-					{t('history.detailTitle', { startDate: '', endDate: '' }).trim()}
+					{t('history.periodDetail')}
 				</span>
 			</div>
 			<div class="flex items-center gap-2 sm:gap-4">
@@ -116,7 +116,7 @@
 					<span
 						class="rounded-full bg-fog px-2.5 py-0.5 text-xs font-semibold text-slate dark:bg-spruce/40 dark:text-linen-mist"
 					>
-						{t('common.success')}
+						{t('history.periodCompleted')}
 					</span>
 					<span class="text-xs text-slate dark:text-pebble">
 						{t('dashboard.payDayPrefix', { day: data.period.payDay })}

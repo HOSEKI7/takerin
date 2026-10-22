@@ -125,4 +125,44 @@ describe('i18n runtime (Seam 1)', () => {
 		initI18n('id');
 		expect(getLocale()).toBe('id');
 	});
+
+	it('maintains 100% translation key parity between id.json and en.json', async () => {
+		const idDict = (await import('./id.json')).default;
+		const enDict = (await import('./en.json')).default;
+
+		function getDeepKeys(obj: Record<string, unknown>, prefix = ''): string[] {
+			let keys: string[] = [];
+			for (const [k, v] of Object.entries(obj)) {
+				const fullKey = prefix ? `${prefix}.${k}` : k;
+				if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
+					keys = keys.concat(getDeepKeys(v as Record<string, unknown>, fullKey));
+				} else {
+					keys.push(fullKey);
+				}
+			}
+			return keys;
+		}
+
+		const idKeys = new Set(getDeepKeys(idDict));
+		const enKeys = new Set(getDeepKeys(enDict));
+
+		const missingInEn = [...idKeys].filter((k) => !enKeys.has(k));
+		const missingInId = [...enKeys].filter((k) => !idKeys.has(k));
+
+		expect(missingInEn).toEqual([]);
+		expect(missingInId).toEqual([]);
+	});
+
+	it('adheres to GLOSSARY.md nomenclature in translation dictionaries', async () => {
+		const idStr = JSON.stringify((await import('./id.json')).default);
+		const enStr = JSON.stringify((await import('./en.json')).default);
+
+		// ID: forbidden terms "transaksi", standalone "pos" (meaning category)
+		expect([...idStr.matchAll(/transaksi/gi)].length).toBe(0);
+		expect([...idStr.matchAll(/\bpos\b/gi)].length).toBe(0);
+
+		// EN: forbidden terms "spending" (as noun for expense), "transaction"
+		expect([...enStr.matchAll(/\bspending\b/gi)].length).toBe(0);
+		expect([...enStr.matchAll(/\btransaction\b/gi)].length).toBe(0);
+	});
 });
