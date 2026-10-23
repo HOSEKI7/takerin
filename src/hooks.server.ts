@@ -16,6 +16,18 @@ const PROTECTED_PREFIXES = [
 	'/admin'
 ];
 
+function tryGetEnv(): Record<string, unknown> | undefined {
+	try {
+		if (typeof env === 'object' && env !== null) {
+			void (env as unknown as Record<string, unknown>)['__test__'];
+			return env as unknown as Record<string, unknown>;
+		}
+	} catch {
+		return undefined;
+	}
+	return undefined;
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
 	if (building) {
 		event.locals.user = null;
@@ -23,7 +35,29 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return resolve(event);
 	}
 
-	const d1 = event.platform?.env?.DB ?? env?.DB;
+	let ambientDb: D1Database | undefined;
+	try {
+		ambientDb = env?.DB;
+	} catch {
+		ambientDb = undefined;
+	}
+
+	const d1 = event.platform?.env?.DB ?? ambientDb;
+
+	const mutableEvent = event as { platform?: App.Platform };
+	if (!mutableEvent.platform) {
+		mutableEvent.platform = {
+			env: (tryGetEnv() ?? {}) as unknown as Env,
+			ctx: {} as ExecutionContext,
+			caches: (globalThis.caches as CacheStorage) ?? ({} as CacheStorage)
+		};
+	} else if (!mutableEvent.platform.env) {
+		(mutableEvent.platform as { env: Env }).env = (tryGetEnv() ?? {}) as unknown as Env;
+	}
+
+	if (d1 && !mutableEvent.platform.env.DB) {
+		(mutableEvent.platform.env as { DB: D1Database }).DB = d1;
+	}
 
 	if (d1) {
 		try {

@@ -241,4 +241,55 @@ describe('Onboarding Route Server (+page.server.ts)', () => {
 			})
 		);
 	});
+
+	it('handles onboarding load gracefully when platform is undefined', async () => {
+		const mockEvent = {
+			locals: {
+				user: { id: 'u1', name: 'User 1', email: 'u1@test.com', onboardingCompleted: false }
+			},
+			platform: undefined
+		} as unknown as Parameters<typeof load>[0];
+
+		const result = (await load(mockEvent)) as {
+			user: unknown;
+			userSettings: unknown;
+			incomeSources: unknown[];
+			categoryTemplates: unknown[];
+		};
+
+		expect(result.user).toBeDefined();
+		expect(result.userSettings).toBeNull();
+		expect(result.incomeSources).toEqual([]);
+		expect(result.categoryTemplates).toEqual([]);
+	});
+
+	it('returns 500 fail when database is missing upon submitting actions.default', async () => {
+		const formData = new FormData();
+		formData.append('payDay', '25');
+		formData.append('incomeSources', JSON.stringify([{ name: 'Gaji Pokok', amount: 10000000 }]));
+		formData.append(
+			'categories',
+			JSON.stringify([{ name: 'Kebutuhan', percentage: 100, isSavings: false }])
+		);
+
+		const mockEvent = {
+			locals: {
+				user: { id: 'u1', name: 'User 1', email: 'u1@test.com', onboardingCompleted: false }
+			},
+			request: {
+				formData: vi.fn().mockResolvedValue(formData)
+			},
+			platform: undefined
+		} as unknown as Parameters<NonNullable<typeof actions.default>>[0];
+
+		const result = (await actions.default(mockEvent)) as {
+			status: number;
+			data: { errorMessage: string };
+		};
+
+		expect(result?.status).toBe(500);
+		expect(result?.data?.errorMessage).toBe(
+			'Database tidak tersedia. Silakan hubungi administrator.'
+		);
+	});
 });

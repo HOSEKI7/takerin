@@ -442,4 +442,25 @@ describe('Server Hooks & Route Protection', () => {
 		expect(mockEvent.locals.user?.role).toBe('user');
 		expect(mockResolve).not.toHaveBeenCalled();
 	});
+
+	it('populates event.platform and event.platform.env when platform is undefined', async () => {
+		mockGetSession.mockResolvedValue(null);
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/auth/login'),
+			request: new Request('http://localhost:5173/auth/login'),
+			platform: undefined,
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockImplementation((event: RequestEvent) => {
+			expect(event.platform).toBeDefined();
+			expect(event.platform?.env).toBeDefined();
+			return new Response('OK');
+		});
+
+		const response = await handle({ event: mockEvent, resolve: mockResolve });
+		expect(response.status).toBe(200);
+		expect(mockResolve).toHaveBeenCalled();
+	});
 });

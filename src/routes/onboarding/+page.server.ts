@@ -1,5 +1,6 @@
 import type { PageServerLoad, Actions } from './$types.js';
 import { fail, redirect } from '@sveltejs/kit';
+import { env } from 'cloudflare:workers';
 import {
 	validatePayDay,
 	validateIncomeSources,
@@ -15,6 +16,15 @@ import {
 	type CategoryTemplateRecord
 } from '#lib/server/db/onboarding.js';
 
+function getD1(platform?: App.Platform): D1Database | undefined {
+	if (platform?.env?.DB) return platform.env.DB;
+	try {
+		return env?.DB;
+	} catch {
+		return undefined;
+	}
+}
+
 export const load: PageServerLoad = async ({ locals, platform }) => {
 	if (!locals.user) {
 		throw redirect(303, '/auth/login');
@@ -28,11 +38,12 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 	let incomeSources: Array<{ id: string; name: string; amount: number }> = [];
 	let categoryTemplates: CategoryTemplateRecord[] = [];
 
-	if (platform?.env?.DB) {
+	const d1 = getD1(platform);
+	if (d1) {
 		try {
-			userSettings = await getUserSettings(platform.env.DB, locals.user.id);
-			incomeSources = (await getIncomeSources(platform.env.DB, locals.user.id)) ?? [];
-			categoryTemplates = (await getCategoryTemplates(platform.env.DB)) ?? [];
+			userSettings = await getUserSettings(d1, locals.user.id);
+			incomeSources = (await getIncomeSources(d1, locals.user.id)) ?? [];
+			categoryTemplates = (await getCategoryTemplates(d1)) ?? [];
 		} catch (err) {
 			console.error('Failed to load onboarding data:', err);
 		}
@@ -103,7 +114,8 @@ export const actions: Actions = {
 			});
 		}
 
-		if (!platform?.env?.DB) {
+		const d1 = getD1(platform);
+		if (!d1) {
 			return fail(500, {
 				errorMessage: 'Database tidak tersedia. Silakan hubungi administrator.'
 			});
@@ -116,7 +128,7 @@ export const actions: Actions = {
 		}));
 
 		try {
-			await completeOnboarding(platform.env.DB, locals.user.id, {
+			await completeOnboarding(d1, locals.user.id, {
 				payDay,
 				incomeSources: sources,
 				categories: parsedCategories
