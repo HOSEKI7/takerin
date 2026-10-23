@@ -41,9 +41,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 				const adminEmailsRaw = getRuntimeEnv('ADMIN_EMAILS', event.platform?.env);
 				if (
 					d1 &&
+					event.locals.user?.role !== 'admin' &&
 					event.locals.user?.email &&
-					isAdminEmail(event.locals.user.email, adminEmailsRaw) &&
-					event.locals.user.role !== 'admin'
+					isAdminEmail(event.locals.user.email, adminEmailsRaw)
 				) {
 					try {
 						await setUserRole(d1, event.locals.user.id, 'admin');

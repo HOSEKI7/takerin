@@ -10,20 +10,14 @@ const mockAuth = {
 	}
 };
 
-vi.mock('#lib/server/auth/index.js', () => ({
-	getAuth: () => mockAuth,
-	setUserRole: (...args: unknown[]) => mockSetUserRole(...args),
-	isAdminEmail: (email?: string, raw?: string) => {
-		if (!email || !raw) return false;
-		const set = new Set(
-			raw
-				.split(',')
-				.map((s) => s.trim().toLowerCase())
-				.filter(Boolean)
-		);
-		return set.has(email.trim().toLowerCase());
-	}
-}));
+vi.mock('#lib/server/auth/index.js', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('#lib/server/auth/index.js')>();
+	return {
+		...actual,
+		getAuth: () => mockAuth,
+		setUserRole: (...args: unknown[]) => mockSetUserRole(...args)
+	};
+});
 
 vi.mock('#lib/server/db/period.js', () => ({
 	ensureActivePeriod: (...args: unknown[]) => mockEnsureActivePeriod(...args)
@@ -408,7 +402,7 @@ describe('Server Hooks & Route Protection', () => {
 		expect(mockResolve).toHaveBeenCalled();
 	});
 
-	it('does not synchronize role when authenticated user email does not match ADMIN_EMAILS', async () => {
+	it('does not synchronize role and redirects to /dashboard when authenticated user email does not match ADMIN_EMAILS targeting /admin', async () => {
 		const normalUser = {
 			id: 'user_normal',
 			name: 'Normal User',
@@ -427,8 +421,8 @@ describe('Server Hooks & Route Protection', () => {
 
 		const mockDb = { prepare: vi.fn() } as unknown as D1Database;
 		const mockEvent = {
-			url: new URL('http://localhost:5173/dashboard'),
-			request: new Request('http://localhost:5173/dashboard'),
+			url: new URL('http://localhost:5173/admin/users'),
+			request: new Request('http://localhost:5173/admin/users'),
 			platform: {
 				env: {
 					DB: mockDb,
@@ -438,11 +432,14 @@ describe('Server Hooks & Route Protection', () => {
 			locals: {} as App.Locals
 		} as unknown as RequestEvent;
 
-		const mockResolve = vi.fn().mockResolvedValue(new Response('Dashboard content'));
+		const mockResolve = vi.fn().mockResolvedValue(new Response('Admin content'));
 
-		const response = await handle({ event: mockEvent, resolve: mockResolve });
-		expect(response.status).toBe(200);
+		await expect(handle({ event: mockEvent, resolve: mockResolve })).rejects.toMatchObject({
+			status: 303,
+			location: '/dashboard'
+		});
 		expect(mockSetUserRole).not.toHaveBeenCalled();
 		expect(mockEvent.locals.user?.role).toBe('user');
+		expect(mockResolve).not.toHaveBeenCalled();
 	});
 });

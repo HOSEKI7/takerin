@@ -388,6 +388,14 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 			expect(emails.has('owner@domain.com')).toBe(true);
 		});
 
+		it('deduplicates identical emails regardless of casing and surrounding whitespace', () => {
+			const emails = parseAdminEmails(
+				'admin@takerin.my.id, ADMIN@TAKERIN.MY.ID,  Admin@Takerin.My.Id  '
+			);
+			expect(emails.size).toBe(1);
+			expect(emails.has('admin@takerin.my.id')).toBe(true);
+		});
+
 		it('returns empty set for null, undefined, or empty string', () => {
 			expect(parseAdminEmails(null).size).toBe(0);
 			expect(parseAdminEmails(undefined).size).toBe(0);

@@ -14,13 +14,7 @@ Dokumen ini menjelaskan konfigurasi deployment otomatis untuk aplikasi Takerin p
 4. Tambahkan Environment Variable di **Settings** > **Environment variables**:
    - `NODE_VERSION`: `22`
    - `PNPM_VERSION`: `11.25.0` (atau biarkan default corepack)
-   - `BETTER_AUTH_SECRET`: Kunci rahasia minimal 32 karakter (`openssl rand -base64 32`)
-   - `BETTER_AUTH_URL`: `https://takerin.my.id`
    - `ADMIN_EMAILS`: Daftar email administrator pertama/sistem yang dipisahkan koma (misal: `owner@takerin.my.id,admin@takerin.my.id`). Akun yang mendaftar atau login dengan email ini otomatis mendapatkan role `admin`.
-   - `RESEND_API_KEY`: API Key Resend
-   - `EMAIL_FROM`: `Takerin <noreply@takerin.my.id>`
-   - `GROQ_API_KEY`: API Key Groq
-   - `GEMINI_API_KEY`: API Key Google Gemini Flash
 5. Hubungkan D1 Database Binding:
    - Buka **Settings** > **Functions** > **D1 database bindings**.
    - Tambahkan binding:
