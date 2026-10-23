@@ -3,6 +3,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 
 const mockGetSession = vi.fn();
 const mockEnsureActivePeriod = vi.fn();
+const mockSetUserRole = vi.fn();
 const mockAuth = {
 	api: {
 		getSession: mockGetSession
@@ -10,7 +11,18 @@ const mockAuth = {
 };
 
 vi.mock('#lib/server/auth/index.js', () => ({
-	getAuth: () => mockAuth
+	getAuth: () => mockAuth,
+	setUserRole: (...args: unknown[]) => mockSetUserRole(...args),
+	isAdminEmail: (email?: string, raw?: string) => {
+		if (!email || !raw) return false;
+		const set = new Set(
+			raw
+				.split(',')
+				.map((s) => s.trim().toLowerCase())
+				.filter(Boolean)
+		);
+		return set.has(email.trim().toLowerCase());
+	}
 }));
 
 vi.mock('#lib/server/db/period.js', () => ({
@@ -355,5 +367,82 @@ describe('Server Hooks & Route Protection', () => {
 		const response = await handle({ event: mockEvent, resolve: mockResolve });
 		expect(response.status).toBe(200);
 		expect(mockResolve).toHaveBeenCalled();
+	});
+
+	it('lazy synchronizes role to "admin" when authenticated user email matches ADMIN_EMAILS', async () => {
+		const userToPromote = {
+			id: 'user_lazy',
+			name: 'Lazy Admin',
+			email: 'lazyadmin@example.com',
+			role: 'user',
+			emailVerified: true,
+			onboardingCompleted: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: userToPromote,
+			session: { id: 'sess_lazy', userId: 'user_lazy' }
+		});
+
+		const mockDb = { prepare: vi.fn() } as unknown as D1Database;
+		const mockEvent = {
+			url: new URL('http://localhost:5173/admin/users'),
+			request: new Request('http://localhost:5173/admin/users'),
+			platform: {
+				env: {
+					DB: mockDb,
+					ADMIN_EMAILS: 'lazyadmin@example.com, other@example.com'
+				}
+			},
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('Admin content'));
+
+		const response = await handle({ event: mockEvent, resolve: mockResolve });
+		expect(response.status).toBe(200);
+		expect(mockSetUserRole).toHaveBeenCalledWith(mockDb, 'user_lazy', 'admin');
+		expect(mockEvent.locals.user?.role).toBe('admin');
+		expect(mockResolve).toHaveBeenCalled();
+	});
+
+	it('does not synchronize role when authenticated user email does not match ADMIN_EMAILS', async () => {
+		const normalUser = {
+			id: 'user_normal',
+			name: 'Normal User',
+			email: 'normal@example.com',
+			role: 'user',
+			emailVerified: true,
+			onboardingCompleted: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: normalUser,
+			session: { id: 'sess_normal', userId: 'user_normal' }
+		});
+
+		const mockDb = { prepare: vi.fn() } as unknown as D1Database;
+		const mockEvent = {
+			url: new URL('http://localhost:5173/dashboard'),
+			request: new Request('http://localhost:5173/dashboard'),
+			platform: {
+				env: {
+					DB: mockDb,
+					ADMIN_EMAILS: 'boss@example.com'
+				}
+			},
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('Dashboard content'));
+
+		const response = await handle({ event: mockEvent, resolve: mockResolve });
+		expect(response.status).toBe(200);
+		expect(mockSetUserRole).not.toHaveBeenCalled();
+		expect(mockEvent.locals.user?.role).toBe('user');
 	});
 });

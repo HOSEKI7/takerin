@@ -17,12 +17,29 @@ import {
 export interface AuthOptions {
 	secret?: string;
 	baseURL?: string;
+	adminEmails?: string;
 	platformEnv?: Record<string, unknown>;
 	emailService?: {
 		sendVerificationEmail: (opts: EmailOptions) => Promise<EmailResult>;
 		sendResetPasswordEmail: (opts: EmailOptions) => Promise<EmailResult>;
 		sendOTPEmail?: (opts: OTPEmailOptions) => Promise<EmailResult>;
 	};
+}
+
+export function parseAdminEmails(raw?: string | null): Set<string> {
+	if (!raw || typeof raw !== 'string') return new Set();
+	return new Set(
+		raw
+			.split(',')
+			.map((e) => e.trim().toLowerCase())
+			.filter(Boolean)
+	);
+}
+
+export function isAdminEmail(email?: string | null, rawAdminEmails?: string | null): boolean {
+	if (!email || !rawAdminEmails) return false;
+	const adminSet = parseAdminEmails(rawAdminEmails);
+	return adminSet.has(email.trim().toLowerCase());
 }
 
 export function createAuth(d1: D1Database, options: AuthOptions = {}) {
@@ -35,6 +52,8 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 		options.baseURL ||
 		getRuntimeEnv('BETTER_AUTH_URL', options.platformEnv) ||
 		'http://localhost:5173';
+
+	const adminEmailsRaw = options.adminEmails ?? getRuntimeEnv('ADMIN_EMAILS', options.platformEnv);
 
 	const emailService = options.emailService || {
 		sendVerificationEmail: defaultSendVerification,
@@ -53,6 +72,22 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 				twoFactor: schema.twoFactor
 			}
 		}),
+		databaseHooks: {
+			user: {
+				create: {
+					before: async (user) => {
+						if (isAdminEmail(user.email, adminEmailsRaw)) {
+							return {
+								data: {
+									...user,
+									role: 'admin'
+								}
+							};
+						}
+					}
+				}
+			}
+		},
 		secret,
 		baseURL,
 		plugins: [

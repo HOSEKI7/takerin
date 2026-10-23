@@ -1,8 +1,9 @@
 import type { Handle } from '@sveltejs/kit/hooks';
 import { redirect } from '@sveltejs/kit';
 import { building } from '$app/env';
-import { getAuth } from '#lib/server/auth/index.js';
+import { getAuth, setUserRole, isAdminEmail } from '#lib/server/auth/index.js';
 import { ensureActivePeriod } from '#lib/server/db/period.js';
+import { getRuntimeEnv } from '#lib/server/env.js';
 import { env } from 'cloudflare:workers';
 
 const PROTECTED_PREFIXES = [
@@ -36,6 +37,21 @@ export const handle: Handle = async ({ event, resolve }) => {
 			if (sessionData) {
 				event.locals.user = sessionData.user as App.Locals['user'];
 				event.locals.session = sessionData.session as App.Locals['session'];
+
+				const adminEmailsRaw = getRuntimeEnv('ADMIN_EMAILS', event.platform?.env);
+				if (
+					d1 &&
+					event.locals.user?.email &&
+					isAdminEmail(event.locals.user.email, adminEmailsRaw) &&
+					event.locals.user.role !== 'admin'
+				) {
+					try {
+						await setUserRole(d1, event.locals.user.id, 'admin');
+						event.locals.user.role = 'admin';
+					} catch (err) {
+						console.error('Error synchronizing admin role in hooks:', err);
+					}
+				}
 			} else {
 				event.locals.user = null;
 				event.locals.session = null;

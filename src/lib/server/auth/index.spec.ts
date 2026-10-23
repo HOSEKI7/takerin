@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
-import { createAuth, setUserRole } from './index';
+import { createAuth, setUserRole, parseAdminEmails, isAdminEmail } from './index';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -375,5 +375,88 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 			.bind('budi@example.com')
 			.first<{ two_factor_enabled: number }>();
 		expect(userAfterDisable?.two_factor_enabled).toBe(0);
+	});
+
+	describe('parseAdminEmails & isAdminEmail utilities', () => {
+		it('correctly parses comma-separated emails with whitespace, casing, and empty elements', () => {
+			const emails = parseAdminEmails(
+				'  Admin@Takerin.my.id , boss@example.com, ,  OWNER@Domain.COM  '
+			);
+			expect(emails.size).toBe(3);
+			expect(emails.has('admin@takerin.my.id')).toBe(true);
+			expect(emails.has('boss@example.com')).toBe(true);
+			expect(emails.has('owner@domain.com')).toBe(true);
+		});
+
+		it('returns empty set for null, undefined, or empty string', () => {
+			expect(parseAdminEmails(null).size).toBe(0);
+			expect(parseAdminEmails(undefined).size).toBe(0);
+			expect(parseAdminEmails('').size).toBe(0);
+			expect(parseAdminEmails('   ').size).toBe(0);
+		});
+
+		it('validates email matching with case and whitespace insensitivity', () => {
+			const raw = 'admin@takerin.my.id, root@takerin.my.id';
+			expect(isAdminEmail('Admin@Takerin.my.id', raw)).toBe(true);
+			expect(isAdminEmail('  admin@takerin.my.id  ', raw)).toBe(true);
+			expect(isAdminEmail('other@example.com', raw)).toBe(false);
+			expect(isAdminEmail(null, raw)).toBe(false);
+			expect(isAdminEmail('admin@takerin.my.id', undefined)).toBe(false);
+			expect(isAdminEmail('admin@takerin.my.id', '')).toBe(false);
+		});
+	});
+
+	describe('Bootstrap Admin via adminEmails option', () => {
+		it('automatically assigns role "admin" on registration if email matches adminEmails', async () => {
+			const customAuth = createAuth(proxy.env.DB, {
+				adminEmails: 'superadmin@example.com, owner@takerin.my.id',
+				emailService: {
+					sendVerificationEmail: async () => ({ success: true }),
+					sendResetPasswordEmail: async () => ({ success: true })
+				}
+			});
+
+			const res = await customAuth.api.signUpEmail({
+				body: {
+					name: 'Super Administrator',
+					email: 'SuperAdmin@example.com',
+					password: 'adminPassword123'
+				}
+			});
+
+			expect(res.user).toBeDefined();
+			expect(res.user.role).toBe('admin');
+
+			const dbUser = await proxy.env.DB.prepare('SELECT role FROM user WHERE email = ?')
+				.bind('superadmin@example.com')
+				.first<{ role: string }>();
+			expect(dbUser?.role).toBe('admin');
+		});
+
+		it('assigns role "user" on registration if email does NOT match adminEmails', async () => {
+			const customAuth = createAuth(proxy.env.DB, {
+				adminEmails: 'superadmin@example.com',
+				emailService: {
+					sendVerificationEmail: async () => ({ success: true }),
+					sendResetPasswordEmail: async () => ({ success: true })
+				}
+			});
+
+			const res = await customAuth.api.signUpEmail({
+				body: {
+					name: 'Regular Customer',
+					email: 'customer@example.com',
+					password: 'customerPassword123'
+				}
+			});
+
+			expect(res.user).toBeDefined();
+			expect(res.user.role).toBe('user');
+
+			const dbUser = await proxy.env.DB.prepare('SELECT role FROM user WHERE email = ?')
+				.bind('customer@example.com')
+				.first<{ role: string }>();
+			expect(dbUser?.role).toBe('user');
+		});
 	});
 });
