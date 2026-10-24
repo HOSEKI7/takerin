@@ -2,6 +2,8 @@
 	import { untrack } from 'svelte';
 	import type { PageProps } from './$types.js';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { t } from '#lib/i18n/index.js';
 	import Button from '#lib/components/Button.svelte';
 	import Input from '#lib/components/Input.svelte';
@@ -9,6 +11,7 @@
 	import ProgressBar from '#lib/components/ProgressBar.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
+	import OnboardingTutorial from '#lib/components/OnboardingTutorial.svelte';
 	import {
 		validatePayDay,
 		validateIncomeSources,
@@ -105,6 +108,15 @@
 
 	let step4Error = $state<string>('');
 	let isSubmitting = $state(false);
+	let showTutorial = $state(false);
+
+	function handleFinishTutorial() {
+		goto(resolve('/dashboard'));
+	}
+
+	function handleSkipTutorial() {
+		goto(resolve('/dashboard'));
+	}
 
 	// Derived calculations
 	const totalIncome = $derived(calculateTotalIncome(incomeSources));
@@ -358,6 +370,12 @@
 
 	<!-- Main Content -->
 	<main class="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-4 py-8 sm:px-6">
+		{#if showTutorial}
+			<OnboardingTutorial
+				onfinish={handleFinishTutorial}
+				onskip={handleSkipTutorial}
+			/>
+		{:else}
 		<!-- Progress Bar -->
 		<div class="mb-6">
 			<ProgressBar
@@ -714,9 +732,13 @@
 							formData.set('incomeSources', serializedIncomeSources);
 							formData.set('categories', serializedCategories);
 						}
-						return async ({ update }) => {
+						return async ({ result, update }) => {
 							isSubmitting = false;
-							await update();
+							if (result.type === 'redirect') {
+								showTutorial = true;
+							} else {
+								await update();
+							}
 						};
 					}}
 					class="space-y-6"
@@ -954,5 +976,6 @@
 				</form>
 			{/if}
 		</Card>
+		{/if}
 	</main>
 </div>

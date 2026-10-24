@@ -13,6 +13,7 @@ describe('Base UI Components & HugeIcons Seam', () => {
 		expect(lib.StatusBadge).toBeDefined();
 		expect(lib.BrandLogo).toBeDefined();
 		expect(lib.PwaInstallPrompt).toBeDefined();
+		expect(lib.OnboardingTutorial).toBeDefined();
 	});
 
 	it('successfully imports and verifies HugeIcons definitions', () => {

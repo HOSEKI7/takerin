@@ -8,6 +8,7 @@ export { default as ThemeToggle } from './components/ThemeToggle.svelte';
 export { default as StatusBadge } from './components/StatusBadge.svelte';
 export { default as BrandLogo } from './components/BrandLogo.svelte';
 export { default as PwaInstallPrompt } from './components/PwaInstallPrompt.svelte';
+export { default as OnboardingTutorial } from './components/OnboardingTutorial.svelte';
 
 // Theme Utilities
 export * from './theme';

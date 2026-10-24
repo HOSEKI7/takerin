@@ -204,7 +204,22 @@
     "progress2": "Langkah 2 dari 4: Sumber Pemasukan",
     "progress3": "Langkah 3 dari 4: Pilih Template Kategori",
     "progress4": "Langkah 4 dari 4: Atur & Sesuaikan Kategori",
-    "prevButton": "Kembali"
+    "prevButton": "Kembali",
+    "tutorial": {
+      "badge": "Panduan Cepat",
+      "skip": "Lewati",
+      "prev": "Sebelumnya",
+      "next": "Lanjut",
+      "finish": "Mulai Takerin Sekarang 🎉",
+      "slide1Title": "Dashboard & Sisa Jatah",
+      "slide1Desc": "Ini dashboard kamu — lihat sisa jatah per kategori di sini",
+      "slide2Title": "Catat Cepat Cuma 5 Detik",
+      "slide2Desc": "Tekan tombol + untuk catat pengeluaran — cukup 5 detik!",
+      "slide3Title": "Tips AI & Riwayat Bulanan",
+      "slide3Desc": "Tiap akhir bulan, lihat ringkasan dan tips AI di History",
+      "slide4Title": "Selamat Datang!",
+      "slide4Desc": "Selamat! Mulai takerin gajimu sekarang 🎉"
+    }
   },
   "dashboard": {
     "welcome": "Selamat datang, {{name}}!",

@@ -204,7 +204,22 @@
     "progress2": "Step 2 of 4: Income Sources",
     "progress3": "Step 3 of 4: Choose Category Template",
     "progress4": "Step 4 of 4: Customize Categories",
-    "prevButton": "Back"
+    "prevButton": "Back",
+    "tutorial": {
+      "badge": "Quick Guide",
+      "skip": "Skip",
+      "prev": "Previous",
+      "next": "Next",
+      "finish": "Start Takerin Now 🎉",
+      "slide1Title": "Dashboard & Category Balance",
+      "slide1Desc": "This is your dashboard — see remaining budgets per category here",
+      "slide2Title": "Quick 5-Second Entry",
+      "slide2Desc": "Press the + button to record expenses — in just 5 seconds!",
+      "slide3Title": "AI Tips & Monthly History",
+      "slide3Desc": "At the end of every month, check summaries and AI tips in History",
+      "slide4Title": "Welcome Aboard!",
+      "slide4Desc": "Congratulations! Start allocating your income now 🎉"
+    }
   },
   "dashboard": {
     "welcome": "Welcome, {{name}}!",

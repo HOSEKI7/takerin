@@ -292,4 +292,18 @@ describe('Onboarding Route Server (+page.server.ts)', () => {
 			'Database tidak tersedia. Silakan hubungi administrator.'
 		);
 	});
+
+	it('redirects to /dashboard if user has already completed onboarding (does not show tutorial again on subsequent visits)', async () => {
+		const mockEvent = {
+			locals: {
+				user: { id: 'u1', name: 'User 1', email: 'u1@test.com', onboardingCompleted: true }
+			},
+			platform: { env: { DB: {} as unknown as D1Database } }
+		} as unknown as Parameters<typeof load>[0];
+
+		await expect(load(mockEvent)).rejects.toMatchObject({
+			status: 303,
+			location: '/dashboard'
+		});
+	});
 });
