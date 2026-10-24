@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { getBreadcrumbs } from '#lib/navigation/breadcrumb.js';
+	import { t } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { ArrowRight01Icon } from '@hugeicons/core-free-icons';
 
@@ -20,10 +21,10 @@
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <header
-	class="content-header w-full border-b border-fog/50 bg-paper/60 px-4 py-3 backdrop-blur-xs transition-colors sm:px-6 lg:px-8 dark:border-dark-border/50 dark:bg-dark-surface/60 {className}"
+	class="content-header w-full border-b border-fog/60 bg-fog/40 px-4 py-3 transition-colors sm:px-6 lg:px-8 dark:border-dark-border dark:bg-dark-surface {className}"
 >
 	<div class="mx-auto flex w-full max-w-6xl items-center justify-between">
-		<nav aria-label="Breadcrumb" class="flex items-center">
+		<nav aria-label={t('nav.breadcrumb')} class="flex items-center">
 			<ol class="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm">
 				{#each breadcrumbs as item (item.label + (item.href ?? ''))}
 					<li class="inline-flex items-center gap-1.5">

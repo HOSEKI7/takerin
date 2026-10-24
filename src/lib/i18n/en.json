@@ -63,6 +63,7 @@
     "openMenu": "Open navigation menu",
     "closeMenu": "Close navigation menu",
     "mobileNav": "Mobile Navigation",
+    "breadcrumb": "Breadcrumb",
     "newExpense": "Record Expense",
     "admin": "Admin",
     "logout": "Sign Out",

@@ -14,8 +14,10 @@ describe('ContentHeader Component & Breadcrumbs Seam (Issue #29)', () => {
 			}
 		});
 
-		// Minimalist header container
+		// Minimalist header container using Wise design system tokens
 		expect(html).toContain('content-header');
+		expect(html).toContain('bg-fog/40');
+		expect(html).toContain('dark:bg-dark-surface');
 		expect(html).not.toContain('bg-slate');
 		expect(html).not.toContain('bg-obsidian');
 	});
@@ -27,8 +29,8 @@ describe('ContentHeader Component & Breadcrumbs Seam (Issue #29)', () => {
 			}
 		});
 
-		// ARIA compliant navigation
-		expect(html).toContain('<nav aria-label="Breadcrumb"');
+		// ARIA compliant navigation with Indonesian localized label
+		expect(html).toContain('<nav aria-label="Rekam jejak"');
 		expect(html).toContain('<ol');
 		expect(html).toContain('<li');
 		expect(html).toContain('aria-current="page"');

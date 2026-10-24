@@ -14,6 +14,47 @@ const SEGMENT_LABELS: Record<string, string> = {
 	settings: 'Pengaturan'
 };
 
+interface SubRouteConfig {
+	prefix: string;
+	parentLabel: string;
+	parentHref: string;
+	subRoutes?: Record<string, string>;
+	defaultDetailLabel: string;
+}
+
+const SUB_ROUTE_CONFIGS: SubRouteConfig[] = [
+	{
+		prefix: '/expenses',
+		parentLabel: 'Pengeluaran',
+		parentHref: resolve('/(app)/expenses'),
+		subRoutes: {
+			new: 'Catat Baru'
+		},
+		defaultDetailLabel: 'Detail Pengeluaran'
+	},
+	{
+		prefix: '/categories',
+		parentLabel: 'Kategori',
+		parentHref: resolve('/(app)/categories'),
+		defaultDetailLabel: 'Detail Kategori'
+	},
+	{
+		prefix: '/history',
+		parentLabel: 'Riwayat',
+		parentHref: resolve('/(app)/history'),
+		defaultDetailLabel: 'Detail Periode'
+	},
+	{
+		prefix: '/settings',
+		parentLabel: 'Pengaturan',
+		parentHref: resolve('/(app)/settings'),
+		subRoutes: {
+			security: 'Keamanan'
+		},
+		defaultDetailLabel: 'Detail Pengaturan'
+	}
+];
+
 /**
  * Normalizes pathname by stripping SvelteKit (app) group folder if present
  * and trimming trailing slashes.
@@ -47,105 +88,41 @@ export function getBreadcrumbs(rawPath: string): BreadcrumbItem[] {
 		return items;
 	}
 
-	if (path === '/expenses') {
-		items.push({
-			label: 'Pengeluaran',
-			href: resolve('/(app)/expenses'),
-			current: true
-		});
-		return items;
-	}
+	// Match against table-driven sub-route configurations
+	for (const config of SUB_ROUTE_CONFIGS) {
+		if (path === config.prefix) {
+			items.push({
+				label: config.parentLabel,
+				href: config.parentHref,
+				current: true
+			});
+			return items;
+		}
 
-	if (path === '/expenses/new') {
-		items.push({
-			label: 'Pengeluaran',
-			href: resolve('/(app)/expenses')
-		});
-		items.push({
-			label: 'Catat Baru',
-			href: resolve('/(app)/expenses/new'),
-			current: true
-		});
-		return items;
-	}
+		if (path.startsWith(`${config.prefix}/`)) {
+			items.push({
+				label: config.parentLabel,
+				href: config.parentHref
+			});
 
-	if (path.startsWith('/expenses/') && path.endsWith('/edit')) {
-		items.push({
-			label: 'Pengeluaran',
-			href: resolve('/(app)/expenses')
-		});
-		items.push({
-			label: 'Edit Pengeluaran',
-			href: path,
-			current: true
-		});
-		return items;
-	}
+			const subPath = path.slice(config.prefix.length + 1);
+			let detailLabel = config.subRoutes?.[subPath];
 
-	if (path.startsWith('/expenses/')) {
-		items.push({
-			label: 'Pengeluaran',
-			href: resolve('/(app)/expenses')
-		});
-		items.push({
-			label: 'Detail Pengeluaran',
-			href: path,
-			current: true
-		});
-		return items;
-	}
+			if (!detailLabel) {
+				if (subPath.endsWith('/edit')) {
+					detailLabel = `Edit ${config.parentLabel}`;
+				} else {
+					detailLabel = config.defaultDetailLabel;
+				}
+			}
 
-	if (path === '/categories') {
-		items.push({
-			label: 'Kategori',
-			href: resolve('/(app)/categories'),
-			current: true
-		});
-		return items;
-	}
-
-	if (path.startsWith('/categories/')) {
-		items.push({
-			label: 'Kategori',
-			href: resolve('/(app)/categories')
-		});
-		items.push({
-			label: 'Detail Kategori',
-			href: path,
-			current: true
-		});
-		return items;
-	}
-
-	if (path === '/history') {
-		items.push({
-			label: 'Riwayat',
-			href: resolve('/(app)/history'),
-			current: true
-		});
-		return items;
-	}
-
-	if (path.startsWith('/history/')) {
-		items.push({
-			label: 'Riwayat',
-			href: resolve('/(app)/history')
-		});
-		items.push({
-			label: 'Detail Periode',
-			href: path,
-			current: true
-		});
-		return items;
-	}
-
-	if (path === '/settings') {
-		items.push({
-			label: 'Pengaturan',
-			href: resolve('/(app)/settings'),
-			current: true
-		});
-		return items;
+			items.push({
+				label: detailLabel,
+				href: path,
+				current: true
+			});
+			return items;
+		}
 	}
 
 	// Dynamic fallback for any other nested sub-route
@@ -155,7 +132,6 @@ export function getBreadcrumbs(rawPath: string): BreadcrumbItem[] {
 		const seg = segments[i];
 		accumulated += `/${seg}`;
 		const isLast = i === segments.length - 1;
-
 		const label = SEGMENT_LABELS[seg] ?? (seg.charAt(0).toUpperCase() + seg.slice(1));
 
 		items.push({

@@ -73,12 +73,21 @@ describe('Breadcrumb Navigation Logic (Seam 1)', () => {
 		]);
 	});
 
-	it('generates fallback breadcrumbs for arbitrary nested paths', () => {
+	it('generates breadcrumbs for /settings/security (Keamanan)', () => {
 		const items = getBreadcrumbs('/settings/security');
 		expect(items).toEqual<BreadcrumbItem[]>([
 			{ label: 'Keuangan', href: '/dashboard' },
 			{ label: 'Pengaturan', href: '/settings' },
-			{ label: 'Security', href: '/settings/security', current: true }
+			{ label: 'Keamanan', href: '/settings/security', current: true }
+		]);
+	});
+
+	it('generates fallback breadcrumbs for arbitrary unmapped nested paths', () => {
+		const items = getBreadcrumbs('/analytics/monthly');
+		expect(items).toEqual<BreadcrumbItem[]>([
+			{ label: 'Keuangan', href: '/dashboard' },
+			{ label: 'Analytics', href: '/analytics' },
+			{ label: 'Monthly', href: '/analytics/monthly', current: true }
 		]);
 	});
 });
