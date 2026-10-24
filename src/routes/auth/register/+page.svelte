@@ -50,6 +50,7 @@
 
 			if (data) {
 				if ((data as { user?: { role?: string } })?.user?.role === 'admin') {
+					isLoading = false;
 					goto(resolve('/admin'));
 					return;
 				}

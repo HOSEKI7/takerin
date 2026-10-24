@@ -16,6 +16,8 @@ const PROTECTED_PREFIXES = [
 	'/admin'
 ];
 
+const USER_PREFIXES = ['/dashboard', '/expenses', '/categories', '/history', '/onboarding'];
+
 function tryGetEnv(): Record<string, unknown> | undefined {
 	try {
 		if (typeof env === 'object' && env !== null) {
@@ -114,7 +116,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 			throw redirect(303, '/dashboard');
 		}
 
-		const USER_PREFIXES = ['/dashboard', '/expenses', '/categories', '/history', '/onboarding'];
 		const isUserRoute = USER_PREFIXES.some((prefix) => event.url.pathname.startsWith(prefix));
 
 		if (isAdmin && isUserRoute) {
@@ -125,7 +126,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			const isOnboardingRoute = event.url.pathname.startsWith('/onboarding');
 			const hasCompletedOnboarding = Boolean(event.locals.user.onboardingCompleted);
 
-			if (!hasCompletedOnboarding && isProtected && !isOnboardingRoute && !isAdminRoute) {
+			if (!hasCompletedOnboarding && isProtected && !isOnboardingRoute) {
 				throw redirect(303, '/onboarding');
 			}
 
@@ -138,7 +139,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 				typeof (d1 as { prepare?: unknown }).prepare === 'function' &&
 				isProtected &&
 				!isOnboardingRoute &&
-				!isAdminRoute &&
 				hasCompletedOnboarding
 			) {
 				try {
