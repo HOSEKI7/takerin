@@ -64,3 +64,12 @@ _Avoid_: Member, nasabah, klien
 Mekanisme pendaftaran akun Administrator baru melalui tautan token berbatas waktu yang dikirimkan ke email tujuan oleh Administrator yang sudah aktif dari Admin Console.
 _Avoid_: Referral link, admin signup, kode aktivasi
 
+**Kode Verifikasi (OTP)**:
+Kode numerik 6 digit berbatas waktu yang dikirimkan melalui email (Resend) untuk memverifikasi kepemilikan alamat email saat pendaftaran akun, lupa kata sandi, maupun penggantian alamat email akun.
+_Avoid_: Kode aktivasi, token rahasia, pin auth
+
+**Admin Bootstrap**:
+Mekanisme inisialisasi akun Administrator pertama kali melalui pendaftaran form registrasi publik saat sistem baru dipasang, di mana sistem mendeteksi kesesuaian email terhadap variabel lingkungan `ADMIN_EMAILS` dan mewajibkan verifikasi OTP sebelum hak akses admin aktif.
+_Avoid_: Admin default, auto-admin, admin tanpa verifikasi
+
+
