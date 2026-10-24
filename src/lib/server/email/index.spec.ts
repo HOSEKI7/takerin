@@ -178,7 +178,7 @@ describe('Email Service (Resend)', () => {
 		const result = await service.sendAdminInvitationEmail({
 			to: 'calon.admin@example.com',
 			url: 'https://takerin.my.id/auth/admin-invite/test-token-123',
-			invitedByName: 'Super Admin'
+			invitedByName: 'Admin Takerin'
 		});
 
 		expect(result.success).toBe(true);
@@ -192,7 +192,7 @@ describe('Email Service (Resend)', () => {
 		expect(callArg.text).toContain('https://takerin.my.id/auth/admin-invite/test-token-123');
 		expect(callArg.html).toContain('48 jam');
 		expect(callArg.text).toContain('48 jam');
-		expect(callArg.html).toContain('Super Admin');
+		expect(callArg.html).toContain('Admin Takerin');
 	});
 
 	it('handles gracefully when sending admin invitation in mock mode (no API key)', async () => {

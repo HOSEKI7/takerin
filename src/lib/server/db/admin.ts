@@ -669,20 +669,18 @@ export interface AcceptInvitationResult {
 export async function revokeAdminInvitation(
 	d1: D1Database,
 	id: string,
-	adminUserId?: string
+	adminUserId: string
 ): Promise<RevokeInvitationResult> {
 	const db = getDb(d1);
 
-	if (adminUserId) {
-		const admin = await db
-			.select({ id: schema.user.id })
-			.from(schema.user)
-			.where(and(eq(schema.user.id, adminUserId), eq(schema.user.role, 'admin')))
-			.limit(1);
+	const admin = await db
+		.select({ id: schema.user.id })
+		.from(schema.user)
+		.where(and(eq(schema.user.id, adminUserId), eq(schema.user.role, 'admin')))
+		.limit(1);
 
-		if (admin.length === 0) {
-			return { success: false, reason: 'unauthorized' };
-		}
+	if (admin.length === 0) {
+		return { success: false, reason: 'unauthorized' };
 	}
 
 	const existing = await db
