@@ -13,6 +13,7 @@ describe('Base UI Components & HugeIcons Seam', () => {
 		expect(lib.StatusBadge).toBeDefined();
 		expect(lib.BrandLogo).toBeDefined();
 		expect(lib.DesktopSidebar).toBeDefined();
+		expect(lib.MobileNav).toBeDefined();
 		expect(lib.PwaInstallPrompt).toBeDefined();
 		expect(lib.OnboardingTutorial).toBeDefined();
 	});

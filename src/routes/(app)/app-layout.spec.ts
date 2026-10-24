@@ -28,11 +28,8 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 
 		const content = fs.readFileSync(layoutPath, 'utf-8');
 		expect(content).toContain('{@render children()}');
-		expect(content).toContain("resolve('/(app)/dashboard')");
-		expect(content).toContain("resolve('/(app)/expenses')");
-		expect(content).toContain("resolve('/(app)/categories')");
-		expect(content).toContain("resolve('/(app)/history')");
-		expect(content).toContain("resolve('/(app)/settings')");
+		expect(content).toContain('DesktopSidebar');
+		expect(content).toContain('MobileNav');
 		expect(content).toContain('handleLogout');
 	});
 
@@ -44,6 +41,14 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		expect(content).toContain('bind:isCollapsed');
 		expect(content).toContain('lg:pl-[72px]');
 		expect(content).toContain('lg:pl-64');
+	});
+
+	it('integrates MobileNav with slide-over drawer and thin header for mobile & tablet (Issue #28)', () => {
+		const layoutPath = path.join(appDir, '+layout.svelte');
+		const content = fs.readFileSync(layoutPath, 'utf-8');
+
+		expect(content).toContain('MobileNav');
+		expect(content).not.toContain('min-w-max items-center justify-around');
 	});
 
 	it('removes duplicated topbars from protected page views', () => {
