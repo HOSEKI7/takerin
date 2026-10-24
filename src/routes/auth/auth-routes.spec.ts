@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
 	authClient,
 	signIn,
@@ -15,8 +15,16 @@ import {
 	validateResetPasswordInput,
 	validateOTPInput,
 	validateBackupCodeInput,
+	validateAdminInviteActivationInput,
 	formatAuthError
 } from '#lib/validation/auth.js';
+import {
+	load as adminInviteLoad,
+	actions as adminInviteActions
+} from './admin-invite/[token]/+page.server.js';
+import * as adminDb from '#lib/server/db/admin.js';
+import * as authServer from '#lib/server/auth/index.js';
+import * as dbModule from '#lib/server/db/index.js';
 
 describe('Auth Client & Route Interfaces', () => {
 	it('exports working client methods from auth-client', () => {
@@ -154,5 +162,340 @@ describe('Auth Client & Route Interfaces', () => {
 			'Kode cadangan tidak valid atau sudah digunakan.'
 		);
 		expect(formatAuthError(null)).toBe('Terjadi kesalahan. Silakan coba lagi.');
+	});
+
+	it('validates admin invite activation inputs', () => {
+		expect(
+			validateAdminInviteActivationInput({
+				name: 'A',
+				password: 'password123',
+				confirmPassword: 'password123'
+			})
+		).toBe('Nama lengkap minimal 2 karakter.');
+
+		expect(
+			validateAdminInviteActivationInput({
+				name: 'Farid',
+				password: 'short',
+				confirmPassword: 'short'
+			})
+		).toBe('Password minimal terdiri dari 8 karakter.');
+
+		expect(
+			validateAdminInviteActivationInput({
+				name: 'Farid',
+				password: 'password123',
+				confirmPassword: 'password321'
+			})
+		).toBe('Konfirmasi password tidak cocok.');
+
+		expect(
+			validateAdminInviteActivationInput({
+				name: 'Farid Zahran',
+				password: 'password123',
+				confirmPassword: 'password123'
+			})
+		).toBeNull();
+	});
+});
+
+describe('Admin Invite Activation Route (/auth/admin-invite/[token])', () => {
+	const mockD1 = {} as D1Database;
+	const mockInvitation: adminDb.AdminInvitationRecord = {
+		id: 'inv-test-123',
+		email: 'candidate@takerin.my.id',
+		token: 'valid-test-token',
+		invitedBy: 'u-super-1',
+		status: 'pending',
+		expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+		createdAt: new Date(),
+		inviterName: 'Super Admin'
+	};
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	describe('+page.server.ts load', () => {
+		it('returns error when database is missing', async () => {
+			const result = await adminInviteLoad({
+				params: { token: 'some-token' },
+				platform: undefined
+			} as unknown as Parameters<typeof adminInviteLoad>[0]);
+
+			expect(result).toMatchObject({
+				valid: false,
+				reason: 'error'
+			});
+		});
+
+		it('returns error status when token is not found', async () => {
+			vi.spyOn(adminDb, 'getValidInvitationByToken').mockResolvedValueOnce({
+				valid: false,
+				status: 'not_found'
+			});
+
+			const result = await adminInviteLoad({
+				params: { token: 'invalid-token' },
+				platform: { env: { DB: mockD1 } }
+			} as unknown as Parameters<typeof adminInviteLoad>[0]);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: 'not_found',
+				email: undefined
+			});
+		});
+
+		it('returns error status when token is expired', async () => {
+			vi.spyOn(adminDb, 'getValidInvitationByToken').mockResolvedValueOnce({
+				valid: false,
+				invitation: mockInvitation,
+				status: 'expired'
+			});
+
+			const result = await adminInviteLoad({
+				params: { token: 'expired-token' },
+				platform: { env: { DB: mockD1 } }
+			} as unknown as Parameters<typeof adminInviteLoad>[0]);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: 'expired',
+				email: 'candidate@takerin.my.id'
+			});
+		});
+
+		it('returns error status when token is revoked', async () => {
+			vi.spyOn(adminDb, 'getValidInvitationByToken').mockResolvedValueOnce({
+				valid: false,
+				invitation: mockInvitation,
+				status: 'revoked'
+			});
+
+			const result = await adminInviteLoad({
+				params: { token: 'revoked-token' },
+				platform: { env: { DB: mockD1 } }
+			} as unknown as Parameters<typeof adminInviteLoad>[0]);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: 'revoked',
+				email: 'candidate@takerin.my.id'
+			});
+		});
+
+		it('returns error status when token is already accepted', async () => {
+			vi.spyOn(adminDb, 'getValidInvitationByToken').mockResolvedValueOnce({
+				valid: false,
+				invitation: mockInvitation,
+				status: 'accepted'
+			});
+
+			const result = await adminInviteLoad({
+				params: { token: 'accepted-token' },
+				platform: { env: { DB: mockD1 } }
+			} as unknown as Parameters<typeof adminInviteLoad>[0]);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: 'accepted',
+				email: 'candidate@takerin.my.id'
+			});
+		});
+
+		it('returns invitation data when token is valid', async () => {
+			vi.spyOn(adminDb, 'getValidInvitationByToken').mockResolvedValueOnce({
+				valid: true,
+				invitation: mockInvitation,
+				status: 'valid'
+			});
+
+			const result = await adminInviteLoad({
+				params: { token: 'valid-test-token' },
+				platform: { env: { DB: mockD1 } }
+			} as unknown as Parameters<typeof adminInviteLoad>[0]);
+
+			expect(result).toEqual({
+				valid: true,
+				email: 'candidate@takerin.my.id',
+				token: 'valid-test-token'
+			});
+		});
+	});
+
+	describe('+page.server.ts default action', () => {
+		it('rejects activation if token is invalid or expired', async () => {
+			vi.spyOn(adminDb, 'getValidInvitationByToken').mockResolvedValueOnce({
+				valid: false,
+				status: 'expired'
+			});
+
+			const formData = new FormData();
+			formData.append('name', 'Admin Baru');
+			formData.append('password', 'password123');
+			formData.append('confirmPassword', 'password123');
+
+			const mockRequest = { formData: vi.fn().mockResolvedValue(formData) } as unknown as Request;
+
+			const result = await adminInviteActions.default({
+				request: mockRequest,
+				params: { token: 'expired-token' },
+				platform: { env: { DB: mockD1 } }
+			} as unknown as Parameters<typeof adminInviteActions.default>[0]);
+
+			expect(result).toMatchObject({
+				status: 400,
+				data: {
+					error: 'Tautan undangan tidak valid atau telah kedaluwarsa.',
+					reason: 'expired'
+				}
+			});
+		});
+
+		it('rejects activation when validation fails (short password or mismatch)', async () => {
+			vi.spyOn(adminDb, 'getValidInvitationByToken').mockResolvedValueOnce({
+				valid: true,
+				invitation: mockInvitation,
+				status: 'valid'
+			});
+
+			const formData = new FormData();
+			formData.append('name', 'Admin Baru');
+			formData.append('password', 'password123');
+			formData.append('confirmPassword', 'passwordMismatch');
+
+			const mockRequest = { formData: vi.fn().mockResolvedValue(formData) } as unknown as Request;
+
+			const result = await adminInviteActions.default({
+				request: mockRequest,
+				params: { token: 'valid-test-token' },
+				platform: { env: { DB: mockD1 } }
+			} as unknown as Parameters<typeof adminInviteActions.default>[0]);
+
+			expect(result).toMatchObject({
+				status: 400,
+				data: {
+					error: 'Konfirmasi password tidak cocok.',
+					name: 'Admin Baru'
+				}
+			});
+		});
+
+		it('registers new admin user, marks invitation accepted, sets session cookies, and redirects to /admin', async () => {
+			vi.spyOn(adminDb, 'getValidInvitationByToken').mockResolvedValueOnce({
+				valid: true,
+				invitation: mockInvitation,
+				status: 'valid'
+			});
+
+			const markAcceptedSpy = vi
+				.spyOn(adminDb, 'markInvitationAccepted')
+				.mockResolvedValueOnce({ success: true });
+
+			const mockSignUpEmail = vi.fn().mockResolvedValue({
+				user: { id: 'u-new-admin', email: 'candidate@takerin.my.id' }
+			});
+
+			const mockHeaders = new Headers();
+			mockHeaders.append(
+				'set-cookie',
+				'better-auth.session_token=session-token-xyz; Path=/; HttpOnly; SameSite=Lax'
+			);
+
+			const mockSignInResponse = new Response(JSON.stringify({ status: true }), {
+				status: 200,
+				headers: mockHeaders
+			});
+
+			const mockSignInEmail = vi.fn().mockResolvedValue(mockSignInResponse);
+
+			const mockAuth = {
+				api: {
+					signUpEmail: mockSignUpEmail,
+					signInEmail: mockSignInEmail
+				}
+			};
+
+			vi.spyOn(authServer, 'getAuth').mockReturnValue(
+				mockAuth as unknown as ReturnType<typeof authServer.getAuth>
+			);
+
+			const mockWhere = vi.fn().mockResolvedValue([]);
+			const mockSet = vi.fn().mockReturnValue({ where: mockWhere });
+			const mockUpdate = vi.fn().mockReturnValue({ set: mockSet });
+			const mockDb = { update: mockUpdate };
+			vi.spyOn(dbModule, 'getDb').mockReturnValue(
+				mockDb as unknown as ReturnType<typeof dbModule.getDb>
+			);
+
+			const cookieSetSpy = vi.fn();
+			const mockCookies = {
+				set: cookieSetSpy,
+				get: vi.fn(),
+				delete: vi.fn()
+			};
+
+			const formData = new FormData();
+			formData.append('name', 'Admin Baru');
+			formData.append('password', 'password123');
+			formData.append('confirmPassword', 'password123');
+
+			const mockRequest = { formData: vi.fn().mockResolvedValue(formData) } as unknown as Request;
+
+			await expect(
+				adminInviteActions.default({
+					request: mockRequest,
+					params: { token: 'valid-test-token' },
+					platform: { env: { DB: mockD1 } },
+					cookies: mockCookies
+				} as unknown as Parameters<typeof adminInviteActions.default>[0])
+			).rejects.toMatchObject({
+				status: 303,
+				location: '/admin'
+			});
+
+			// Verify signUpEmail called
+			expect(mockSignUpEmail).toHaveBeenCalledWith({
+				body: {
+					name: 'Admin Baru',
+					email: 'candidate@takerin.my.id',
+					password: 'password123'
+				}
+			});
+
+			// Verify user role, emailVerified, and onboardingCompleted updated
+			expect(mockUpdate).toHaveBeenCalled();
+			expect(mockSet).toHaveBeenCalledWith(
+				expect.objectContaining({
+					role: 'admin',
+					emailVerified: true,
+					onboardingCompleted: true
+				})
+			);
+
+			// Verify signInEmail called with asResponse: true
+			expect(mockSignInEmail).toHaveBeenCalledWith({
+				body: {
+					email: 'candidate@takerin.my.id',
+					password: 'password123'
+				},
+				asResponse: true
+			});
+
+			// Verify invitation marked accepted
+			expect(markAcceptedSpy).toHaveBeenCalledWith(mockD1, 'inv-test-123');
+
+			// Verify session cookie set
+			expect(cookieSetSpy).toHaveBeenCalledWith(
+				'better-auth.session_token',
+				'session-token-xyz',
+				expect.objectContaining({
+					path: '/',
+					httpOnly: true,
+					sameSite: 'lax'
+				})
+			);
+		});
 	});
 });

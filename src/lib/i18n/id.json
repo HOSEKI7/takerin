@@ -145,6 +145,25 @@
       "submitting": "Memverifikasi...",
       "notYourAccount": "Bukan akun Anda?",
       "backToLogin": "Kembali ke halaman masuk"
+    },
+    "adminInvite": {
+      "title": "Aktivasi Akun Administrator",
+      "subtitle": "Lengkapi identitas Anda untuk mengaktifkan akses ke Admin Console Takerin.",
+      "emailLabel": "Alamat Email Terundang",
+      "nameLabel": "Nama Lengkap",
+      "namePlaceholder": "Nama lengkap Anda",
+      "passwordLabel": "Password Baru",
+      "passwordPlaceholder": "Minimal 8 karakter",
+      "confirmPasswordLabel": "Konfirmasi Password",
+      "confirmPasswordPlaceholder": "Ulangi password baru Anda",
+      "submitButton": "Aktivasi Akun Administrator",
+      "submitting": "Mengaktifkan Akun...",
+      "invalidTitle": "Undangan Tidak Berlaku",
+      "invalidDesc": "Tautan undangan ini tidak valid atau tidak ditemukan.",
+      "expiredDesc": "Tautan undangan ini telah kedaluwarsa (>48 jam). Silakan minta undangan baru kepada administrator.",
+      "revokedDesc": "Tautan undangan ini telah dinonaktifkan atau dibatalkan oleh administrator.",
+      "acceptedDesc": "Tautan undangan ini sudah pernah digunakan untuk aktivasi akun sebelumnya.",
+      "backToLogin": "Kembali ke Halaman Masuk"
     }
   },
   "onboarding": {

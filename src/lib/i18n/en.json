@@ -145,6 +145,25 @@
       "submitting": "Verifying...",
       "notYourAccount": "Not your account?",
       "backToLogin": "Back to sign in page"
+    },
+    "adminInvite": {
+      "title": "Activate Administrator Account",
+      "subtitle": "Complete your identity to activate access to the Takerin Admin Console.",
+      "emailLabel": "Invited Email Address",
+      "nameLabel": "Full Name",
+      "namePlaceholder": "Your full name",
+      "passwordLabel": "New Password",
+      "passwordPlaceholder": "Minimum 8 characters",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Repeat your new password",
+      "submitButton": "Activate Administrator Account",
+      "submitting": "Activating Account...",
+      "invalidTitle": "Invalid Invitation",
+      "invalidDesc": "This invitation link is invalid or could not be found.",
+      "expiredDesc": "This invitation link has expired (>48 hours). Please request a new invitation from an administrator.",
+      "revokedDesc": "This invitation link has been revoked by an administrator.",
+      "acceptedDesc": "This invitation link has already been used to activate an account.",
+      "backToLogin": "Back to Sign In"
     }
   },
   "onboarding": {

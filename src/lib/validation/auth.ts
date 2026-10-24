@@ -86,6 +86,27 @@ export function validateBackupCodeInput(code: string): string | null {
 	return null;
 }
 
+export interface AdminInviteActivationInput {
+	name?: string;
+	password?: string;
+	confirmPassword?: string;
+}
+
+export function validateAdminInviteActivationInput(
+	input: AdminInviteActivationInput
+): string | null {
+	if (!input.name || input.name.trim().length < 2) {
+		return 'Nama lengkap minimal 2 karakter.';
+	}
+	if (!input.password || input.password.length < 8) {
+		return 'Password minimal terdiri dari 8 karakter.';
+	}
+	if (input.password !== input.confirmPassword) {
+		return 'Konfirmasi password tidak cocok.';
+	}
+	return null;
+}
+
 export function formatAuthError(error?: { message?: string } | string | null): string {
 	if (!error) return 'Terjadi kesalahan. Silakan coba lagi.';
 	const msg = typeof error === 'string' ? error : error.message || '';

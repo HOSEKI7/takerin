@@ -170,3 +170,63 @@ export async function setUserRole(d1: D1Database, userId: string, role: 'user' |
 		.set({ role, updatedAt: new Date() })
 		.where(eq(schema.user.id, userId));
 }
+
+function tryDecode(str: string): string {
+	if (str.indexOf('%') === -1) return str;
+	try {
+		return decodeURIComponent(str);
+	} catch {
+		return str;
+	}
+}
+
+/**
+ * Parses and propagates Set-Cookie headers from a Better Auth Response to SvelteKit cookies.
+ */
+export function applyAuthCookies(
+	res: Response,
+	cookies?: { set: (name: string, value: string, options: Record<string, unknown>) => void }
+) {
+	if (!cookies || typeof cookies.set !== 'function') return;
+
+	const rawCookies =
+		typeof res.headers.getSetCookie === 'function'
+			? res.headers.getSetCookie()
+			: res.headers.get('set-cookie')
+				? [res.headers.get('set-cookie')!]
+				: [];
+
+	for (const header of rawCookies) {
+		const parts = header.split(';').map((p) => p.trim());
+		const [nameValue, ...attributePairs] = parts;
+		const [rawName, ...rawVal] = (nameValue || '').split('=');
+		const cookieName = rawName?.trim();
+		if (!cookieName) continue;
+		const cookieValue = rawVal.join('=');
+
+		const options: Record<string, unknown> = { path: '/' };
+		for (const attr of attributePairs) {
+			const [attributeKey, ...attributeValueParts] = attr.split('=');
+			const key = attributeKey?.trim().toLowerCase();
+			const val = attributeValueParts.join('=').trim();
+			if (key === 'path') options.path = val;
+			else if (key === 'expires') options.expires = new Date(val);
+			else if (key === 'max-age') options.maxAge = parseInt(val, 10);
+			else if (key === 'domain') options.domain = val;
+			else if (key === 'secure') options.secure = true;
+			else if (key === 'httponly') options.httpOnly = true;
+			else if (key === 'samesite') {
+				const sameSiteValue = val.toLowerCase();
+				if (
+					sameSiteValue === 'lax' ||
+					sameSiteValue === 'strict' ||
+					sameSiteValue === 'none'
+				) {
+					options.sameSite = sameSiteValue;
+				}
+			}
+		}
+
+		cookies.set(cookieName, tryDecode(cookieValue), options);
+	}
+}
