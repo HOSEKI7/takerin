@@ -132,7 +132,7 @@ export function getBreadcrumbs(rawPath: string): BreadcrumbItem[] {
 		const seg = segments[i];
 		accumulated += `/${seg}`;
 		const isLast = i === segments.length - 1;
-		const label = SEGMENT_LABELS[seg] ?? (seg.charAt(0).toUpperCase() + seg.slice(1));
+		const label = SEGMENT_LABELS[seg] ?? seg.charAt(0).toUpperCase() + seg.slice(1);
 
 		items.push({
 			label,

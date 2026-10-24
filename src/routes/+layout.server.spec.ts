@@ -39,7 +39,9 @@ describe('Root Layout Server Load (Seam 2)', () => {
 				})
 			})
 		};
-		vi.spyOn(dbModule, 'getDb').mockReturnValue(mockDb as any);
+		vi.spyOn(dbModule, 'getDb').mockReturnValue(
+			mockDb as unknown as ReturnType<typeof dbModule.getDb>
+		);
 
 		const result = await load({
 			locals: { user: { id: 'u1', name: 'User' } },

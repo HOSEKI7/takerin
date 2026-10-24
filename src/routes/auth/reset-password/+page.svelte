@@ -162,7 +162,9 @@
 
 						<div class="pt-2">
 							<Button type="submit" variant="primary" size="md" class="w-full" disabled={isLoading}>
-								{isLoading ? t('auth.resetPassword.submitting') : t('auth.resetPassword.submitButton')}
+								{isLoading
+									? t('auth.resetPassword.submitting')
+									: t('auth.resetPassword.submitButton')}
 							</Button>
 						</div>
 					</form>

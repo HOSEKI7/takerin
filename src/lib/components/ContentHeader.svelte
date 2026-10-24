@@ -42,10 +42,7 @@
 							>
 								{item.label}
 							</a>
-							<span
-								aria-hidden="true"
-								class="select-none text-slate/40 dark:text-pebble/40"
-							>
+							<span aria-hidden="true" class="text-slate/40 select-none dark:text-pebble/40">
 								<HugeiconsIcon icon={ArrowRight01Icon} class="h-3 w-3" />
 							</span>
 						{:else}

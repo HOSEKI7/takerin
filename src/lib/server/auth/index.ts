@@ -217,11 +217,7 @@ export function applyAuthCookies(
 			else if (key === 'httponly') options.httpOnly = true;
 			else if (key === 'samesite') {
 				const sameSiteValue = val.toLowerCase();
-				if (
-					sameSiteValue === 'lax' ||
-					sameSiteValue === 'strict' ||
-					sameSiteValue === 'none'
-				) {
+				if (sameSiteValue === 'lax' || sameSiteValue === 'strict' || sameSiteValue === 'none') {
 					options.sameSite = sameSiteValue;
 				}
 			}

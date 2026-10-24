@@ -5,7 +5,6 @@
 	import Input from '#lib/components/Input.svelte';
 	import NumpadCalculator from '#lib/components/NumpadCalculator.svelte';
 	import CategoryPicker from '#lib/components/CategoryPicker.svelte';
-	import { resolve } from '$app/paths';
 	import { formatRupiah, formatDateIndonesian, formatDateISO } from '#lib/validation/onboarding.js';
 	import { isOverBudget } from '#lib/validation/expense.js';
 	import { t } from '#lib/i18n/index.js';

@@ -6,7 +6,7 @@
 	import BrandLogo from './BrandLogo.svelte';
 	import ThemeToggle from './ThemeToggle.svelte';
 	import Button from './Button.svelte';
-	import { isRouteActive } from './DesktopSidebar.svelte';
+	import { isRouteActive } from '#lib/navigation/route.js';
 	import { t } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
@@ -208,7 +208,11 @@
 
 		<!-- Quick Action CTA: + Catat Pengeluaran -->
 		<div class="px-4 pt-4 pb-2">
-			<a href={resolve('/(app)/expenses/new')} onclick={closeDrawer} class="block w-full">
+			<a
+				href={resolve('/(app)/expenses/new')}
+				onclick={closeDrawer}
+				class="block w-full rounded-xl focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:focus-visible:ring-lime-voltage"
+			>
 				<Button
 					variant="primary"
 					size="md"
@@ -228,7 +232,7 @@
 			<!-- Group 1: Menu Utama -->
 			<div>
 				<h3
-					class="px-3 pb-1.5 text-[11px] font-bold tracking-wider text-slate/70 uppercase dark:text-pebble/70"
+					class="px-3 pb-1.5 text-[11px] font-bold tracking-wider text-slate uppercase dark:text-pebble"
 				>
 					{t('nav.mainMenu')}
 				</h3>
@@ -240,7 +244,7 @@
 								href={item.href}
 								onclick={closeDrawer}
 								aria-current={active ? 'page' : undefined}
-								class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors {active
+								class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:focus-visible:ring-lime-voltage {active
 									? 'bg-forest-ink text-lime-voltage shadow-xs dark:bg-forest-ink dark:text-lime-voltage'
 									: 'text-charcoal hover:bg-fog hover:text-forest-ink dark:text-linen-mist dark:hover:bg-dark-card dark:hover:text-lime-voltage'}"
 							>
@@ -258,7 +262,7 @@
 			<!-- Group 2: Preferensi -->
 			<div>
 				<h3
-					class="px-3 pb-1.5 text-[11px] font-bold tracking-wider text-slate/70 uppercase dark:text-pebble/70"
+					class="px-3 pb-1.5 text-[11px] font-bold tracking-wider text-slate uppercase dark:text-pebble"
 				>
 					{t('nav.preferences')}
 				</h3>
@@ -270,7 +274,7 @@
 								href={item.href}
 								onclick={closeDrawer}
 								aria-current={active ? 'page' : undefined}
-								class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors {active
+								class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:focus-visible:ring-lime-voltage {active
 									? 'bg-forest-ink text-lime-voltage shadow-xs dark:bg-forest-ink dark:text-lime-voltage'
 									: 'text-charcoal hover:bg-fog hover:text-forest-ink dark:text-linen-mist dark:hover:bg-dark-card dark:hover:text-lime-voltage'}"
 							>

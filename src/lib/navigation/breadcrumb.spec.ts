@@ -4,21 +4,15 @@ import { getBreadcrumbs, type BreadcrumbItem } from './breadcrumb.js';
 describe('Breadcrumb Navigation Logic (Seam 1)', () => {
 	it('generates breadcrumb for dashboard as active root without self-reloading parent link', () => {
 		const items = getBreadcrumbs('/dashboard');
-		expect(items).toEqual<BreadcrumbItem[]>([
-			{ label: 'Dashboard', current: true }
-		]);
+		expect(items).toEqual<BreadcrumbItem[]>([{ label: 'Dashboard', current: true }]);
 	});
 
 	it('handles root path / or /(app)/dashboard identically', () => {
 		const fromRoot = getBreadcrumbs('/');
-		expect(fromRoot).toEqual<BreadcrumbItem[]>([
-			{ label: 'Dashboard', current: true }
-		]);
+		expect(fromRoot).toEqual<BreadcrumbItem[]>([{ label: 'Dashboard', current: true }]);
 
 		const fromRouteGroup = getBreadcrumbs('/(app)/dashboard');
-		expect(fromRouteGroup).toEqual<BreadcrumbItem[]>([
-			{ label: 'Dashboard', current: true }
-		]);
+		expect(fromRouteGroup).toEqual<BreadcrumbItem[]>([{ label: 'Dashboard', current: true }]);
 	});
 
 	it('generates breadcrumbs for 1st level main routes (expenses, categories, history, settings)', () => {

@@ -344,7 +344,8 @@
 								? 'text-forest-ink dark:text-lime-voltage'
 								: 'text-alarm-red'}"
 						>
-							{t('admin.templates.totalAlloc', { percent: totalPercentage })} {isPercentageValid
+							{t('admin.templates.totalAlloc', { percent: totalPercentage })}
+							{isPercentageValid
 								? t('admin.templates.exactFit')
 								: `(${totalPercentage < 100 ? t('admin.templates.underFit', { percent: Math.round((100 - totalPercentage) * 100) / 100 }) : t('admin.templates.overFit', { percent: Math.round((totalPercentage - 100) * 100) / 100 })})`}
 						</span>
@@ -457,7 +458,9 @@
 				<div class="rounded-full bg-alarm-red/10 p-2 text-alarm-red dark:bg-alarm-red/20">
 					<HugeiconsIcon icon={Alert02Icon} size={24} />
 				</div>
-				<h3 class="text-lg font-bold text-obsidian dark:text-paper">{t('admin.templates.deleteTitle')}</h3>
+				<h3 class="text-lg font-bold text-obsidian dark:text-paper">
+					{t('admin.templates.deleteTitle')}
+				</h3>
 			</div>
 
 			<p class="mt-3 text-xs leading-relaxed text-slate dark:text-pebble">

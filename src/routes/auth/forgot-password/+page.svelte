@@ -116,7 +116,9 @@
 
 						<div class="pt-2">
 							<Button type="submit" variant="dark" size="md" class="w-full" disabled={isLoading}>
-								{isLoading ? t('auth.forgotPassword.submitting') : t('auth.forgotPassword.submitButton')}
+								{isLoading
+									? t('auth.forgotPassword.submitting')
+									: t('auth.forgotPassword.submitButton')}
 							</Button>
 						</div>
 					</form>

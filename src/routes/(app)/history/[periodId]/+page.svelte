@@ -73,9 +73,7 @@
 				</span>
 			</div>
 			<h1 class="mt-1 text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-				{formatDateIndonesian(data.period.startDate)} – {formatDateIndonesian(
-					data.period.endDate
-				)}
+				{formatDateIndonesian(data.period.startDate)} – {formatDateIndonesian(data.period.endDate)}
 			</h1>
 		</div>
 	</div>

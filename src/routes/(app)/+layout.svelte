@@ -36,11 +36,7 @@
 	/>
 
 	<!-- Mobile & Tablet Navigation (< 1024px) -->
-	<MobileNav
-		user={data?.user}
-		{isLoggingOut}
-		onLogout={handleLogout}
-	/>
+	<MobileNav user={data?.user} {isLoggingOut} onLogout={handleLogout} />
 
 	<!-- App Content Shell with responsive desktop left padding -->
 	<div

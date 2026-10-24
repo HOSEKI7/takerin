@@ -102,7 +102,9 @@
 					{analytics.totalExpenses.toLocaleString('id-ID')}
 				</span>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
-					{t('admin.overview.totalAmount', { amount: formatRupiah(analytics.totalExpenseAmount || 0) })}
+					{t('admin.overview.totalAmount', {
+						amount: formatRupiah(analytics.totalExpenseAmount || 0)
+					})}
 				</p>
 			</div>
 		</Card>

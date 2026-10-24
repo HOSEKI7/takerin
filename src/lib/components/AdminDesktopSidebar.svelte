@@ -45,6 +45,14 @@
 		onLogout
 	}: Props = $props();
 
+	let activeTooltipDismissed = $state(false);
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			activeTooltipDismissed = true;
+		}
+	}
+
 	const effectivePath = $derived(
 		currentPath ?? (typeof page !== 'undefined' && page?.url ? page.url.pathname : '')
 	);
@@ -114,13 +122,17 @@
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 
+<svelte:window onkeydown={handleKeydown} />
+
 {#snippet tooltip(text: string)}
-	<div
-		role="tooltip"
-		class="pointer-events-none absolute left-full z-50 ml-3 rounded-md bg-charcoal px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-paper opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:bg-paper dark:text-charcoal"
-	>
-		{text}
-	</div>
+	{#if !activeTooltipDismissed}
+		<div
+			role="tooltip"
+			class="pointer-events-none absolute left-full z-50 ml-3 rounded-md bg-charcoal px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-paper opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:bg-paper dark:text-charcoal"
+		>
+			{text}
+		</div>
+	{/if}
 {/snippet}
 
 {#snippet userAvatar()}
@@ -145,7 +157,7 @@
 		<a
 			href={item.href}
 			aria-current={active ? 'page' : undefined}
-			class="group relative flex items-center rounded-xl font-semibold transition-colors {isCollapsed
+			class="group relative flex items-center rounded-xl font-semibold transition-colors focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:focus-visible:ring-lime-voltage {isCollapsed
 				? 'mx-auto h-11 w-11 justify-center'
 				: 'gap-3 px-3.5 py-2.5 text-sm'} {active
 				? 'bg-forest-ink text-lime-voltage shadow-xs dark:bg-forest-ink dark:text-lime-voltage'
@@ -164,6 +176,8 @@
 {/snippet}
 
 <aside
+	onfocusin={() => (activeTooltipDismissed = false)}
+	onpointerenter={() => (activeTooltipDismissed = false)}
 	class="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-fog bg-fog/40 transition-all duration-300 ease-in-out lg:flex dark:border-dark-border dark:bg-dark-surface {isCollapsed
 		? 'w-[72px]'
 		: 'w-64'}"
@@ -213,7 +227,7 @@
 				<div class="sr-only">{t('admin.title')}</div>
 			{:else}
 				<h3
-					class="px-3 pb-1.5 text-[11px] font-bold tracking-wider text-slate/70 uppercase dark:text-pebble/70"
+					class="px-3 pb-1.5 text-[11px] font-bold tracking-wider text-slate uppercase dark:text-pebble"
 				>
 					{t('admin.title')}
 				</h3>

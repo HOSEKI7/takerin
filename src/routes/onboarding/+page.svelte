@@ -367,611 +367,609 @@
 	<!-- Main Content -->
 	<main class="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-4 py-8 sm:px-6">
 		{#if showTutorial}
-			<OnboardingTutorial
-				onfinish={handleExitTutorial}
-				onskip={handleExitTutorial}
-			/>
+			<OnboardingTutorial onfinish={handleExitTutorial} onskip={handleExitTutorial} />
 		{:else}
-		<!-- Progress Bar -->
-		<div class="mb-6">
-			<ProgressBar
-				value={progressInfo.value}
-				max={100}
-				variant="lime"
-				label={progressInfo.label}
-				showValue={true}
-			/>
-		</div>
-
-		<!-- Error alert from server if any -->
-		{#if form?.errorMessage}
-			<div
-				role="alert"
-				class="mb-6 rounded-[10px] border border-alarm-red/30 bg-alarm-red/10 p-4 text-sm font-medium text-alarm-red"
-			>
-				{form.errorMessage}
+			<!-- Progress Bar -->
+			<div class="mb-6">
+				<ProgressBar
+					value={progressInfo.value}
+					max={100}
+					variant="lime"
+					label={progressInfo.label}
+					showValue={true}
+				/>
 			</div>
-		{/if}
 
-		<Card variant="default" padding="lg" class="shadow-md">
-			{#if currentStep === 1}
-				<!-- Step 1: Set Tanggal Gajian -->
-				<div class="space-y-6">
-					<div>
-						<div
-							class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
-						>
-							<HugeiconsIcon icon={Calendar01Icon} size={16} />
-							<span>{t('onboarding.step1Badge')}</span>
-						</div>
-						<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-							{t('onboarding.step1Title')}
-						</h1>
-						<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
-							{t('onboarding.step1Desc')}
-						</p>
-					</div>
-
-					{#if step1Error}
-						<div
-							role="alert"
-							class="rounded-[10px] border border-alarm-red/30 bg-alarm-red/10 p-3.5 text-sm font-medium text-alarm-red"
-						>
-							{step1Error}
-						</div>
-					{/if}
-
-					<!-- Quick Selection Buttons -->
-					<div class="space-y-2">
-						<p class="text-xs font-semibold text-slate dark:text-pebble">
-							{t('onboarding.quickPayDayLabel')}
-						</p>
-						<div class="flex flex-wrap gap-2">
-							{#each popularPayDays as day (day)}
-								<button
-									type="button"
-									onclick={() => handleSelectQuickPayDay(day)}
-									class="cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold transition {Number(
-										payDay
-									) === day
-										? 'border-forest-ink bg-forest-ink text-paper dark:border-lime-voltage dark:bg-lime-voltage dark:text-forest-ink'
-										: 'border-pebble bg-paper text-charcoal hover:border-forest-ink dark:border-dark-border dark:bg-dark-surface dark:text-linen-mist dark:hover:border-lime-voltage'}"
-								>
-									{t('onboarding.payDayButton', { day })}
-								</button>
-							{/each}
-						</div>
-					</div>
-
-					<!-- Manual Input -->
-					<form
-						onsubmit={(e) => {
-							e.preventDefault();
-							handleNextToStep2();
-						}}
-						class="space-y-2"
-					>
-						<Input
-							id="onboarding-payday"
-							label={t('onboarding.payDayInputLabel')}
-							type="number"
-							min="1"
-							max="31"
-							placeholder="25"
-							required
-							bind:value={payDay}
-						/>
-						<p class="text-xs text-slate dark:text-pebble">
-							{t('onboarding.payDayInputHelp')}
-						</p>
-					</form>
-
-					<div class="pt-4">
-						<Button
-							type="button"
-							variant="primary"
-							size="md"
-							class="w-full"
-							onclick={handleNextToStep2}
-						>
-							<span>{t('onboarding.nextToIncome')}</span>
-							<HugeiconsIcon icon={ArrowRight02Icon} size={18} />
-						</Button>
-					</div>
-				</div>
-			{:else if currentStep === 2}
-				<!-- Step 2: Input Sumber Pemasukan -->
-				<div class="space-y-6">
-					<div>
-						<div
-							class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
-						>
-							<span>{t('onboarding.step2Badge')}</span>
-						</div>
-						<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-							{t('onboarding.step2Title')}
-						</h1>
-						<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
-							{t('onboarding.step2Desc')}
-						</p>
-					</div>
-
-					{#if step2Error}
-						<div
-							role="alert"
-							class="rounded-[10px] border border-alarm-red/30 bg-alarm-red/10 p-3.5 text-sm font-medium text-alarm-red"
-						>
-							{step2Error}
-						</div>
-					{/if}
-
-					<!-- Income Sources List -->
-					<div class="space-y-4">
-						{#each incomeSources as source, index (source.id)}
-							<div
-								class="relative rounded-[10px] border border-fog bg-paper/60 p-4 transition dark:border-dark-border dark:bg-dark-card/60"
-							>
-								<div class="flex items-center justify-between pb-2">
-									<span
-										class="text-xs font-bold tracking-wide text-forest-ink uppercase dark:text-lime-voltage"
-									>
-										{t('onboarding.sourceItemLabel', { index: index + 1 })}
-									</span>
-									{#if incomeSources.length > 1}
-										<button
-											type="button"
-											onclick={() => handleRemoveSource(index)}
-											aria-label={t('onboarding.deleteSourceAria', {
-												name: source.name || t('onboarding.incomeNameLabel')
-											})}
-											class="cursor-pointer text-xs font-semibold text-alarm-red hover:underline"
-										>
-											<HugeiconsIcon icon={Delete02Icon} size={16} />
-										</button>
-									{/if}
-								</div>
-
-								<div class="grid gap-3 sm:grid-cols-2">
-									<Input
-										id={`source-name-${index}`}
-										label={t('onboarding.incomeNameLabel')}
-										type="text"
-										placeholder={t('onboarding.incomeNamePlaceholder')}
-										required
-										bind:value={source.name}
-									/>
-
-									<Input
-										id={`source-amount-${index}`}
-										label={t('onboarding.incomeAmountLabel')}
-										type="number"
-										min="1"
-										placeholder={t('onboarding.incomeAmountPlaceholder')}
-										required
-										bind:value={source.amount}
-										hint={source.amount && Number(source.amount) > 0
-											? formatRupiah(source.amount)
-											: undefined}
-									/>
-								</div>
-							</div>
-						{/each}
-
-						<button
-							type="button"
-							onclick={handleAddSource}
-							class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-dashed border-forest-ink/30 bg-paper py-3 font-sans text-sm font-semibold text-forest-ink transition hover:border-forest-ink hover:bg-fog dark:border-lime-voltage/30 dark:bg-dark-surface dark:text-lime-voltage dark:hover:border-lime-voltage dark:hover:bg-dark-card"
-						>
-							<HugeiconsIcon icon={Add01Icon} size={18} />
-							<span>{t('onboarding.addSourceButton')}</span>
-						</button>
-					</div>
-
-					<!-- Total Monthly Income Display Card -->
-					<div
-						class="rounded-[10px] border border-lime-voltage/50 bg-linen-mist/60 p-5 dark:border-lime-voltage/40 dark:bg-spruce/30"
-					>
-						<span
-							class="text-xs font-bold tracking-wider text-forest-ink uppercase dark:text-lime-voltage"
-						>
-							{t('onboarding.totalIncomeLabel')}
-						</span>
-						<div class="mt-1 flex items-baseline justify-between gap-2">
-							<span class="text-2xl font-black text-forest-ink sm:text-3xl dark:text-lime-voltage">
-								{formatRupiah(totalIncome)}
-							</span>
-							<span class="text-xs text-slate dark:text-pebble">
-								{t('onboarding.totalIncomeSourcesCount', { count: incomeSources.length })}
-							</span>
-						</div>
-						<p class="mt-2 text-xs text-charcoal/80 dark:text-linen-mist/80">
-							{t('onboarding.totalIncomeHelp')}
-						</p>
-					</div>
-
-					<!-- Navigation Actions -->
-					<div class="flex flex-col gap-3 pt-2 sm:flex-row">
-						<Button
-							type="button"
-							variant="secondary"
-							size="md"
-							class="flex-1"
-							onclick={handleBackToStep1}
-						>
-							<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
-							<span>{t('onboarding.prevButton')}</span>
-						</Button>
-
-						<Button
-							type="button"
-							variant="primary"
-							size="md"
-							class="flex-1"
-							onclick={handleNextToStep3}
-							disabled={totalIncome <= 0}
-						>
-							<span>{t('onboarding.nextToTemplate')}</span>
-							<HugeiconsIcon icon={ArrowRight02Icon} size={18} />
-						</Button>
-					</div>
-				</div>
-			{:else if currentStep === 3}
-				<!-- Step 3: Pilih Template Kategori -->
-				<div class="space-y-6">
-					<div>
-						<div
-							class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
-						>
-							<HugeiconsIcon icon={PieChart01Icon} size={16} />
-							<span>{t('onboarding.step3Badge')}</span>
-						</div>
-						<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-							{t('onboarding.step3Title')}
-						</h1>
-						<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
-							{t('onboarding.step3Desc')}
-						</p>
-					</div>
-
-					<!-- Dynamic Template Options from D1 / Presets -->
-					<div class="grid gap-4">
-						{#each availableTemplates as tpl (tpl.id)}
-							<button
-								type="button"
-								onclick={() => handleSelectTemplate(tpl.name)}
-								class="group flex w-full cursor-pointer flex-col rounded-[10px] border p-5 text-left transition {selectedTemplate.toLowerCase() ===
-								tpl.name.toLowerCase()
-									? 'border-forest-ink bg-linen-mist/40 shadow-sm dark:border-lime-voltage dark:bg-spruce/30'
-									: 'border-fog bg-paper hover:border-pebble dark:border-dark-border dark:bg-dark-card/60'}"
-							>
-								<div class="flex items-center justify-between">
-									<div class="flex items-center gap-3">
-										<div
-											class="rounded-full bg-linen-mist p-2 text-forest-ink dark:bg-spruce dark:text-lime-voltage"
-										>
-											{#if tpl.name === '6 Toples'}
-												<HugeiconsIcon icon={MoneySavingJarIcon} size={22} />
-											{:else if tpl.name === 'Custom'}
-												<HugeiconsIcon icon={Layers01Icon} size={22} />
-											{:else}
-												<HugeiconsIcon icon={PieChart01Icon} size={22} />
-											{/if}
-										</div>
-										<div>
-											<h2 class="text-lg font-black text-obsidian dark:text-paper">
-												{tpl.name === 'Custom'
-													? t('onboarding.customTemplateTitle')
-													: t('onboarding.templateNamed', { name: tpl.name })}
-											</h2>
-											{#if tpl.description}
-												<p class="text-xs text-slate dark:text-pebble">
-													{tpl.description}
-												</p>
-											{/if}
-										</div>
-									</div>
-									{#if selectedTemplate.toLowerCase() === tpl.name.toLowerCase()}
-										<div class="text-forest-ink dark:text-lime-voltage">
-											<HugeiconsIcon icon={CheckmarkCircle02Icon} size={24} />
-										</div>
-									{/if}
-								</div>
-
-								{#if tpl.categories && tpl.categories.length > 0}
-									<div class="mt-4 flex flex-wrap gap-2">
-										{#each tpl.categories as cat (cat.name)}
-											<span
-												class="rounded-full bg-forest-ink/10 px-2.5 py-1 text-xs font-semibold text-forest-ink dark:bg-lime-voltage/20 dark:text-lime-voltage"
-											>
-												{cat.name} ({cat.percentage}%)
-											</span>
-										{/each}
-									</div>
-								{/if}
-							</button>
-						{/each}
-					</div>
-
-					<!-- Navigation Actions -->
-					<div class="flex flex-col gap-3 pt-2 sm:flex-row">
-						<Button
-							type="button"
-							variant="secondary"
-							size="md"
-							class="flex-1"
-							onclick={handleBackToStep2}
-						>
-							<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
-							<span>{t('onboarding.prevButton')}</span>
-						</Button>
-
-						<Button
-							type="button"
-							variant="primary"
-							size="md"
-							class="flex-1"
-							onclick={handleNextToStep4}
-						>
-							<span>{t('onboarding.nextToCategories')}</span>
-							<HugeiconsIcon icon={ArrowRight02Icon} size={18} />
-						</Button>
-					</div>
-				</div>
-			{:else}
-				<!-- Step 4: Customize Kategori & Submit -->
-				<form
-					method="POST"
-					use:enhance={({ formData, cancel }) => {
-						validateAndPrepareSubmit({ cancel });
-						if (isSubmitting) {
-							formData.set('payDay', String(payDay));
-							formData.set('incomeSources', serializedIncomeSources);
-							formData.set('categories', serializedCategories);
-						}
-						return async ({ result, update }) => {
-							isSubmitting = false;
-							if (result.type === 'redirect') {
-								showTutorial = true;
-							} else {
-								await update();
-							}
-						};
-					}}
-					class="space-y-6"
+			<!-- Error alert from server if any -->
+			{#if form?.errorMessage}
+				<div
+					role="alert"
+					class="mb-6 rounded-[10px] border border-alarm-red/30 bg-alarm-red/10 p-4 text-sm font-medium text-alarm-red"
 				>
-					<input type="hidden" name="payDay" value={payDay} />
-					<input type="hidden" name="incomeSources" value={serializedIncomeSources} />
-					<input type="hidden" name="categories" value={serializedCategories} />
+					{form.errorMessage}
+				</div>
+			{/if}
 
-					<div>
-						<div
-							class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
-						>
-							<HugeiconsIcon icon={Layers01Icon} size={16} />
-							<span>{t('onboarding.step4Badge')}</span>
-						</div>
-						<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-							{t('onboarding.step4Title')}
-						</h1>
-						<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
-							{t('onboarding.step4Desc')}
-						</p>
-					</div>
-
-					{#if step4Error}
-						<div
-							role="alert"
-							class="rounded-[10px] border border-alarm-red/30 bg-alarm-red/10 p-3.5 text-sm font-medium text-alarm-red"
-						>
-							{step4Error}
-						</div>
-					{/if}
-
-					<!-- Income Summary Bar -->
-					<div
-						class="flex items-center justify-between rounded-[10px] border border-fog bg-paper/80 px-4 py-3 dark:border-dark-border dark:bg-dark-card/60"
-					>
+			<Card variant="default" padding="lg" class="shadow-md">
+				{#if currentStep === 1}
+					<!-- Step 1: Set Tanggal Gajian -->
+					<div class="space-y-6">
 						<div>
-							<span class="text-xs font-medium text-slate dark:text-pebble">
-								{t('onboarding.totalIncomeLabel')}:
-							</span>
-							<p class="text-base font-extrabold text-forest-ink dark:text-lime-voltage">
-								{formatRupiah(totalIncome)}
+							<div
+								class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
+							>
+								<HugeiconsIcon icon={Calendar01Icon} size={16} />
+								<span>{t('onboarding.step1Badge')}</span>
+							</div>
+							<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
+								{t('onboarding.step1Title')}
+							</h1>
+							<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
+								{t('onboarding.step1Desc')}
 							</p>
 						</div>
-						<span
-							class="rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
-						>
-							{t('onboarding.payDayBadge', { day: payDay })}
-						</span>
-					</div>
 
-					<!-- Categories List -->
-					<div class="space-y-4">
-						{#each categories as category, index (category.id)}
+						{#if step1Error}
 							<div
-								class="relative rounded-[10px] border border-fog bg-paper/60 p-4 transition dark:border-dark-border dark:bg-dark-card/60"
+								role="alert"
+								class="rounded-[10px] border border-alarm-red/30 bg-alarm-red/10 p-3.5 text-sm font-medium text-alarm-red"
 							>
-								<div class="flex items-center justify-between pb-2">
-									<div class="flex items-center gap-2">
+								{step1Error}
+							</div>
+						{/if}
+
+						<!-- Quick Selection Buttons -->
+						<div class="space-y-2">
+							<p class="text-xs font-semibold text-slate dark:text-pebble">
+								{t('onboarding.quickPayDayLabel')}
+							</p>
+							<div class="flex flex-wrap gap-2">
+								{#each popularPayDays as day (day)}
+									<button
+										type="button"
+										onclick={() => handleSelectQuickPayDay(day)}
+										class="cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold transition {Number(
+											payDay
+										) === day
+											? 'border-forest-ink bg-forest-ink text-paper dark:border-lime-voltage dark:bg-lime-voltage dark:text-forest-ink'
+											: 'border-pebble bg-paper text-charcoal hover:border-forest-ink dark:border-dark-border dark:bg-dark-surface dark:text-linen-mist dark:hover:border-lime-voltage'}"
+									>
+										{t('onboarding.payDayButton', { day })}
+									</button>
+								{/each}
+							</div>
+						</div>
+
+						<!-- Manual Input -->
+						<form
+							onsubmit={(e) => {
+								e.preventDefault();
+								handleNextToStep2();
+							}}
+							class="space-y-2"
+						>
+							<Input
+								id="onboarding-payday"
+								label={t('onboarding.payDayInputLabel')}
+								type="number"
+								min="1"
+								max="31"
+								placeholder="25"
+								required
+								bind:value={payDay}
+							/>
+							<p class="text-xs text-slate dark:text-pebble">
+								{t('onboarding.payDayInputHelp')}
+							</p>
+						</form>
+
+						<div class="pt-4">
+							<Button
+								type="button"
+								variant="primary"
+								size="md"
+								class="w-full"
+								onclick={handleNextToStep2}
+							>
+								<span>{t('onboarding.nextToIncome')}</span>
+								<HugeiconsIcon icon={ArrowRight02Icon} size={18} />
+							</Button>
+						</div>
+					</div>
+				{:else if currentStep === 2}
+					<!-- Step 2: Input Sumber Pemasukan -->
+					<div class="space-y-6">
+						<div>
+							<div
+								class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
+							>
+								<span>{t('onboarding.step2Badge')}</span>
+							</div>
+							<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
+								{t('onboarding.step2Title')}
+							</h1>
+							<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
+								{t('onboarding.step2Desc')}
+							</p>
+						</div>
+
+						{#if step2Error}
+							<div
+								role="alert"
+								class="rounded-[10px] border border-alarm-red/30 bg-alarm-red/10 p-3.5 text-sm font-medium text-alarm-red"
+							>
+								{step2Error}
+							</div>
+						{/if}
+
+						<!-- Income Sources List -->
+						<div class="space-y-4">
+							{#each incomeSources as source, index (source.id)}
+								<div
+									class="relative rounded-[10px] border border-fog bg-paper/60 p-4 transition dark:border-dark-border dark:bg-dark-card/60"
+								>
+									<div class="flex items-center justify-between pb-2">
 										<span
 											class="text-xs font-bold tracking-wide text-forest-ink uppercase dark:text-lime-voltage"
 										>
-											{t('onboarding.categoryItemLabel', { index: index + 1 })}
+											{t('onboarding.sourceItemLabel', { index: index + 1 })}
 										</span>
-										{#if category.isSavings}
-											<span
-												class="inline-flex items-center gap-1 rounded-full bg-spruce/10 px-2 py-0.5 text-xs font-semibold text-spruce dark:bg-lime-voltage/20 dark:text-lime-voltage"
+										{#if incomeSources.length > 1}
+											<button
+												type="button"
+												onclick={() => handleRemoveSource(index)}
+												aria-label={t('onboarding.deleteSourceAria', {
+													name: source.name || t('onboarding.incomeNameLabel')
+												})}
+												class="cursor-pointer text-xs font-semibold text-alarm-red hover:underline"
 											>
-												<HugeiconsIcon icon={PiggyBankIcon} size={12} />
-												<span>{t('onboarding.savingsBadge')}</span>
-											</span>
+												<HugeiconsIcon icon={Delete02Icon} size={16} />
+											</button>
 										{/if}
 									</div>
 
-									{#if categories.length > 1}
-										<button
-											type="button"
-											onclick={() => handleRemoveCategory(index)}
-											aria-label={t('onboarding.deleteCategoryAria', {
-												name: category.name || t('onboarding.categoryNameLabel')
-											})}
-											class="cursor-pointer text-xs font-semibold text-alarm-red hover:underline"
-										>
-											<HugeiconsIcon icon={Delete02Icon} size={16} />
-										</button>
-									{/if}
-								</div>
-
-								<div class="grid gap-3 sm:grid-cols-2">
-									<Input
-										id={`category-name-${index}`}
-										label={t('onboarding.categoryNameLabel')}
-										type="text"
-										placeholder={t('onboarding.categoryNamePlaceholder')}
-										required
-										bind:value={category.name}
-										disabled={isSubmitting}
-									/>
-
-									<Input
-										id={`category-percentage-${index}`}
-										label={t('onboarding.categoryPercentageLabel')}
-										type="number"
-										step="any"
-										min="0.1"
-										max="100"
-										placeholder="50"
-										required
-										bind:value={category.percentage}
-										hint={category.percentage && Number(category.percentage) > 0
-											? t('onboarding.estimatedAmount', {
-													amount: formatRupiah((totalIncome * Number(category.percentage)) / 100)
-												})
-											: undefined}
-										disabled={isSubmitting}
-									/>
-								</div>
-
-								<!-- Savings Flag Toggle -->
-								<div
-									class="mt-3 flex items-center justify-between border-t border-fog/60 pt-3 dark:border-dark-border/60"
-								>
-									<label
-										for={`category-savings-${index}`}
-										class="flex cursor-pointer items-center gap-2 text-xs font-semibold text-charcoal select-none dark:text-linen-mist"
-									>
-										<input
-											id={`category-savings-${index}`}
-											type="checkbox"
-											checked={category.isSavings}
-											onchange={() => handleToggleSavings(index)}
-											disabled={isSubmitting}
-											class="h-4 w-4 rounded border-pebble text-forest-ink focus:ring-forest-ink dark:border-dark-border dark:focus:ring-lime-voltage"
+									<div class="grid gap-3 sm:grid-cols-2">
+										<Input
+											id={`source-name-${index}`}
+											label={t('onboarding.incomeNameLabel')}
+											type="text"
+											placeholder={t('onboarding.incomeNamePlaceholder')}
+											required
+											bind:value={source.name}
 										/>
-										<span>{t('onboarding.markSavingsLabel')}</span>
-									</label>
-									<span class="text-xs text-slate dark:text-pebble">
-										{category.isSavings
-											? t('onboarding.savingsHint')
-											: t('onboarding.expenseHint')}
-									</span>
+
+										<Input
+											id={`source-amount-${index}`}
+											label={t('onboarding.incomeAmountLabel')}
+											type="number"
+											min="1"
+											placeholder={t('onboarding.incomeAmountPlaceholder')}
+											required
+											bind:value={source.amount}
+											hint={source.amount && Number(source.amount) > 0
+												? formatRupiah(source.amount)
+												: undefined}
+										/>
+									</div>
 								</div>
+							{/each}
+
+							<button
+								type="button"
+								onclick={handleAddSource}
+								class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-dashed border-forest-ink/30 bg-paper py-3 font-sans text-sm font-semibold text-forest-ink transition hover:border-forest-ink hover:bg-fog dark:border-lime-voltage/30 dark:bg-dark-surface dark:text-lime-voltage dark:hover:border-lime-voltage dark:hover:bg-dark-card"
+							>
+								<HugeiconsIcon icon={Add01Icon} size={18} />
+								<span>{t('onboarding.addSourceButton')}</span>
+							</button>
+						</div>
+
+						<!-- Total Monthly Income Display Card -->
+						<div
+							class="rounded-[10px] border border-lime-voltage/50 bg-linen-mist/60 p-5 dark:border-lime-voltage/40 dark:bg-spruce/30"
+						>
+							<span
+								class="text-xs font-bold tracking-wider text-forest-ink uppercase dark:text-lime-voltage"
+							>
+								{t('onboarding.totalIncomeLabel')}
+							</span>
+							<div class="mt-1 flex items-baseline justify-between gap-2">
+								<span
+									class="text-2xl font-black text-forest-ink sm:text-3xl dark:text-lime-voltage"
+								>
+									{formatRupiah(totalIncome)}
+								</span>
+								<span class="text-xs text-slate dark:text-pebble">
+									{t('onboarding.totalIncomeSourcesCount', { count: incomeSources.length })}
+								</span>
 							</div>
-						{/each}
+							<p class="mt-2 text-xs text-charcoal/80 dark:text-linen-mist/80">
+								{t('onboarding.totalIncomeHelp')}
+							</p>
+						</div>
 
-						<button
-							type="button"
-							onclick={handleAddCategory}
-							disabled={isSubmitting}
-							class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-dashed border-forest-ink/30 bg-paper py-3 font-sans text-sm font-semibold text-forest-ink transition hover:border-forest-ink hover:bg-fog dark:border-lime-voltage/30 dark:bg-dark-surface dark:text-lime-voltage dark:hover:border-lime-voltage dark:hover:bg-dark-card"
-						>
-							<HugeiconsIcon icon={Add01Icon} size={18} />
-							<span>{t('onboarding.addCategoryButton')}</span>
-						</button>
+						<!-- Navigation Actions -->
+						<div class="flex flex-col gap-3 pt-2 sm:flex-row">
+							<Button
+								type="button"
+								variant="secondary"
+								size="md"
+								class="flex-1"
+								onclick={handleBackToStep1}
+							>
+								<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
+								<span>{t('onboarding.prevButton')}</span>
+							</Button>
+
+							<Button
+								type="button"
+								variant="primary"
+								size="md"
+								class="flex-1"
+								onclick={handleNextToStep3}
+								disabled={totalIncome <= 0}
+							>
+								<span>{t('onboarding.nextToTemplate')}</span>
+								<HugeiconsIcon icon={ArrowRight02Icon} size={18} />
+							</Button>
+						</div>
 					</div>
+				{:else if currentStep === 3}
+					<!-- Step 3: Pilih Template Kategori -->
+					<div class="space-y-6">
+						<div>
+							<div
+								class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
+							>
+								<HugeiconsIcon icon={PieChart01Icon} size={16} />
+								<span>{t('onboarding.step3Badge')}</span>
+							</div>
+							<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
+								{t('onboarding.step3Title')}
+							</h1>
+							<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
+								{t('onboarding.step3Desc')}
+							</p>
+						</div>
 
-					<!-- Total Percentage Meter Card -->
-					<div
-						class="rounded-[10px] border p-5 transition {Math.abs(totalPercentage - 100) < 0.001
-							? 'border-lime-voltage/60 bg-linen-mist/60 dark:border-lime-voltage/40 dark:bg-spruce/30'
-							: 'border-alarm-red/40 bg-alarm-red/10'}"
+						<!-- Dynamic Template Options from D1 / Presets -->
+						<div class="grid gap-4">
+							{#each availableTemplates as tpl (tpl.id)}
+								<button
+									type="button"
+									onclick={() => handleSelectTemplate(tpl.name)}
+									class="group flex w-full cursor-pointer flex-col rounded-[10px] border p-5 text-left transition {selectedTemplate.toLowerCase() ===
+									tpl.name.toLowerCase()
+										? 'border-forest-ink bg-linen-mist/40 shadow-sm dark:border-lime-voltage dark:bg-spruce/30'
+										: 'border-fog bg-paper hover:border-pebble dark:border-dark-border dark:bg-dark-card/60'}"
+								>
+									<div class="flex items-center justify-between">
+										<div class="flex items-center gap-3">
+											<div
+												class="rounded-full bg-linen-mist p-2 text-forest-ink dark:bg-spruce dark:text-lime-voltage"
+											>
+												{#if tpl.name === '6 Toples'}
+													<HugeiconsIcon icon={MoneySavingJarIcon} size={22} />
+												{:else if tpl.name === 'Custom'}
+													<HugeiconsIcon icon={Layers01Icon} size={22} />
+												{:else}
+													<HugeiconsIcon icon={PieChart01Icon} size={22} />
+												{/if}
+											</div>
+											<div>
+												<h2 class="text-lg font-black text-obsidian dark:text-paper">
+													{tpl.name === 'Custom'
+														? t('onboarding.customTemplateTitle')
+														: t('onboarding.templateNamed', { name: tpl.name })}
+												</h2>
+												{#if tpl.description}
+													<p class="text-xs text-slate dark:text-pebble">
+														{tpl.description}
+													</p>
+												{/if}
+											</div>
+										</div>
+										{#if selectedTemplate.toLowerCase() === tpl.name.toLowerCase()}
+											<div class="text-forest-ink dark:text-lime-voltage">
+												<HugeiconsIcon icon={CheckmarkCircle02Icon} size={24} />
+											</div>
+										{/if}
+									</div>
+
+									{#if tpl.categories && tpl.categories.length > 0}
+										<div class="mt-4 flex flex-wrap gap-2">
+											{#each tpl.categories as cat (cat.name)}
+												<span
+													class="rounded-full bg-forest-ink/10 px-2.5 py-1 text-xs font-semibold text-forest-ink dark:bg-lime-voltage/20 dark:text-lime-voltage"
+												>
+													{cat.name} ({cat.percentage}%)
+												</span>
+											{/each}
+										</div>
+									{/if}
+								</button>
+							{/each}
+						</div>
+
+						<!-- Navigation Actions -->
+						<div class="flex flex-col gap-3 pt-2 sm:flex-row">
+							<Button
+								type="button"
+								variant="secondary"
+								size="md"
+								class="flex-1"
+								onclick={handleBackToStep2}
+							>
+								<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
+								<span>{t('onboarding.prevButton')}</span>
+							</Button>
+
+							<Button
+								type="button"
+								variant="primary"
+								size="md"
+								class="flex-1"
+								onclick={handleNextToStep4}
+							>
+								<span>{t('onboarding.nextToCategories')}</span>
+								<HugeiconsIcon icon={ArrowRight02Icon} size={18} />
+							</Button>
+						</div>
+					</div>
+				{:else}
+					<!-- Step 4: Customize Kategori & Submit -->
+					<form
+						method="POST"
+						use:enhance={({ formData, cancel }) => {
+							validateAndPrepareSubmit({ cancel });
+							if (isSubmitting) {
+								formData.set('payDay', String(payDay));
+								formData.set('incomeSources', serializedIncomeSources);
+								formData.set('categories', serializedCategories);
+							}
+							return async ({ result, update }) => {
+								isSubmitting = false;
+								if (result.type === 'redirect') {
+									showTutorial = true;
+								} else {
+									await update();
+								}
+							};
+						}}
+						class="space-y-6"
 					>
-						<div class="flex items-center justify-between pb-2">
-							<span
-								class="text-xs font-bold tracking-wider uppercase {Math.abs(totalPercentage - 100) <
-								0.001
-									? 'text-forest-ink dark:text-lime-voltage'
-									: 'text-alarm-red'}"
+						<input type="hidden" name="payDay" value={payDay} />
+						<input type="hidden" name="incomeSources" value={serializedIncomeSources} />
+						<input type="hidden" name="categories" value={serializedCategories} />
+
+						<div>
+							<div
+								class="mb-2 inline-flex items-center gap-2 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/50 dark:text-lime-voltage"
 							>
-								{t('onboarding.totalAllocationLabel')}
-							</span>
-							<span
-								class="text-lg font-black {Math.abs(totalPercentage - 100) < 0.001
-									? 'text-forest-ink dark:text-lime-voltage'
-									: 'text-alarm-red'}"
+								<HugeiconsIcon icon={Layers01Icon} size={16} />
+								<span>{t('onboarding.step4Badge')}</span>
+							</div>
+							<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
+								{t('onboarding.step4Title')}
+							</h1>
+							<p class="mt-2 text-sm leading-relaxed text-slate dark:text-pebble">
+								{t('onboarding.step4Desc')}
+							</p>
+						</div>
+
+						{#if step4Error}
+							<div
+								role="alert"
+								class="rounded-[10px] border border-alarm-red/30 bg-alarm-red/10 p-3.5 text-sm font-medium text-alarm-red"
 							>
-								{totalPercentage}% / 100%
+								{step4Error}
+							</div>
+						{/if}
+
+						<!-- Income Summary Bar -->
+						<div
+							class="flex items-center justify-between rounded-[10px] border border-fog bg-paper/80 px-4 py-3 dark:border-dark-border dark:bg-dark-card/60"
+						>
+							<div>
+								<span class="text-xs font-medium text-slate dark:text-pebble">
+									{t('onboarding.totalIncomeLabel')}:
+								</span>
+								<p class="text-base font-extrabold text-forest-ink dark:text-lime-voltage">
+									{formatRupiah(totalIncome)}
+								</p>
+							</div>
+							<span
+								class="rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
+							>
+								{t('onboarding.payDayBadge', { day: payDay })}
 							</span>
 						</div>
 
-						<ProgressBar
-							value={totalPercentage}
-							max={100}
-							variant={Math.abs(totalPercentage - 100) < 0.001 ? 'lime' : 'danger'}
-							class="my-1"
-						/>
+						<!-- Categories List -->
+						<div class="space-y-4">
+							{#each categories as category, index (category.id)}
+								<div
+									class="relative rounded-[10px] border border-fog bg-paper/60 p-4 transition dark:border-dark-border dark:bg-dark-card/60"
+								>
+									<div class="flex items-center justify-between pb-2">
+										<div class="flex items-center gap-2">
+											<span
+												class="text-xs font-bold tracking-wide text-forest-ink uppercase dark:text-lime-voltage"
+											>
+												{t('onboarding.categoryItemLabel', { index: index + 1 })}
+											</span>
+											{#if category.isSavings}
+												<span
+													class="inline-flex items-center gap-1 rounded-full bg-spruce/10 px-2 py-0.5 text-xs font-semibold text-spruce dark:bg-lime-voltage/20 dark:text-lime-voltage"
+												>
+													<HugeiconsIcon icon={PiggyBankIcon} size={12} />
+													<span>{t('onboarding.savingsBadge')}</span>
+												</span>
+											{/if}
+										</div>
 
-						<div class="mt-2 text-xs">
-							{#if Math.abs(totalPercentage - 100) < 0.001}
-								<p class="font-semibold text-forest-ink dark:text-lime-voltage">
-									{t('onboarding.allocationExact')}
-								</p>
-							{:else if totalPercentage < 100}
-								<p class="font-medium text-alarm-red">
-									{t('onboarding.allocationUnder', {
-										percent: Math.round((100 - totalPercentage) * 100) / 100
-									})}
-								</p>
-							{:else}
-								<p class="font-medium text-alarm-red">
-									{t('onboarding.allocationOver', {
-										percent: Math.round((totalPercentage - 100) * 100) / 100
-									})}
-								</p>
-							{/if}
+										{#if categories.length > 1}
+											<button
+												type="button"
+												onclick={() => handleRemoveCategory(index)}
+												aria-label={t('onboarding.deleteCategoryAria', {
+													name: category.name || t('onboarding.categoryNameLabel')
+												})}
+												class="cursor-pointer text-xs font-semibold text-alarm-red hover:underline"
+											>
+												<HugeiconsIcon icon={Delete02Icon} size={16} />
+											</button>
+										{/if}
+									</div>
+
+									<div class="grid gap-3 sm:grid-cols-2">
+										<Input
+											id={`category-name-${index}`}
+											label={t('onboarding.categoryNameLabel')}
+											type="text"
+											placeholder={t('onboarding.categoryNamePlaceholder')}
+											required
+											bind:value={category.name}
+											disabled={isSubmitting}
+										/>
+
+										<Input
+											id={`category-percentage-${index}`}
+											label={t('onboarding.categoryPercentageLabel')}
+											type="number"
+											step="any"
+											min="0.1"
+											max="100"
+											placeholder="50"
+											required
+											bind:value={category.percentage}
+											hint={category.percentage && Number(category.percentage) > 0
+												? t('onboarding.estimatedAmount', {
+														amount: formatRupiah((totalIncome * Number(category.percentage)) / 100)
+													})
+												: undefined}
+											disabled={isSubmitting}
+										/>
+									</div>
+
+									<!-- Savings Flag Toggle -->
+									<div
+										class="mt-3 flex items-center justify-between border-t border-fog/60 pt-3 dark:border-dark-border/60"
+									>
+										<label
+											for={`category-savings-${index}`}
+											class="flex cursor-pointer items-center gap-2 text-xs font-semibold text-charcoal select-none dark:text-linen-mist"
+										>
+											<input
+												id={`category-savings-${index}`}
+												type="checkbox"
+												checked={category.isSavings}
+												onchange={() => handleToggleSavings(index)}
+												disabled={isSubmitting}
+												class="h-4 w-4 rounded border-pebble text-forest-ink focus:ring-forest-ink dark:border-dark-border dark:focus:ring-lime-voltage"
+											/>
+											<span>{t('onboarding.markSavingsLabel')}</span>
+										</label>
+										<span class="text-xs text-slate dark:text-pebble">
+											{category.isSavings
+												? t('onboarding.savingsHint')
+												: t('onboarding.expenseHint')}
+										</span>
+									</div>
+								</div>
+							{/each}
+
+							<button
+								type="button"
+								onclick={handleAddCategory}
+								disabled={isSubmitting}
+								class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-dashed border-forest-ink/30 bg-paper py-3 font-sans text-sm font-semibold text-forest-ink transition hover:border-forest-ink hover:bg-fog dark:border-lime-voltage/30 dark:bg-dark-surface dark:text-lime-voltage dark:hover:border-lime-voltage dark:hover:bg-dark-card"
+							>
+								<HugeiconsIcon icon={Add01Icon} size={18} />
+								<span>{t('onboarding.addCategoryButton')}</span>
+							</button>
 						</div>
-					</div>
 
-					<!-- Navigation Actions -->
-					<div class="flex flex-col gap-3 pt-2 sm:flex-row">
-						<Button
-							type="button"
-							variant="secondary"
-							size="md"
-							class="flex-1"
-							onclick={handleBackToStep3}
-							disabled={isSubmitting}
+						<!-- Total Percentage Meter Card -->
+						<div
+							class="rounded-[10px] border p-5 transition {Math.abs(totalPercentage - 100) < 0.001
+								? 'border-lime-voltage/60 bg-linen-mist/60 dark:border-lime-voltage/40 dark:bg-spruce/30'
+								: 'border-alarm-red/40 bg-alarm-red/10'}"
 						>
-							<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
-							<span>{t('onboarding.prevButton')}</span>
-						</Button>
+							<div class="flex items-center justify-between pb-2">
+								<span
+									class="text-xs font-bold tracking-wider uppercase {Math.abs(
+										totalPercentage - 100
+									) < 0.001
+										? 'text-forest-ink dark:text-lime-voltage'
+										: 'text-alarm-red'}"
+								>
+									{t('onboarding.totalAllocationLabel')}
+								</span>
+								<span
+									class="text-lg font-black {Math.abs(totalPercentage - 100) < 0.001
+										? 'text-forest-ink dark:text-lime-voltage'
+										: 'text-alarm-red'}"
+								>
+									{totalPercentage}% / 100%
+								</span>
+							</div>
 
-						<Button
-							type="submit"
-							variant="primary"
-							size="md"
-							class="flex-1"
-							disabled={isSubmitting || Math.abs(totalPercentage - 100) >= 0.001}
-						>
-							{isSubmitting
-								? t('onboarding.savingAndPreparing')
-								: t('onboarding.finishAndStart')}
-						</Button>
-					</div>
-				</form>
-			{/if}
-		</Card>
+							<ProgressBar
+								value={totalPercentage}
+								max={100}
+								variant={Math.abs(totalPercentage - 100) < 0.001 ? 'lime' : 'danger'}
+								class="my-1"
+							/>
+
+							<div class="mt-2 text-xs">
+								{#if Math.abs(totalPercentage - 100) < 0.001}
+									<p class="font-semibold text-forest-ink dark:text-lime-voltage">
+										{t('onboarding.allocationExact')}
+									</p>
+								{:else if totalPercentage < 100}
+									<p class="font-medium text-alarm-red">
+										{t('onboarding.allocationUnder', {
+											percent: Math.round((100 - totalPercentage) * 100) / 100
+										})}
+									</p>
+								{:else}
+									<p class="font-medium text-alarm-red">
+										{t('onboarding.allocationOver', {
+											percent: Math.round((totalPercentage - 100) * 100) / 100
+										})}
+									</p>
+								{/if}
+							</div>
+						</div>
+
+						<!-- Navigation Actions -->
+						<div class="flex flex-col gap-3 pt-2 sm:flex-row">
+							<Button
+								type="button"
+								variant="secondary"
+								size="md"
+								class="flex-1"
+								onclick={handleBackToStep3}
+								disabled={isSubmitting}
+							>
+								<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
+								<span>{t('onboarding.prevButton')}</span>
+							</Button>
+
+							<Button
+								type="submit"
+								variant="primary"
+								size="md"
+								class="flex-1"
+								disabled={isSubmitting || Math.abs(totalPercentage - 100) >= 0.001}
+							>
+								{isSubmitting ? t('onboarding.savingAndPreparing') : t('onboarding.finishAndStart')}
+							</Button>
+						</div>
+					</form>
+				{/if}
+			</Card>
 		{/if}
 	</main>
 </div>

@@ -4,7 +4,6 @@ import {
 	getLocale,
 	setLocale,
 	initI18n,
-	type Locale,
 	SUPPORTED_LOCALES,
 	LANGUAGE_STORAGE_KEY
 } from './index.js';
@@ -28,7 +27,7 @@ function createMockStorage(initialData: Record<string, string> = {}) {
 describe('i18n runtime (Seam 1)', () => {
 	let mockStorage: ReturnType<typeof createMockStorage>;
 	let mockDoc: { cookie: string };
-	let eventListeners: Map<string, Function[]>;
+	let eventListeners: Map<string, EventListener[]>;
 
 	beforeEach(() => {
 		vi.restoreAllMocks();
@@ -43,11 +42,11 @@ describe('i18n runtime (Seam 1)', () => {
 				fns.forEach((fn) => fn(event));
 				return true;
 			}),
-			addEventListener: vi.fn((type: string, fn: Function) => {
+			addEventListener: vi.fn((type: string, fn: EventListener) => {
 				if (!eventListeners.has(type)) eventListeners.set(type, []);
 				eventListeners.get(type)!.push(fn);
 			}),
-			removeEventListener: vi.fn((type: string, fn: Function) => {
+			removeEventListener: vi.fn((type: string, fn: EventListener) => {
 				const list = eventListeners.get(type) || [];
 				eventListeners.set(
 					type,

@@ -88,7 +88,11 @@
 		</span>
 	</div>
 
-	<div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label={t('nav.categories')}>
+	<div
+		class="grid grid-cols-2 gap-2.5 sm:grid-cols-3"
+		role="radiogroup"
+		aria-label={t('nav.categories')}
+	>
 		{#each visibleCategories as cat (cat.id)}
 			{@const isSelected = selectedId === cat.id}
 			{@const icon = getCategoryIcon(cat.name, cat.isSavings)}
