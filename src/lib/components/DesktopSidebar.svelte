@@ -1,10 +1,5 @@
 <script module lang="ts">
-	export function isRouteActive(currentPath: string, targetHref: string, exact: boolean): boolean {
-		if (exact) {
-			return currentPath === targetHref;
-		}
-		return currentPath === targetHref || currentPath.startsWith(`${targetHref}/`);
-	}
+	export { isRouteActive } from '#lib/navigation/route.js';
 </script>
 
 <script lang="ts">
@@ -12,6 +7,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { isRouteActive } from '#lib/navigation/route.js';
 	import BrandLogo from './BrandLogo.svelte';
 	import ThemeToggle from './ThemeToggle.svelte';
 	import Button from './Button.svelte';

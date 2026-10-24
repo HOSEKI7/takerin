@@ -28,7 +28,7 @@ describe('AdminDesktopSidebar Component & Navigation Seam (Issue #30)', () => {
 
 	it('renders expanded admin desktop sidebar (~256px / w-64) with Lime Voltage badge and strict isolation', () => {
 		const mockAdmin = {
-			name: 'Super Admin',
+			name: 'Administrator Takerin',
 			email: 'admin@takerin.my.id',
 			image: null
 		};
@@ -75,14 +75,14 @@ describe('AdminDesktopSidebar Component & Navigation Seam (Issue #30)', () => {
 		expect(html).toContain('bg-forest-ink text-lime-voltage');
 
 		// Check admin user profile in sticky footer
-		expect(html).toContain('Super Admin');
+		expect(html).toContain('Administrator Takerin');
 		expect(html).toContain('admin@takerin.my.id');
 		expect(html).toContain('Keluar');
 	});
 
 	it('renders collapsed admin desktop sidebar (~72px / w-[72px]) with icon-only and tooltips', () => {
 		const mockAdmin = {
-			name: 'Super Admin',
+			name: 'Administrator Takerin',
 			email: 'admin@takerin.my.id',
 			image: null
 		};
@@ -98,6 +98,10 @@ describe('AdminDesktopSidebar Component & Navigation Seam (Issue #30)', () => {
 		// Check collapsed width
 		expect(html).toContain('w-[72px]');
 
+		// Check Admin Panel role badge indicator preserved in collapsed header
+		expect(html).toContain('Admin Panel');
+		expect(html).toContain('bg-lime-voltage');
+
 		// Check tooltips rendered
 		expect(html).toContain('Ringkasan');
 		expect(html).toContain('Pengguna');
@@ -106,7 +110,7 @@ describe('AdminDesktopSidebar Component & Navigation Seam (Issue #30)', () => {
 		expect(html).toContain('Kesehatan Sistem');
 
 		// Check initials avatar in sticky footer
-		expect(html).toContain('S');
+		expect(html).toContain('A');
 	});
 
 	it('correctly matches active route for admin root and sub-routes', () => {

@@ -7,7 +7,7 @@
 	import Badge from './Badge.svelte';
 	import ThemeToggle from './ThemeToggle.svelte';
 	import Button from './Button.svelte';
-	import { isRouteActive } from './DesktopSidebar.svelte';
+	import { isRouteActive } from '#lib/navigation/route.js';
 	import { t } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {

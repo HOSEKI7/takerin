@@ -7,7 +7,7 @@
 	import Badge from './Badge.svelte';
 	import ThemeToggle from './ThemeToggle.svelte';
 	import Button from './Button.svelte';
-	import { isRouteActive } from './DesktopSidebar.svelte';
+	import { isRouteActive } from '#lib/navigation/route.js';
 	import { t } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 
@@ -176,8 +176,17 @@
 			: 'px-4'}"
 	>
 		<div class="flex items-center gap-2">
-			<BrandLogo href="/admin" size="sm" variant={isCollapsed ? 'mark' : 'combined'} />
-			{#if !isCollapsed}
+			{#if isCollapsed}
+				<div class="group relative flex items-center justify-center">
+					<BrandLogo href="/admin" size="sm" variant="mark" />
+					<span
+						class="absolute -top-1 -right-1 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-lime-voltage ring-2 ring-paper dark:ring-dark-surface"
+						title={t('admin.adminPanel')}
+					></span>
+					{@render tooltip(t('admin.adminPanel'))}
+				</div>
+			{:else}
+				<BrandLogo href="/admin" size="sm" variant="combined" />
 				<Badge variant="lime" class="shrink-0">{t('admin.adminPanel')}</Badge>
 			{/if}
 		</div>

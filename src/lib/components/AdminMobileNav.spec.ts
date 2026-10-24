@@ -9,7 +9,7 @@ describe('AdminMobileNav Component & Navigation Seam (Issue #30)', () => {
 
 	it('renders mobile top header with hamburger button, brand logo (/admin), Admin Panel badge, theme toggle, and admin avatar', () => {
 		const mockAdmin = {
-			name: 'Super Admin',
+			name: 'Administrator Takerin',
 			email: 'admin@takerin.my.id',
 			image: null
 		};
@@ -40,12 +40,12 @@ describe('AdminMobileNav Component & Navigation Seam (Issue #30)', () => {
 		expect(html).toContain('bg-lime-voltage');
 
 		// Admin initial avatar in top header
-		expect(html).toContain('S');
+		expect(html).toContain('A');
 	});
 
 	it('renders slide-over drawer with backdrop overlay, admin navigation menu, and admin profile when isOpen is true', () => {
 		const mockAdmin = {
-			name: 'Super Admin',
+			name: 'Administrator Takerin',
 			email: 'admin@takerin.my.id',
 			image: null
 		};
@@ -91,7 +91,7 @@ describe('AdminMobileNav Component & Navigation Seam (Issue #30)', () => {
 		expect(html).toContain('bg-forest-ink text-lime-voltage');
 
 		// Admin profile & logout in drawer footer
-		expect(html).toContain('Super Admin');
+		expect(html).toContain('Administrator Takerin');
 		expect(html).toContain('admin@takerin.my.id');
 		expect(html).toContain('Keluar');
 	});
