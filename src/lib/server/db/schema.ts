@@ -155,3 +155,19 @@ export const expense = sqliteTable('expense', {
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
 });
+
+export const adminInvitations = sqliteTable('admin_invitations', {
+	id: text('id').primaryKey(),
+	email: text('email').notNull(),
+	token: text('token').notNull().unique(),
+	invitedBy: text('invited_by')
+		.notNull()
+		.references(() => user.id),
+	status: text('status', { enum: ['pending', 'accepted', 'revoked'] })
+		.notNull()
+		.default('pending'),
+	expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+	acceptedAt: integer('accepted_at', { mode: 'timestamp_ms' }),
+	revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
+	createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull()
+});

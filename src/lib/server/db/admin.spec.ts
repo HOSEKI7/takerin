@@ -10,7 +10,8 @@ import {
 	expense,
 	incomeSource,
 	userSettings,
-	healthCheck
+	healthCheck,
+	adminInvitations
 } from './schema.js';
 import {
 	getAdminAnalytics,
@@ -20,7 +21,12 @@ import {
 	updateCategoryTemplate,
 	deleteCategoryTemplate,
 	getSystemHealth,
-	purgeAdminBudgetData
+	purgeAdminBudgetData,
+	createAdminInvitation,
+	getAdminInvitations,
+	getValidInvitationByToken,
+	revokeAdminInvitation,
+	markInvitationAccepted
 } from './admin.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -34,6 +40,7 @@ describe('Admin D1 Database Operations (Seam 2)', () => {
 		db = getDb(proxy.env.DB);
 
 		// Clean up tables
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS admin_invitations;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS expense;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS monthly_period;');
@@ -82,6 +89,7 @@ describe('Admin D1 Database Operations (Seam 2)', () => {
 
 	beforeEach(async () => {
 		// Clean mutable data between tests while preserving system templates
+		await proxy.env.DB.exec('DELETE FROM admin_invitations;');
 		await proxy.env.DB.exec('DELETE FROM expense;');
 		await proxy.env.DB.exec('DELETE FROM category;');
 		await proxy.env.DB.exec('DELETE FROM monthly_period;');
@@ -523,6 +531,203 @@ describe('Admin D1 Database Operations (Seam 2)', () => {
 			expect(userPeriods).toHaveLength(1);
 			expect(userIncomes).toHaveLength(1);
 			expect(userSettingsRows).toHaveLength(1);
+		});
+	});
+
+	describe('Admin Invitation Lifecycle & Queries', () => {
+		const adminUser = {
+			id: 'admin-inviter-1',
+			name: 'Main Administrator',
+			email: 'admin@takerin.my.id',
+			role: 'admin',
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		beforeEach(async () => {
+			await db.insert(user).values(adminUser);
+		});
+
+		it('creates an admin invitation with a cryptographic token, 48h expiry, and valid URL', async () => {
+			const origin = 'https://takerin.my.id';
+			const beforeTime = Date.now();
+			const result = await createAdminInvitation(proxy.env.DB, {
+				email: 'newadmin@takerin.my.id',
+				invitedBy: adminUser.id,
+				origin
+			});
+
+			const afterTime = Date.now();
+
+			expect(result.id).toBeTruthy();
+			expect(result.email).toBe('newadmin@takerin.my.id');
+			expect(result.token).toBeTruthy();
+			expect(result.token.length).toBeGreaterThanOrEqual(32);
+			expect(result.status).toBe('pending');
+			expect(result.url).toBe(`${origin}/auth/admin-invite/${result.token}`);
+
+			// Expiry should be exactly 48 hours (+/- 5 seconds)
+			const expectedMinExpiry = beforeTime + 48 * 60 * 60 * 1000;
+			const expectedMaxExpiry = afterTime + 48 * 60 * 60 * 1000;
+			expect(result.expiresAt.getTime()).toBeGreaterThanOrEqual(expectedMinExpiry);
+			expect(result.expiresAt.getTime()).toBeLessThanOrEqual(expectedMaxExpiry);
+
+			// Check record in database
+			const rows = await db
+				.select()
+				.from(adminInvitations)
+				.where(eq(adminInvitations.id, result.id));
+			expect(rows).toHaveLength(1);
+			expect(rows[0].email).toBe('newadmin@takerin.my.id');
+			expect(rows[0].token).toBe(result.token);
+			expect(rows[0].status).toBe('pending');
+			expect(rows[0].invitedBy).toBe(adminUser.id);
+		});
+
+		it('retrieves all admin invitations with inviter details in descending order', async () => {
+			const inv1 = await createAdminInvitation(proxy.env.DB, {
+				email: 'first@takerin.my.id',
+				invitedBy: adminUser.id,
+				origin: 'https://takerin.my.id'
+			});
+
+			const inv2 = await createAdminInvitation(proxy.env.DB, {
+				email: 'second@takerin.my.id',
+				invitedBy: adminUser.id,
+				origin: 'https://takerin.my.id'
+			});
+
+			const invitations = await getAdminInvitations(proxy.env.DB);
+			expect(invitations.length).toBeGreaterThanOrEqual(2);
+
+			const found1 = invitations.find((i) => i.id === inv1.id);
+			const found2 = invitations.find((i) => i.id === inv2.id);
+
+			expect(found1).toBeDefined();
+			expect(found1?.email).toBe('first@takerin.my.id');
+			expect(found1?.inviterName).toBe(adminUser.name);
+			expect(found1?.inviterEmail).toBe(adminUser.email);
+
+			expect(found2).toBeDefined();
+			expect(found2?.email).toBe('second@takerin.my.id');
+			expect(found2?.inviterName).toBe(adminUser.name);
+		});
+
+		it('validates token lifecycle: valid, expired, revoked, accepted, not_found', async () => {
+			// 1. Create a valid invitation
+			const created = await createAdminInvitation(proxy.env.DB, {
+				email: 'active@takerin.my.id',
+				invitedBy: adminUser.id,
+				origin: 'https://takerin.my.id'
+			});
+
+			// Valid token check
+			const validCheck = await getValidInvitationByToken(proxy.env.DB, created.token);
+			expect(validCheck.valid).toBe(true);
+			expect(validCheck.status).toBe('valid');
+			if (validCheck.valid) {
+				expect(validCheck.invitation.email).toBe('active@takerin.my.id');
+				expect(validCheck.invitation.status).toBe('pending');
+			}
+
+			// 2. Non-existent token
+			const missingCheck = await getValidInvitationByToken(proxy.env.DB, 'non-existent-token');
+			expect(missingCheck.valid).toBe(false);
+			expect(missingCheck.status).toBe('not_found');
+
+			// 3. Expired token
+			const expiredId = 'exp-invite-1';
+			const expiredToken = 'expired-token-xyz';
+			await db.insert(adminInvitations).values({
+				id: expiredId,
+				email: 'expired@takerin.my.id',
+				token: expiredToken,
+				invitedBy: adminUser.id,
+				status: 'pending',
+				expiresAt: new Date(Date.now() - 1000 * 60), // 1 min ago
+				createdAt: new Date(Date.now() - 49 * 60 * 60 * 1000)
+			});
+
+			const expiredCheck = await getValidInvitationByToken(proxy.env.DB, expiredToken);
+			expect(expiredCheck.valid).toBe(false);
+			expect(expiredCheck.status).toBe('expired');
+
+			// 4. Revoked token
+			const revokeRes = await revokeAdminInvitation(proxy.env.DB, created.id, adminUser.id);
+			expect(revokeRes.success).toBe(true);
+
+			const revokedCheck = await getValidInvitationByToken(proxy.env.DB, created.token);
+			expect(revokedCheck.valid).toBe(false);
+			expect(revokedCheck.status).toBe('revoked');
+
+			// Check database state after revoke
+			const revokedRow = await db
+				.select()
+				.from(adminInvitations)
+				.where(eq(adminInvitations.id, created.id));
+			expect(revokedRow[0].status).toBe('revoked');
+			expect(revokedRow[0].revokedAt).not.toBeNull();
+
+			// Cannot re-revoke an already revoked invitation
+			const reRevokeRes = await revokeAdminInvitation(proxy.env.DB, created.id, adminUser.id);
+			expect(reRevokeRes.success).toBe(false);
+			expect(reRevokeRes.reason).toBe('invalid_status');
+
+			// Cannot revoke with unauthorized non-admin user
+			const nonAdminUser = {
+				id: 'regular-user-no-admin',
+				name: 'Regular',
+				email: 'regular@takerin.my.id',
+				role: 'user',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			await db.insert(user).values(nonAdminUser);
+
+			const freshInvite = await createAdminInvitation(proxy.env.DB, {
+				email: 'fresh@takerin.my.id',
+				invitedBy: adminUser.id,
+				origin: 'https://takerin.my.id'
+			});
+			const unauthorizedRevoke = await revokeAdminInvitation(
+				proxy.env.DB,
+				freshInvite.id,
+				nonAdminUser.id
+			);
+			expect(unauthorizedRevoke.success).toBe(false);
+			expect(unauthorizedRevoke.reason).toBe('unauthorized');
+
+			// 5. Accepted token
+			const acceptedInvite = await createAdminInvitation(proxy.env.DB, {
+				email: 'accepted@takerin.my.id',
+				invitedBy: adminUser.id,
+				origin: 'https://takerin.my.id'
+			});
+
+			const acceptRes = await markInvitationAccepted(proxy.env.DB, acceptedInvite.id);
+			expect(acceptRes.success).toBe(true);
+
+			// Cannot re-accept an already accepted invitation
+			const reAcceptRes = await markInvitationAccepted(proxy.env.DB, acceptedInvite.id);
+			expect(reAcceptRes.success).toBe(false);
+			expect(reAcceptRes.reason).toBe('invalid_status');
+
+			// Cannot accept an expired invitation
+			const expiredAcceptRes = await markInvitationAccepted(proxy.env.DB, expiredId);
+			expect(expiredAcceptRes.success).toBe(false);
+			expect(expiredAcceptRes.reason).toBe('expired');
+
+			const acceptedCheck = await getValidInvitationByToken(proxy.env.DB, acceptedInvite.token);
+			expect(acceptedCheck.valid).toBe(false);
+			expect(acceptedCheck.status).toBe('accepted');
+
+			// Check database state after accept
+			const acceptedRow = await db
+				.select()
+				.from(adminInvitations)
+				.where(eq(adminInvitations.id, acceptedInvite.id));
+			expect(acceptedRow[0].status).toBe('accepted');
+			expect(acceptedRow[0].acceptedAt).not.toBeNull();
 		});
 	});
 });

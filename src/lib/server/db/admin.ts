@@ -1,4 +1,4 @@
-import { sql, eq, desc, gte, or } from 'drizzle-orm';
+import { sql, eq, desc, gte, or, and } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
 import {
@@ -500,4 +500,258 @@ export async function purgeAdminBudgetData(d1: D1Database): Promise<PurgeAdminDa
 		success: true,
 		purgedAdminsCount: adminIds.length
 	};
+}
+
+export interface AdminInvitationRecord {
+	id: string;
+	email: string;
+	token: string;
+	invitedBy: string;
+	status: 'pending' | 'accepted' | 'revoked';
+	expiresAt: Date;
+	acceptedAt?: Date | null;
+	revokedAt?: Date | null;
+	createdAt: Date;
+	inviterName?: string | null;
+	inviterEmail?: string | null;
+}
+
+export interface CreateAdminInvitationInput {
+	email: string;
+	invitedBy: string;
+	origin: string;
+}
+
+export interface CreateAdminInvitationResult {
+	id: string;
+	email: string;
+	token: string;
+	url: string;
+	expiresAt: Date;
+	status: 'pending';
+}
+
+export type InvitationValidationResult =
+	| { valid: true; invitation: AdminInvitationRecord; status: 'valid' }
+	| {
+			valid: false;
+			invitation?: AdminInvitationRecord;
+			status: 'not_found' | 'expired' | 'revoked' | 'accepted';
+	  };
+
+const adminInvitationSelectFields = {
+	id: schema.adminInvitations.id,
+	email: schema.adminInvitations.email,
+	token: schema.adminInvitations.token,
+	invitedBy: schema.adminInvitations.invitedBy,
+	status: schema.adminInvitations.status,
+	expiresAt: schema.adminInvitations.expiresAt,
+	acceptedAt: schema.adminInvitations.acceptedAt,
+	revokedAt: schema.adminInvitations.revokedAt,
+	createdAt: schema.adminInvitations.createdAt,
+	inviterName: schema.user.name,
+	inviterEmail: schema.user.email
+};
+
+function generateSecureToken(): string {
+	const bytes = new Uint8Array(32);
+	crypto.getRandomValues(bytes);
+	return Array.from(bytes)
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('');
+}
+
+/**
+ * Creates a cryptographically secure admin invitation valid for 48 hours.
+ */
+export async function createAdminInvitation(
+	d1: D1Database,
+	input: CreateAdminInvitationInput
+): Promise<CreateAdminInvitationResult> {
+	const db = getDb(d1);
+	const id = crypto.randomUUID();
+	const token = generateSecureToken();
+	const email = input.email.trim().toLowerCase();
+	const createdAt = new Date();
+	const expiresAt = new Date(createdAt.getTime() + 48 * 60 * 60 * 1000);
+
+	await db.insert(schema.adminInvitations).values({
+		id,
+		email,
+		token,
+		invitedBy: input.invitedBy,
+		status: 'pending',
+		expiresAt,
+		createdAt
+	});
+
+	const cleanOrigin = input.origin.replace(/\/+$/, '');
+	const url = `${cleanOrigin}/auth/admin-invite/${token}`;
+
+	return {
+		id,
+		email,
+		token,
+		url,
+		expiresAt,
+		status: 'pending'
+	};
+}
+
+/**
+ * Retrieves all admin invitations along with inviter information.
+ */
+export async function getAdminInvitations(d1: D1Database): Promise<AdminInvitationRecord[]> {
+	const db = getDb(d1);
+
+	const rows = await db
+		.select(adminInvitationSelectFields)
+		.from(schema.adminInvitations)
+		.leftJoin(schema.user, eq(schema.adminInvitations.invitedBy, schema.user.id))
+		.orderBy(desc(schema.adminInvitations.createdAt));
+
+	return rows as AdminInvitationRecord[];
+}
+
+/**
+ * Retrieves and validates an admin invitation by token.
+ * Returns specific status if not found, expired, revoked, or already accepted.
+ */
+export async function getValidInvitationByToken(
+	d1: D1Database,
+	token: string
+): Promise<InvitationValidationResult> {
+	const db = getDb(d1);
+
+	const rows = await db
+		.select(adminInvitationSelectFields)
+		.from(schema.adminInvitations)
+		.leftJoin(schema.user, eq(schema.adminInvitations.invitedBy, schema.user.id))
+		.where(eq(schema.adminInvitations.token, token))
+		.limit(1);
+
+	const row = rows[0] as AdminInvitationRecord | undefined;
+
+	if (!row) {
+		return { valid: false, status: 'not_found' };
+	}
+
+	if (row.status === 'revoked') {
+		return { valid: false, invitation: row, status: 'revoked' };
+	}
+
+	if (row.status === 'accepted') {
+		return { valid: false, invitation: row, status: 'accepted' };
+	}
+
+	const now = Date.now();
+	if (row.expiresAt.getTime() <= now) {
+		return { valid: false, invitation: row, status: 'expired' };
+	}
+
+	return { valid: true, invitation: row, status: 'valid' };
+}
+
+export interface RevokeInvitationResult {
+	success: boolean;
+	reason?: 'not_found' | 'unauthorized' | 'invalid_status';
+}
+
+export interface AcceptInvitationResult {
+	success: boolean;
+	reason?: 'not_found' | 'expired' | 'invalid_status';
+}
+
+/**
+ * Revokes a pending admin invitation.
+ * Verifies that the revoking user is an administrator and that the invitation is currently pending.
+ */
+export async function revokeAdminInvitation(
+	d1: D1Database,
+	id: string,
+	adminUserId?: string
+): Promise<RevokeInvitationResult> {
+	const db = getDb(d1);
+
+	if (adminUserId) {
+		const admin = await db
+			.select({ id: schema.user.id })
+			.from(schema.user)
+			.where(and(eq(schema.user.id, adminUserId), eq(schema.user.role, 'admin')))
+			.limit(1);
+
+		if (admin.length === 0) {
+			return { success: false, reason: 'unauthorized' };
+		}
+	}
+
+	const existing = await db
+		.select({ id: schema.adminInvitations.id, status: schema.adminInvitations.status })
+		.from(schema.adminInvitations)
+		.where(eq(schema.adminInvitations.id, id))
+		.limit(1);
+
+	if (existing.length === 0) {
+		return { success: false, reason: 'not_found' };
+	}
+
+	if (existing[0].status !== 'pending') {
+		return { success: false, reason: 'invalid_status' };
+	}
+
+	const revokedAt = new Date();
+
+	await db
+		.update(schema.adminInvitations)
+		.set({
+			status: 'revoked',
+			revokedAt
+		})
+		.where(eq(schema.adminInvitations.id, id));
+
+	return { success: true };
+}
+
+/**
+ * Marks a pending, non-expired admin invitation as accepted.
+ */
+export async function markInvitationAccepted(
+	d1: D1Database,
+	id: string
+): Promise<AcceptInvitationResult> {
+	const db = getDb(d1);
+
+	const existing = await db
+		.select({
+			id: schema.adminInvitations.id,
+			status: schema.adminInvitations.status,
+			expiresAt: schema.adminInvitations.expiresAt
+		})
+		.from(schema.adminInvitations)
+		.where(eq(schema.adminInvitations.id, id))
+		.limit(1);
+
+	if (existing.length === 0) {
+		return { success: false, reason: 'not_found' };
+	}
+
+	if (existing[0].status !== 'pending') {
+		return { success: false, reason: 'invalid_status' };
+	}
+
+	if (existing[0].expiresAt.getTime() <= Date.now()) {
+		return { success: false, reason: 'expired' };
+	}
+
+	const acceptedAt = new Date();
+
+	await db
+		.update(schema.adminInvitations)
+		.set({
+			status: 'accepted',
+			acceptedAt
+		})
+		.where(eq(schema.adminInvitations.id, id));
+
+	return { success: true };
 }

@@ -161,4 +161,80 @@ describe('Email Service (Resend)', () => {
 		expect(mockSend.mock.calls[1][0].subject).toContain('Reset Password');
 		expect(mockSend.mock.calls[1][0].html).toContain('987654');
 	});
+
+	it('formats admin invitation email with 48-hour expiration notice and sends via Resend', async () => {
+		const mockSend = vi.fn().mockResolvedValue({ data: { id: 'msg_invite_123' }, error: null });
+		const mockResend: NonNullable<EmailServiceConfig['resendClient']> = {
+			emails: {
+				send: mockSend
+			}
+		};
+
+		const service = createEmailService({
+			resendClient: mockResend,
+			fromEmail: 'Takerin <noreply@takerin.my.id>'
+		});
+
+		const result = await service.sendAdminInvitationEmail({
+			to: 'calon.admin@example.com',
+			url: 'https://takerin.my.id/auth/admin-invite/test-token-123',
+			invitedByName: 'Super Admin'
+		});
+
+		expect(result.success).toBe(true);
+		expect(mockSend).toHaveBeenCalledTimes(1);
+		const callArg = mockSend.mock.calls[0][0];
+		expect(callArg.to).toBe('calon.admin@example.com');
+		expect(callArg.from).toBe('Takerin <noreply@takerin.my.id>');
+		expect(callArg.subject).toContain('Undangan');
+		expect(callArg.subject).toContain('Admin');
+		expect(callArg.html).toContain('https://takerin.my.id/auth/admin-invite/test-token-123');
+		expect(callArg.text).toContain('https://takerin.my.id/auth/admin-invite/test-token-123');
+		expect(callArg.html).toContain('48 jam');
+		expect(callArg.text).toContain('48 jam');
+		expect(callArg.html).toContain('Super Admin');
+	});
+
+	it('handles gracefully when sending admin invitation in mock mode (no API key)', async () => {
+		const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+		const service = createEmailService({
+			apiKey: undefined,
+			fromEmail: 'Takerin <onboarding@resend.dev>'
+		});
+
+		const result = await service.sendAdminInvitationEmail({
+			to: 'mock.admin@example.com',
+			url: 'http://localhost:5173/auth/admin-invite/mock-token'
+		});
+
+		expect(result.success).toBe(true);
+		expect(result.mocked).toBe(true);
+		expect(consoleSpy).toHaveBeenCalled();
+		consoleSpy.mockRestore();
+	});
+
+	it('handles error when Resend fails to send admin invitation', async () => {
+		const mockSend = vi.fn().mockResolvedValue({
+			data: null,
+			error: { message: 'Quota exceeded' }
+		});
+		const mockResend: NonNullable<EmailServiceConfig['resendClient']> = {
+			emails: {
+				send: mockSend
+			}
+		};
+
+		const service = createEmailService({
+			resendClient: mockResend
+		});
+
+		const result = await service.sendAdminInvitationEmail({
+			to: 'fail.admin@example.com',
+			url: 'https://takerin.my.id/auth/admin-invite/token'
+		});
+
+		expect(result.success).toBe(false);
+		expect(result.error).toBe('Quota exceeded');
+	});
 });

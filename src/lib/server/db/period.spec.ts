@@ -17,6 +17,7 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 		db = getDb(proxy.env.DB);
 
 		// Clean up tables
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS admin_invitations;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS expense;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS monthly_period;');

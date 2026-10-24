@@ -13,6 +13,12 @@ export interface OTPEmailOptions {
 	type?: 'sign-in' | 'email-verification' | 'forget-password' | 'sign-in-2fa' | string;
 }
 
+export interface AdminInvitationEmailOptions {
+	to: string;
+	url: string;
+	invitedByName?: string;
+}
+
 export interface EmailServiceConfig {
 	apiKey?: string;
 	fromEmail?: string;
@@ -284,10 +290,90 @@ Jika Anda tidak melakukan permintaan ini, segera amankan akun Anda.`;
 		}
 	}
 
+	async function sendAdminInvitationEmail({
+		to,
+		url,
+		invitedByName
+	}: AdminInvitationEmailOptions): Promise<EmailResult> {
+		const client = getClient();
+		const from = getFrom();
+		const subject = 'Undangan Menjadi Administrator Takerin';
+		const inviterText = invitedByName ? `${invitedByName} mengundang Anda` : 'Anda telah diundang';
+		const text = `Halo,
+
+${inviterText} untuk menjadi Administrator di Takerin.
+Silakan klik tautan berikut untuk melengkapi akun dan menerima undangan Administrator Anda:
+${url}
+
+Penting: Tautan undangan ini berlaku selama 48 jam. Jika Anda tidak merasa mengenal pengirim atau tidak berhak atas undangan ini, Anda dapat mengabaikan email ini.`;
+
+		const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f7f9f6; color: #163300; margin: 0; padding: 24px; }
+    .container { max-width: 540px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; padding: 32px; border: 1px solid #e8ebe6; }
+    .logo { font-size: 24px; font-weight: 800; color: #163300; margin-bottom: 24px; }
+    h1 { font-size: 20px; font-weight: 700; color: #0e0f0c; margin-bottom: 16px; }
+    p { font-size: 15px; line-height: 1.6; color: #454745; margin-bottom: 20px; }
+    .btn { display: inline-block; background-color: #163300; color: #ffffff !important; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 9999px; font-size: 15px; margin: 12px 0 24px 0; }
+    .alert-box { background-color: #f3f6f1; border-left: 4px solid #163300; padding: 12px 16px; border-radius: 4px; margin: 20px 0; font-size: 14px; color: #2d332d; }
+    .footer { font-size: 12px; color: #868685; margin-top: 32px; border-top: 1px solid #e8ebe6; padding-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">Takerin</div>
+    <h1>Undangan Administrator</h1>
+    <p>Halo,</p>
+    <p>${inviterText} untuk bergabung sebagai <strong>Administrator</strong> di platform Takerin.</p>
+    <a href="${url}" class="btn" target="_blank">Terima Undangan Administrator</a>
+    <div class="alert-box">
+      <strong>Masa Berlaku:</strong> Tautan undangan ini hanya berlaku selama <strong>48 jam</strong> sejak dikirimkan.
+    </div>
+    <p>Atau salin dan tempel tautan berikut di browser Anda:<br/><a href="${url}" style="color: #163300; word-break: break-all;">${url}</a></p>
+    <div class="footer">
+      <p>Jika Anda tidak merasa berhak atas undangan ini atau tidak mengenal pihak pengundang, abaikan email ini.</p>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+		if (!client) {
+			console.info(`[Email Service - Mock] Admin invitation email to: ${to}, url: ${url}`);
+			return { success: true, mocked: true };
+		}
+
+		try {
+			const { data, error } = await client.emails.send({
+				from,
+				to,
+				subject,
+				html,
+				text
+			});
+
+			if (error) {
+				console.error('[Email Service] Failed to send admin invitation email:', error);
+				return { success: false, error: error.message || 'Gagal mengirim email undangan admin' };
+			}
+
+			return { success: true, data };
+		} catch (err: unknown) {
+			const message = err instanceof Error ? err.message : 'Error saat mengirim email';
+			console.error('[Email Service] Unexpected error sending admin invitation email:', err);
+			return { success: false, error: message };
+		}
+	}
+
 	return {
 		sendVerificationEmail,
 		sendResetPasswordEmail,
-		sendOTPEmail
+		sendOTPEmail,
+		sendAdminInvitationEmail
 	};
 }
 
@@ -297,3 +383,4 @@ const defaultService = createEmailService();
 export const sendVerificationEmail = defaultService.sendVerificationEmail;
 export const sendResetPasswordEmail = defaultService.sendResetPasswordEmail;
 export const sendOTPEmail = defaultService.sendOTPEmail;
+export const sendAdminInvitationEmail = defaultService.sendAdminInvitationEmail;
