@@ -80,12 +80,12 @@ export function getBreadcrumbs(rawPath: string): BreadcrumbItem[] {
 	];
 
 	if (path === '/' || path === '/dashboard') {
-		items.push({
-			label: 'Dashboard',
-			href: dashboardHref,
-			current: true
-		});
-		return items;
+		return [
+			{
+				label: 'Dashboard',
+				current: true
+			}
+		];
 	}
 
 	// Match against table-driven sub-route configurations

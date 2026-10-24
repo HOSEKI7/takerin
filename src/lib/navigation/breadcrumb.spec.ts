@@ -2,25 +2,22 @@ import { describe, it, expect } from 'vitest';
 import { getBreadcrumbs, type BreadcrumbItem } from './breadcrumb.js';
 
 describe('Breadcrumb Navigation Logic (Seam 1)', () => {
-	it('generates breadcrumb for dashboard as active root', () => {
+	it('generates breadcrumb for dashboard as active root without self-reloading parent link', () => {
 		const items = getBreadcrumbs('/dashboard');
 		expect(items).toEqual<BreadcrumbItem[]>([
-			{ label: 'Keuangan', href: '/dashboard' },
-			{ label: 'Dashboard', href: '/dashboard', current: true }
+			{ label: 'Dashboard', current: true }
 		]);
 	});
 
 	it('handles root path / or /(app)/dashboard identically', () => {
 		const fromRoot = getBreadcrumbs('/');
 		expect(fromRoot).toEqual<BreadcrumbItem[]>([
-			{ label: 'Keuangan', href: '/dashboard' },
-			{ label: 'Dashboard', href: '/dashboard', current: true }
+			{ label: 'Dashboard', current: true }
 		]);
 
 		const fromRouteGroup = getBreadcrumbs('/(app)/dashboard');
 		expect(fromRouteGroup).toEqual<BreadcrumbItem[]>([
-			{ label: 'Keuangan', href: '/dashboard' },
-			{ label: 'Dashboard', href: '/dashboard', current: true }
+			{ label: 'Dashboard', current: true }
 		]);
 	});
 
