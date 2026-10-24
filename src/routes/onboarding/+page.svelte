@@ -110,11 +110,7 @@
 	let isSubmitting = $state(false);
 	let showTutorial = $state(false);
 
-	function handleFinishTutorial() {
-		goto(resolve('/dashboard'));
-	}
-
-	function handleSkipTutorial() {
+	function handleExitTutorial() {
 		goto(resolve('/dashboard'));
 	}
 
@@ -372,8 +368,8 @@
 	<main class="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-4 py-8 sm:px-6">
 		{#if showTutorial}
 			<OnboardingTutorial
-				onfinish={handleFinishTutorial}
-				onskip={handleSkipTutorial}
+				onfinish={handleExitTutorial}
+				onskip={handleExitTutorial}
 			/>
 		{:else}
 		<!-- Progress Bar -->

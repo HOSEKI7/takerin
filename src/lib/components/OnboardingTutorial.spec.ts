@@ -52,31 +52,19 @@ describe('Onboarding Tutorial Component & Content (Seam 1 & 2)', () => {
 		expect(idTutorial.slide4Desc).toContain('Selamat! Mulai takerin gajimu sekarang 🎉');
 	});
 
-	it('validates navigation step progression and bounds logic (4 slides: 0 to 3)', () => {
-		const TOTAL_SLIDES = 4;
-		let currentSlide = 0;
+	it('defines the 4 required slides and their corresponding translation keys', () => {
+		const idTutorial = idDict.onboarding?.tutorial as Record<string, string>;
+		const expectedSlides = [
+			{ title: idTutorial.slide1Title, desc: idTutorial.slide1Desc },
+			{ title: idTutorial.slide2Title, desc: idTutorial.slide2Desc },
+			{ title: idTutorial.slide3Title, desc: idTutorial.slide3Desc },
+			{ title: idTutorial.slide4Title, desc: idTutorial.slide4Desc }
+		];
 
-		const nextSlide = () => {
-			if (currentSlide < TOTAL_SLIDES - 1) currentSlide += 1;
-		};
-		const prevSlide = () => {
-			if (currentSlide > 0) currentSlide -= 1;
-		};
-
-		expect(currentSlide).toBe(0);
-		prevSlide();
-		expect(currentSlide).toBe(0); // Clamped at lower bound
-
-		nextSlide();
-		expect(currentSlide).toBe(1);
-		nextSlide();
-		expect(currentSlide).toBe(2);
-		nextSlide();
-		expect(currentSlide).toBe(3);
-		nextSlide();
-		expect(currentSlide).toBe(3); // Clamped at upper bound
-
-		prevSlide();
-		expect(currentSlide).toBe(2);
+		expect(expectedSlides).toHaveLength(4);
+		expectedSlides.forEach((slide, index) => {
+			expect(slide.title, `Slide ${index + 1} title should not be empty`).toBeTruthy();
+			expect(slide.desc, `Slide ${index + 1} description should not be empty`).toBeTruthy();
+		});
 	});
 });
