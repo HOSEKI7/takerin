@@ -55,6 +55,12 @@
     "expenses": "Expenses",
     "history": "History",
     "settings": "Settings",
+    "accountSettings": "Account Settings",
+    "mainMenu": "Main Menu",
+    "preferences": "Preferences",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "newExpense": "Record Expense",
     "admin": "Admin",
     "logout": "Sign Out",
     "loggingOut": "Signing out..."

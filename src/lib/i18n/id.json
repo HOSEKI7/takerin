@@ -55,6 +55,12 @@
     "expenses": "Pengeluaran",
     "history": "Riwayat",
     "settings": "Pengaturan",
+    "accountSettings": "Pengaturan Akun",
+    "mainMenu": "Menu Utama",
+    "preferences": "Preferensi",
+    "collapseSidebar": "Ciutkan sidebar",
+    "expandSidebar": "Bentangkan sidebar",
+    "newExpense": "Catat Pengeluaran",
     "admin": "Admin",
     "logout": "Keluar",
     "loggingOut": "Sedang keluar..."

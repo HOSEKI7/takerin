@@ -36,6 +36,16 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		expect(content).toContain('handleLogout');
 	});
 
+	it('integrates DesktopSidebar with responsive desktop padding shell (Issue #27)', () => {
+		const layoutPath = path.join(appDir, '+layout.svelte');
+		const content = fs.readFileSync(layoutPath, 'utf-8');
+
+		expect(content).toContain('DesktopSidebar');
+		expect(content).toContain('bind:isCollapsed');
+		expect(content).toContain('lg:pl-[72px]');
+		expect(content).toContain('lg:pl-64');
+	});
+
 	it('removes duplicated topbars from protected page views', () => {
 		const pagesToCheck = [
 			'dashboard/+page.svelte',

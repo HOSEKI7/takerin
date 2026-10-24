@@ -3,6 +3,7 @@
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import Button from '#lib/components/Button.svelte';
+	import DesktopSidebar from '#lib/components/DesktopSidebar.svelte';
 	import { t } from '#lib/i18n/index.js';
 	import { authClient } from '#lib/auth-client.js';
 	import { goto } from '$app/navigation';
@@ -11,9 +12,10 @@
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { PlusSignIcon, Logout01Icon } from '@hugeicons/core-free-icons';
 
-	let { children }: LayoutProps = $props();
+	let { data, children }: LayoutProps = $props();
 
 	let isLoggingOut = $state(false);
+	let isSidebarCollapsed = $state(false);
 
 	async function handleLogout() {
 		isLoggingOut = true;
@@ -46,9 +48,12 @@
 <div
 	class="min-h-screen bg-paper font-sans text-charcoal transition-colors dark:bg-dark-surface dark:text-linen-mist"
 >
-	<!-- Centralized App Header Shell -->
+	<!-- Desktop Sidebar Navigation (≥ 1024px) -->
+	<DesktopSidebar user={data?.user} bind:isCollapsed={isSidebarCollapsed} onLogout={handleLogout} />
+
+	<!-- Centralized App Header Shell (Mobile & Tablet < 1024px) -->
 	<header
-		class="sticky top-0 z-20 border-b border-fog bg-paper/90 px-4 py-3.5 backdrop-blur sm:px-6 dark:border-dark-border dark:bg-dark-card/90"
+		class="sticky top-0 z-20 border-b border-fog bg-paper/90 px-4 py-3.5 backdrop-blur sm:px-6 lg:hidden dark:border-dark-border dark:bg-dark-card/90"
 	>
 		<div class="mx-auto flex max-w-6xl items-center justify-between">
 			<div class="flex items-center gap-4">
@@ -119,7 +124,14 @@
 		</div>
 	</header>
 
-	<div class="app-content-shell">
-		{@render children()}
+	<!-- App Content Shell with responsive desktop left padding -->
+	<div
+		class="min-h-screen transition-[padding] duration-300 {isSidebarCollapsed
+			? 'lg:pl-[72px]'
+			: 'lg:pl-64'}"
+	>
+		<div class="app-content-shell">
+			{@render children()}
+		</div>
 	</div>
 </div>
