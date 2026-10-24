@@ -9,11 +9,14 @@
 	import { validateLoginInput } from '#lib/validation/auth.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 
 	let email = $state('');
 	let password = $state('');
 	let errorMessage = $state('');
 	let isLoading = $state(false);
+
+	const isResetSuccess = $derived(page.url.searchParams.get('reset') === 'success');
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -77,6 +80,15 @@
 						{t('auth.login.subtitle')}
 					</p>
 				</div>
+
+				{#if isResetSuccess}
+					<div
+						role="status"
+						class="mb-6 rounded-lg border border-lime-500/30 bg-lime-50 p-3.5 text-sm font-medium text-forest-ink dark:bg-lime-950/30 dark:text-lime-300"
+					>
+						{t('auth.login.resetSuccess')}
+					</div>
+				{/if}
 
 				{#if errorMessage}
 					<div

@@ -14,6 +14,7 @@ import {
 	validateLoginInput,
 	validateForgotPasswordInput,
 	validateResetPasswordInput,
+	validateResetPasswordWithOTPInput,
 	validateOTPInput,
 	validateBackupCodeInput,
 	validateAdminInviteActivationInput,
@@ -23,10 +24,12 @@ import {
 	load as adminInviteLoad,
 	actions as adminInviteActions
 } from './admin-invite/[token]/+page.server.js';
+import { load as resetPasswordLoad } from './reset-password/+page.server.js';
 import * as adminDb from '#lib/server/db/admin.js';
 import * as authServer from '#lib/server/auth/index.js';
 import * as dbModule from '#lib/server/db/index.js';
 import RegisterPage from './register/+page.svelte';
+import ForgotPasswordPage from './forgot-password/+page.svelte';
 import { render } from 'svelte/server';
 import idDict from '#lib/i18n/id.json';
 import enDict from '#lib/i18n/en.json';
@@ -48,6 +51,7 @@ describe('Auth Client & Route Interfaces', () => {
 		expect(emailOtp).toBeDefined();
 		expect(typeof emailOtp.sendVerificationOtp).toBe('function');
 		expect(typeof emailOtp.verifyEmail).toBe('function');
+		expect(typeof emailOtp.resetPassword).toBe('function');
 	});
 
 	it('validates registration input requirements', () => {
@@ -142,6 +146,62 @@ describe('Auth Client & Route Interfaces', () => {
 		).toBeNull();
 	});
 
+	it('validates unified password reset with OTP inputs', () => {
+		expect(
+			validateResetPasswordWithOTPInput({
+				email: '',
+				otp: '123456',
+				password: 'newPassword123',
+				confirmPassword: 'newPassword123'
+			})
+		).toBe('Alamat email wajib diisi.');
+
+		expect(
+			validateResetPasswordWithOTPInput({
+				email: 'user@example.com',
+				otp: '',
+				password: 'newPassword123',
+				confirmPassword: 'newPassword123'
+			})
+		).toBe('Kode OTP wajib diisi.');
+
+		expect(
+			validateResetPasswordWithOTPInput({
+				email: 'user@example.com',
+				otp: '12345',
+				password: 'newPassword123',
+				confirmPassword: 'newPassword123'
+			})
+		).toBe('Kode OTP harus terdiri dari 6 digit angka.');
+
+		expect(
+			validateResetPasswordWithOTPInput({
+				email: 'user@example.com',
+				otp: '123456',
+				password: 'short',
+				confirmPassword: 'short'
+			})
+		).toBe('Password baru minimal terdiri dari 8 karakter.');
+
+		expect(
+			validateResetPasswordWithOTPInput({
+				email: 'user@example.com',
+				otp: '123456',
+				password: 'newPassword123',
+				confirmPassword: 'differentPassword123'
+			})
+		).toBe('Konfirmasi password baru tidak cocok.');
+
+		expect(
+			validateResetPasswordWithOTPInput({
+				email: 'user@example.com',
+				otp: '123456',
+				password: 'newPassword123',
+				confirmPassword: 'newPassword123'
+			})
+		).toBeNull();
+	});
+
 	it('validates OTP and backup code inputs', () => {
 		expect(validateOTPInput('')).toBe('Kode OTP wajib diisi.');
 		expect(validateOTPInput('123')).toBe('Kode OTP harus terdiri dari 6 digit angka.');
@@ -172,6 +232,8 @@ describe('Auth Client & Route Interfaces', () => {
 		expect(formatAuthError({ message: 'Too many attempts' })).toBe(
 			'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat atau minta kode baru.'
 		);
+		expect(formatAuthError({ message: 'User not found' })).toBe('Alamat email tidak terdaftar.');
+		expect(formatAuthError({ code: 'USER_NOT_FOUND' })).toBe('Alamat email tidak terdaftar.');
 		expect(formatAuthError({ message: 'Invalid password' })).toBe(
 			'Password yang Anda masukkan salah.'
 		);
@@ -243,6 +305,53 @@ describe('Auth Client & Route Interfaces', () => {
 			expect(html).toContain('register-email');
 			expect(html).toContain('register-password');
 			expect(html).toContain('register-confirm-password');
+		});
+	});
+
+	describe('Unified Forgot Password & Reset Password Flow (Issue #34)', () => {
+		it('defines required unified forgot password translation keys in id.json and en.json', () => {
+			const idForgot = idDict.auth.forgotPassword as Record<string, string>;
+			const enForgot = enDict.auth.forgotPassword as Record<string, string>;
+			const idLogin = idDict.auth.login as Record<string, string>;
+			const enLogin = enDict.auth.login as Record<string, string>;
+
+			expect(idForgot.title).toBe('Lupa Kata Sandi?');
+			expect(idForgot.resetTitle).toBe('Atur Ulang Kata Sandi');
+			expect(idForgot.otpLabel).toBe('Kode OTP');
+			expect(idForgot.newPasswordLabel).toBe('Kata Sandi Baru');
+			expect(idForgot.confirmPasswordLabel).toBe('Konfirmasi Kata Sandi Baru');
+			expect(idForgot.resetButton).toBe('Simpan Kata Sandi Baru');
+			expect(idForgot.resendButton).toBe('Kirim Ulang Kode OTP');
+			expect(idForgot.changeEmail).toBe('Salah memasukkan email? Ubah email');
+			expect(idLogin.resetSuccess).toBeDefined();
+
+			expect(enForgot.title).toBe('Forgot Password?');
+			expect(enForgot.resetTitle).toBe('Reset Password');
+			expect(enForgot.otpLabel).toBe('OTP Code');
+			expect(enForgot.newPasswordLabel).toBe('New Password');
+			expect(enForgot.confirmPasswordLabel).toBe('Confirm New Password');
+			expect(enForgot.resetButton).toBe('Save New Password');
+			expect(enForgot.resendButton).toBe('Resend OTP Code');
+			expect(enForgot.changeEmail).toBe('Mistyped email? Change email');
+			expect(enLogin.resetSuccess).toBeDefined();
+		});
+
+		it('renders ForgotPasswordPage in initial request step', () => {
+			const { html } = render(ForgotPasswordPage);
+			expect(html).toContain('Lupa Kata Sandi?');
+			expect(html).toContain('forgot-email');
+			expect(html).toContain('Kirim Kode OTP');
+		});
+
+		it('redirects /auth/reset-password to /auth/forgot-password with 303', () => {
+			try {
+				resetPasswordLoad({} as Parameters<typeof resetPasswordLoad>[0]);
+				expect.unreachable('Should have thrown redirect');
+			} catch (err: unknown) {
+				const redirectErr = err as { status?: number; location?: string };
+				expect(redirectErr.status).toBe(303);
+				expect(redirectErr.location).toBe('/auth/forgot-password');
+			}
 		});
 	});
 });

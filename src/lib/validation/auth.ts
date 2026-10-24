@@ -47,6 +47,30 @@ export function validateForgotPasswordInput(input: ForgotPasswordInput): string 
 	return null;
 }
 
+export interface ResetPasswordWithOTPInput {
+	email?: string;
+	otp?: string;
+	password?: string;
+	confirmPassword?: string;
+}
+
+export function validateResetPasswordWithOTPInput(input: ResetPasswordWithOTPInput): string | null {
+	if (!input.email || !input.email.trim()) {
+		return 'Alamat email wajib diisi.';
+	}
+	const otpError = validateOTPInput(input.otp || '');
+	if (otpError) {
+		return otpError;
+	}
+	if (!input.password || input.password.length < 8) {
+		return 'Password baru minimal terdiri dari 8 karakter.';
+	}
+	if (input.password !== input.confirmPassword) {
+		return 'Konfirmasi password baru tidak cocok.';
+	}
+	return null;
+}
+
 export interface ResetPasswordInput {
 	token?: string | null;
 	password?: string;
@@ -128,6 +152,9 @@ export function formatAuthError(
 	}
 	if (lower.includes('expired') || lower.includes('otp_expired')) {
 		return 'Kode verifikasi sudah kedaluwarsa. Silakan minta kode baru.';
+	}
+	if (lower.includes('user not found') || lower.includes('user_not_found')) {
+		return 'Alamat email tidak terdaftar.';
 	}
 	if (lower.includes('invalid') && lower.includes('password')) {
 		return 'Password yang Anda masukkan salah.';

@@ -5,18 +5,51 @@
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
 	import { t } from '#lib/i18n/index.js';
-	import { requestPasswordReset } from '#lib/auth-client.js';
-	import { validateForgotPasswordInput } from '#lib/validation/auth.js';
+	import { authClient } from '#lib/auth-client.js';
+	import {
+		validateForgotPasswordInput,
+		validateResetPasswordWithOTPInput,
+		formatAuthError
+	} from '#lib/validation/auth.js';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
+	let step = $state<'request' | 'reset'>('request');
 	let email = $state('');
+	let otp = $state('');
+	let newPassword = $state('');
+	let confirmPassword = $state('');
 	let errorMessage = $state('');
-	let isSubmitted = $state(false);
+	let successMessage = $state('');
 	let isLoading = $state(false);
+	let isResending = $state(false);
+	let resendCooldown = $state(60);
 
-	async function handleSubmit(event: SubmitEvent) {
+	let timer: ReturnType<typeof setInterval> | null = null;
+
+	function startCooldown(seconds = 60) {
+		resendCooldown = seconds;
+		if (timer) clearInterval(timer);
+		timer = setInterval(() => {
+			if (resendCooldown > 0) {
+				resendCooldown -= 1;
+			} else {
+				if (timer) clearInterval(timer);
+				timer = null;
+			}
+		}, 1000);
+	}
+
+	$effect(() => {
+		return () => {
+			if (timer) clearInterval(timer);
+		};
+	});
+
+	async function handleRequestOtp(event: SubmitEvent) {
 		event.preventDefault();
 		errorMessage = '';
+		successMessage = '';
 
 		const validationError = validateForgotPasswordInput({ email });
 		if (validationError) {
@@ -26,26 +59,102 @@
 
 		isLoading = true;
 		try {
-			const { error } = await requestPasswordReset({
+			const { error } = await authClient.emailOtp.sendVerificationOtp({
 				email: email.trim(),
-				redirectTo: `${window.location.origin}/auth/reset-password`
+				type: 'forget-password'
 			});
 
 			if (error) {
-				errorMessage = error.message || 'Gagal mengirim link reset. Silakan coba lagi.';
+				errorMessage = formatAuthError(error);
 				isLoading = false;
 				return;
 			}
 
-			isSubmitted = true;
+			step = 'reset';
+			startCooldown(60);
 			isLoading = false;
 		} catch (err: unknown) {
-			const message =
-				err instanceof Error
-					? err.message
-					: 'Terjadi kesalahan saat meminta reset password. Silakan coba lagi.';
-			errorMessage = message;
+			errorMessage = formatAuthError(err as { message?: string });
 			isLoading = false;
+		}
+	}
+
+	async function handleResetPassword(event: SubmitEvent) {
+		event.preventDefault();
+		errorMessage = '';
+		successMessage = '';
+
+		const validationError = validateResetPasswordWithOTPInput({
+			email,
+			otp,
+			password: newPassword,
+			confirmPassword
+		});
+
+		if (validationError) {
+			errorMessage = validationError;
+			return;
+		}
+
+		isLoading = true;
+		try {
+			const { error } = await authClient.emailOtp.resetPassword({
+				email: email.trim(),
+				otp: otp.trim(),
+				password: newPassword
+			});
+
+			if (error) {
+				errorMessage = formatAuthError(error);
+				isLoading = false;
+				return;
+			}
+
+			isLoading = false;
+			goto(resolve('/auth/login?reset=success'));
+		} catch (err: unknown) {
+			errorMessage = formatAuthError(err as { message?: string });
+			isLoading = false;
+		}
+	}
+
+	async function handleResendOtp() {
+		if (resendCooldown > 0 || isResending || isLoading) return;
+		errorMessage = '';
+		successMessage = '';
+		isResending = true;
+
+		try {
+			const { error } = await authClient.emailOtp.sendVerificationOtp({
+				email: email.trim(),
+				type: 'forget-password'
+			});
+
+			if (error) {
+				errorMessage = formatAuthError(error);
+				isResending = false;
+				return;
+			}
+
+			successMessage = t('auth.forgotPassword.resendSuccess');
+			startCooldown(60);
+			isResending = false;
+		} catch (err: unknown) {
+			errorMessage = formatAuthError(err as { message?: string });
+			isResending = false;
+		}
+	}
+
+	function handleChangeEmail() {
+		step = 'request';
+		errorMessage = '';
+		successMessage = '';
+		otp = '';
+		newPassword = '';
+		confirmPassword = '';
+		if (timer) {
+			clearInterval(timer);
+			timer = null;
 		}
 	}
 </script>
@@ -61,26 +170,105 @@
 	<main class="flex flex-1 items-center justify-center px-4 py-8 sm:px-6">
 		<div class="w-full max-w-md">
 			<Card variant="default" padding="lg" class="shadow-lg">
-				{#if isSubmitted}
-					<div class="space-y-4 text-center">
-						<div
-							class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-linen-mist dark:bg-spruce/60"
-						>
-							<span class="text-2xl">📬</span>
-						</div>
+				{#if step === 'reset'}
+					<div class="mb-6">
 						<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
-							{t('auth.forgotPassword.checkEmailTitle')}
+							{t('auth.forgotPassword.resetTitle')}
 						</h1>
-						<p class="text-sm leading-relaxed text-slate dark:text-stone-300">
-							{t('auth.forgotPassword.checkEmailDesc', { email })}
+						<p class="mt-1 text-sm text-slate dark:text-stone-300">
+							{t('auth.forgotPassword.resetSubtitle', { email })}
 						</p>
-						<div class="pt-4">
-							<a
-								href={resolve('/auth/login')}
-								class="inline-block text-sm font-semibold text-forest-ink hover:underline dark:text-lime-voltage"
+					</div>
+
+					{#if errorMessage}
+						<div
+							role="alert"
+							class="mb-6 rounded-lg border border-alarm-red/30 bg-red-50 p-3.5 text-sm font-medium text-alarm-red dark:bg-red-950/30 dark:text-red-300"
+						>
+							{errorMessage}
+						</div>
+					{/if}
+
+					{#if successMessage}
+						<div
+							role="status"
+							class="mb-6 rounded-lg border border-lime-500/30 bg-lime-50 p-3.5 text-sm font-medium text-forest-ink dark:bg-lime-950/30 dark:text-lime-300"
+						>
+							{successMessage}
+						</div>
+					{/if}
+
+					<form onsubmit={handleResetPassword} class="space-y-4">
+						<Input
+							id="forgot-otp"
+							label={t('auth.forgotPassword.otpLabel')}
+							type="text"
+							inputmode="numeric"
+							maxlength={6}
+							placeholder={t('auth.forgotPassword.otpPlaceholder')}
+							autocomplete="one-time-code"
+							required
+							bind:value={otp}
+							disabled={isLoading}
+						/>
+
+						<Input
+							id="forgot-new-password"
+							label={t('auth.forgotPassword.newPasswordLabel')}
+							type="password"
+							placeholder={t('auth.forgotPassword.newPasswordPlaceholder')}
+							autocomplete="new-password"
+							required
+							bind:value={newPassword}
+							disabled={isLoading}
+						/>
+
+						<Input
+							id="forgot-confirm-password"
+							label={t('auth.forgotPassword.confirmPasswordLabel')}
+							type="password"
+							placeholder={t('auth.forgotPassword.confirmPasswordPlaceholder')}
+							autocomplete="new-password"
+							required
+							bind:value={confirmPassword}
+							disabled={isLoading}
+						/>
+
+						<div class="pt-2">
+							<Button type="submit" variant="primary" size="md" class="w-full" disabled={isLoading}>
+								{isLoading
+									? t('auth.forgotPassword.resetting')
+									: t('auth.forgotPassword.resetButton')}
+							</Button>
+						</div>
+					</form>
+
+					<div class="mt-4 space-y-3">
+						<Button
+							type="button"
+							variant="secondary"
+							size="md"
+							class="w-full"
+							onclick={handleResendOtp}
+							disabled={resendCooldown > 0 || isResending || isLoading}
+						>
+							{#if isResending}
+								{t('auth.forgotPassword.resending')}
+							{:else if resendCooldown > 0}
+								{t('auth.forgotPassword.resendCooldown', { seconds: resendCooldown })}
+							{:else}
+								{t('auth.forgotPassword.resendButton')}
+							{/if}
+						</Button>
+
+						<div class="text-center">
+							<button
+								type="button"
+								class="text-xs font-medium text-slate transition-colors hover:text-forest-ink hover:underline dark:text-stone-400 dark:hover:text-lime-voltage"
+								onclick={handleChangeEmail}
 							>
-								{t('auth.forgotPassword.backToLogin')}
-							</a>
+								{t('auth.forgotPassword.changeEmail')}
+							</button>
 						</div>
 					</div>
 				{:else}
@@ -102,7 +290,7 @@
 						</div>
 					{/if}
 
-					<form onsubmit={handleSubmit} class="space-y-4">
+					<form onsubmit={handleRequestOtp} class="space-y-4">
 						<Input
 							id="forgot-email"
 							label={t('auth.forgotPassword.emailLabel')}

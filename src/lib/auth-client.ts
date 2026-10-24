@@ -13,7 +13,7 @@ export interface AuthClientExtended {
 	emailOtp: {
 		sendVerificationOtp: (opts: {
 			email: string;
-			type: 'email-verification' | 'sign-in';
+			type: 'email-verification' | 'sign-in' | 'forget-password';
 		}) => Promise<{ data?: unknown; error?: { message?: string; code?: string } | null }>;
 		verifyEmail: (opts: { email: string; otp: string }) => Promise<{
 			data?: {
@@ -21,6 +21,10 @@ export interface AuthClientExtended {
 				token?: string;
 				user?: { id?: string; email?: string; role?: string; onboardingCompleted?: boolean };
 			} | null;
+			error?: { message?: string; code?: string } | null;
+		}>;
+		resetPassword: (opts: { email: string; otp: string; password: string }) => Promise<{
+			data?: { success?: boolean } | null;
 			error?: { message?: string; code?: string } | null;
 		}>;
 	};

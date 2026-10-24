@@ -279,6 +279,131 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 		expect(newLogin.user.email).toBe('budi@example.com');
 	});
 
+	describe('Unified Password Reset with 6-digit OTP (Issue #34)', () => {
+		beforeAll(async () => {
+			// Register a dedicated user for OTP reset tests
+			await auth.api.signUpEmail({
+				body: {
+					name: 'Dewi Lestari',
+					email: 'dewi@example.com',
+					password: 'initialSecretPassword123'
+				}
+			});
+			const regOtp = sentOTPEmails.find((e) => e.to === 'dewi@example.com');
+			if (regOtp) {
+				await auth.api.verifyEmailOTP({
+					body: {
+						email: 'dewi@example.com',
+						otp: regOtp.otp
+					}
+				});
+			}
+		});
+
+		it('requests forgot password OTP, delivering 6-digit code via sendOTPEmail', async () => {
+			const initialCount = sentOTPEmails.length;
+			await auth.api.sendVerificationOTP({
+				body: {
+					email: 'dewi@example.com',
+					type: 'forget-password'
+				}
+			});
+
+			expect(sentOTPEmails.length).toBe(initialCount + 1);
+			const lastOtp = sentOTPEmails[sentOTPEmails.length - 1];
+			expect(lastOtp.to).toBe('dewi@example.com');
+			expect(lastOtp.type).toBe('forget-password');
+			expect(lastOtp.otp).toMatch(/^\d{6}$/);
+		});
+
+		it('rejects password reset with invalid OTP and invalidates code after 5 attempts', async () => {
+			// Trigger fresh forget-password OTP
+			await auth.api.sendVerificationOTP({
+				body: {
+					email: 'dewi@example.com',
+					type: 'forget-password'
+				}
+			});
+			const lastOtp = sentOTPEmails[sentOTPEmails.length - 1];
+			expect(lastOtp).toBeDefined();
+
+			// 4 invalid attempts
+			for (let i = 0; i < 4; i++) {
+				await expect(
+					auth.api.resetPasswordEmailOTP({
+						body: {
+							email: 'dewi@example.com',
+							otp: '999999',
+							password: 'attemptPassword123'
+						}
+					})
+				).rejects.toThrow();
+			}
+
+			// 5th attempt exhausts attempts
+			await expect(
+				auth.api.resetPasswordEmailOTP({
+					body: {
+						email: 'dewi@example.com',
+						otp: '999999',
+						password: 'attemptPassword123'
+					}
+				})
+			).rejects.toThrow();
+
+			// Even correct OTP is now rejected
+			await expect(
+				auth.api.resetPasswordEmailOTP({
+					body: {
+						email: 'dewi@example.com',
+						otp: lastOtp.otp,
+						password: 'attemptPassword123'
+					}
+				})
+			).rejects.toThrow();
+		});
+
+		it('resets password successfully with valid OTP and allows login with updated password', async () => {
+			// Request new OTP
+			await auth.api.sendVerificationOTP({
+				body: {
+					email: 'dewi@example.com',
+					type: 'forget-password'
+				}
+			});
+			const validOtp = sentOTPEmails[sentOTPEmails.length - 1];
+
+			const res = await auth.api.resetPasswordEmailOTP({
+				body: {
+					email: 'dewi@example.com',
+					otp: validOtp.otp,
+					password: 'myBrandNewPassword2026'
+				}
+			});
+
+			expect(res.success).toBe(true);
+
+			// Old password must fail
+			await expect(
+				auth.api.signInEmail({
+					body: {
+						email: 'dewi@example.com',
+						password: 'initialSecretPassword123'
+					}
+				})
+			).rejects.toThrow();
+
+			// New password succeeds
+			const loginRes = await auth.api.signInEmail({
+				body: {
+					email: 'dewi@example.com',
+					password: 'myBrandNewPassword2026'
+				}
+			});
+			expect(loginRes.user.email).toBe('dewi@example.com');
+		});
+	});
+
 	it('allows updating user role to admin via setUserRole', async () => {
 		const loginRes = await auth.api.signInEmail({
 			body: {
