@@ -753,3 +753,72 @@ export async function markInvitationAccepted(
 
 	return { success: true };
 }
+
+/**
+ * Retrieves all active administrators (role === 'admin') without financial data.
+ */
+export async function getActiveAdmins(d1: D1Database): Promise<AdminUserRecord[]> {
+	const db = getDb(d1);
+	const rows = await db
+		.select({
+			id: schema.user.id,
+			name: schema.user.name,
+			email: schema.user.email,
+			role: schema.user.role,
+			emailVerified: schema.user.emailVerified,
+			onboardingCompleted: schema.user.onboardingCompleted,
+			createdAt: schema.user.createdAt,
+			updatedAt: schema.user.updatedAt
+		})
+		.from(schema.user)
+		.where(eq(schema.user.role, 'admin'))
+		.orderBy(desc(schema.user.createdAt));
+
+	return rows.map((u) => ({
+		id: u.id,
+		name: u.name,
+		email: u.email,
+		role: u.role,
+		emailVerified: u.emailVerified,
+		onboardingCompleted: u.onboardingCompleted,
+		createdAt: u.createdAt,
+		lastActiveAt: u.updatedAt ?? u.createdAt
+	}));
+}
+
+/**
+ * Checks whether an email is already associated with an active administrator account.
+ */
+export async function isEmailAdmin(d1: D1Database, email: string): Promise<boolean> {
+	const db = getDb(d1);
+	const cleanEmail = email.trim().toLowerCase();
+	const rows = await db
+		.select({ id: schema.user.id })
+		.from(schema.user)
+		.where(and(eq(schema.user.email, cleanEmail), eq(schema.user.role, 'admin')))
+		.limit(1);
+
+	return rows.length > 0;
+}
+
+/**
+ * Checks whether there is an active, pending invitation for the given email that has not expired.
+ */
+export async function hasPendingInvitation(d1: D1Database, email: string): Promise<boolean> {
+	const db = getDb(d1);
+	const cleanEmail = email.trim().toLowerCase();
+	const now = new Date();
+	const rows = await db
+		.select({ id: schema.adminInvitations.id })
+		.from(schema.adminInvitations)
+		.where(
+			and(
+				eq(schema.adminInvitations.email, cleanEmail),
+				eq(schema.adminInvitations.status, 'pending'),
+				gte(schema.adminInvitations.expiresAt, now)
+			)
+		)
+		.limit(1);
+
+	return rows.length > 0;
+}

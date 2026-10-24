@@ -13,6 +13,7 @@
 	import {
 		Analytics01Icon,
 		UserGroupIcon,
+		SecurityCheckIcon,
 		Layers01Icon,
 		Activity01Icon,
 		Logout01Icon
@@ -39,6 +40,12 @@
 			href: resolve('/admin/users'),
 			label: t('admin.navUsers'),
 			icon: UserGroupIcon,
+			exact: false
+		},
+		{
+			href: resolve('/admin/admins'),
+			label: t('admin.navAdmins'),
+			icon: SecurityCheckIcon,
 			exact: false
 		},
 		{

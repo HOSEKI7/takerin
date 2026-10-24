@@ -26,7 +26,10 @@ import {
 	getAdminInvitations,
 	getValidInvitationByToken,
 	revokeAdminInvitation,
-	markInvitationAccepted
+	markInvitationAccepted,
+	getActiveAdmins,
+	isEmailAdmin,
+	hasPendingInvitation
 } from './admin.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -728,6 +731,58 @@ describe('Admin D1 Database Operations (Seam 2)', () => {
 				.where(eq(adminInvitations.id, acceptedInvite.id));
 			expect(acceptedRow[0].status).toBe('accepted');
 			expect(acceptedRow[0].acceptedAt).not.toBeNull();
+		});
+
+		it('getActiveAdmins returns only users with role === admin', async () => {
+			const regularUser = {
+				id: 'regular-user-active',
+				name: 'Regular Person',
+				email: 'regular@user.com',
+				role: 'user',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+			const secondAdmin = {
+				id: 'admin-second',
+				name: 'Second Admin',
+				email: 'secondadmin@takerin.my.id',
+				role: 'admin',
+				createdAt: new Date(),
+				updatedAt: new Date()
+			};
+
+			await db.insert(user).values([regularUser, secondAdmin]);
+
+			const admins = await getActiveAdmins(proxy.env.DB);
+			expect(admins.length).toBeGreaterThanOrEqual(2);
+			const adminEmails = admins.map((a) => a.email);
+			expect(adminEmails).toContain(adminUser.email);
+			expect(adminEmails).toContain(secondAdmin.email);
+			expect(adminEmails).not.toContain(regularUser.email);
+		});
+
+		it('isEmailAdmin correctly checks if email belongs to an active administrator', async () => {
+			expect(await isEmailAdmin(proxy.env.DB, adminUser.email)).toBe(true);
+			expect(await isEmailAdmin(proxy.env.DB, adminUser.email.toUpperCase())).toBe(true);
+			expect(await isEmailAdmin(proxy.env.DB, 'nonexistent@example.com')).toBe(false);
+		});
+
+		it('hasPendingInvitation checks if non-expired pending invitation exists for email', async () => {
+			const targetEmail = 'checkpending@takerin.my.id';
+			expect(await hasPendingInvitation(proxy.env.DB, targetEmail)).toBe(false);
+
+			const invite = await createAdminInvitation(proxy.env.DB, {
+				email: targetEmail,
+				invitedBy: adminUser.id,
+				origin: 'https://takerin.my.id'
+			});
+
+			expect(await hasPendingInvitation(proxy.env.DB, targetEmail)).toBe(true);
+			expect(await hasPendingInvitation(proxy.env.DB, targetEmail.toUpperCase())).toBe(true);
+
+			// After revocation, should be false
+			await revokeAdminInvitation(proxy.env.DB, invite.id, adminUser.id);
+			expect(await hasPendingInvitation(proxy.env.DB, targetEmail)).toBe(false);
 		});
 	});
 });
