@@ -452,7 +452,6 @@
 		"resendOtpButton": "Resend OTP Code",
 		"resendCooldown": "Resend in {{seconds}} seconds",
 		"cancelChangeEmail": "Cancel",
-		"emailSameError": "New email address cannot be the same as your current email.",
 		"securitySection": "Security & Password",
 		"changePassword": "Change Password",
 		"currentPasswordLabel": "Current Password",

@@ -31,6 +31,8 @@
 	// 1b. Change Email State (Better Auth emailOTP plugin)
 	// svelte-ignore state_referenced_locally
 	let userEmail = $state(data.profile.email);
+	// svelte-ignore state_referenced_locally
+	let isEmailVerified = $state(data.profile.emailVerified);
 	let changeEmailOpen = $state(false);
 	let changeEmailStep = $state<'request' | 'verify'>('request');
 	let changeEmailCurrentPassword = $state('');
@@ -42,6 +44,15 @@
 	let changeEmailSuccess = $state('');
 	let resendCooldown = $state(0);
 	let cooldownTimer: ReturnType<typeof setInterval> | null = null;
+
+	function openChangeEmailForm() {
+		changeEmailOpen = true;
+		changeEmailStep = 'request';
+		changeEmailCurrentPassword = '';
+		changeEmailNewEmail = '';
+		changeEmailOtp = '';
+		changeEmailError = '';
+	}
 
 	function startCooldown(seconds = 60) {
 		resendCooldown = seconds;
@@ -164,7 +175,7 @@
 
 			const updatedEmail = changeEmailNewEmail.trim().toLowerCase();
 			userEmail = updatedEmail;
-			data.profile.email = updatedEmail;
+			isEmailVerified = true;
 			changeEmailSuccess = t('settings.emailChangedSuccess', { email: updatedEmail });
 			resetChangeEmailForm();
 		} catch (err) {
@@ -437,6 +448,9 @@
 			<h2 class="text-lg font-bold text-obsidian dark:text-paper">
 				{t('settings.profileSection')}
 			</h2>
+			<p class="mt-1 text-xs text-slate dark:text-pebble">
+				{t('settings.subtitle')}
+			</p>
 
 			<div class="mt-6 space-y-6">
 				<div class="grid gap-6 sm:grid-cols-2">
@@ -481,30 +495,13 @@
 					<!-- Kolom Alamat Email & Aksi Ubah Email -->
 					<div class="space-y-4">
 						<div>
-							<div class="flex items-center justify-between pb-1">
+							<div class="pb-1">
 								<label
 									for="profile-email"
 									class="text-xs font-semibold text-obsidian dark:text-paper"
 								>
 									{t('auth.login.emailLabel')}
 								</label>
-								{#if !changeEmailOpen}
-									<button
-										type="button"
-										class="text-xs font-semibold text-forest-ink hover:underline dark:text-lime-voltage"
-										data-testid="btn-action-change-email"
-										onclick={() => {
-											changeEmailOpen = true;
-											changeEmailStep = 'request';
-											changeEmailCurrentPassword = '';
-											changeEmailNewEmail = '';
-											changeEmailOtp = '';
-											changeEmailError = '';
-										}}
-									>
-										{t('settings.changeEmailButton')}
-									</button>
-								{/if}
 							</div>
 							<div class="flex gap-2">
 								<div class="flex-1">
@@ -515,14 +512,8 @@
 										type="button"
 										variant="secondary"
 										size="md"
-										onclick={() => {
-											changeEmailOpen = true;
-											changeEmailStep = 'request';
-											changeEmailCurrentPassword = '';
-											changeEmailNewEmail = '';
-											changeEmailOtp = '';
-											changeEmailError = '';
-										}}
+										data-testid="btn-action-change-email"
+										onclick={openChangeEmailForm}
 									>
 										{t('settings.changeEmailButton')}
 									</Button>
@@ -532,11 +523,11 @@
 
 						<div class="flex items-center gap-2 text-xs">
 							<span
-								class="rounded-full px-2 py-0.5 font-semibold {data.profile.emailVerified
+								class="rounded-full px-2 py-0.5 font-semibold {isEmailVerified
 									? 'bg-linen-mist text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage'
 									: 'bg-alarm-red/10 text-alarm-red'}"
 							>
-								{data.profile.emailVerified ? 'Email Terverifikasi' : 'Belum Verifikasi'}
+								{isEmailVerified ? 'Email Terverifikasi' : 'Belum Verifikasi'}
 							</span>
 						</div>
 					</div>
