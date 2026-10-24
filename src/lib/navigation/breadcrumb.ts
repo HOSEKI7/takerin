@@ -6,6 +6,14 @@ export interface BreadcrumbItem {
 	current?: boolean;
 }
 
+const SEGMENT_LABELS: Record<string, string> = {
+	dashboard: 'Dashboard',
+	expenses: 'Pengeluaran',
+	categories: 'Kategori',
+	history: 'Riwayat',
+	settings: 'Pengaturan'
+};
+
 /**
  * Normalizes pathname by stripping SvelteKit (app) group folder if present
  * and trimming trailing slashes.
@@ -148,11 +156,7 @@ export function getBreadcrumbs(rawPath: string): BreadcrumbItem[] {
 		accumulated += `/${seg}`;
 		const isLast = i === segments.length - 1;
 
-		let label = seg.charAt(0).toUpperCase() + seg.slice(1);
-		if (seg === 'settings') label = 'Pengaturan';
-		else if (seg === 'expenses') label = 'Pengeluaran';
-		else if (seg === 'categories') label = 'Kategori';
-		else if (seg === 'history') label = 'Riwayat';
+		const label = SEGMENT_LABELS[seg] ?? (seg.charAt(0).toUpperCase() + seg.slice(1));
 
 		items.push({
 			label,
