@@ -43,7 +43,7 @@
 		<!-- Actions: Primary CTA paired with secondary text link per DESIGN.md -->
 		<div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
 			<a
-				href={resolve('/dashboard')}
+				href={resolve('/(app)/dashboard')}
 				class="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-lime-voltage)] px-6 py-2.5 text-sm font-semibold text-[var(--color-forest-ink)] transition hover:brightness-95 active:brightness-90"
 			>
 				<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />

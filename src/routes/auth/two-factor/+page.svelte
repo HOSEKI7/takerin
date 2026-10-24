@@ -110,7 +110,7 @@
 			}
 
 			if (data) {
-				goto(resolve('/dashboard'));
+				goto(resolve('/(app)/dashboard'));
 			}
 		} catch (err: unknown) {
 			errorMessage = formatAuthError(err instanceof Error ? err.message : null);

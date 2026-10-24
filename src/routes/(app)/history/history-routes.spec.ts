@@ -17,7 +17,7 @@ vi.mock('#lib/server/ai/summary.js', () => ({
 
 import { load as loadHistoryList } from './+page.server.js';
 import { load as loadHistoryDetail } from './[periodId]/+page.server.js';
-import { POST as postAiSummary } from '../api/periods/[periodId]/ai-summary/+server.js';
+import { POST as postAiSummary } from '../../api/periods/[periodId]/ai-summary/+server.js';
 
 describe('History Routes & API Handlers (Seam 3)', () => {
 	const mockUser = {

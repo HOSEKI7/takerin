@@ -111,7 +111,7 @@
 	let showTutorial = $state(false);
 
 	function handleExitTutorial() {
-		goto(resolve('/dashboard'));
+		goto(resolve('/(app)/dashboard'));
 	}
 
 	// Derived calculations

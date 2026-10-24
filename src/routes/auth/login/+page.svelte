@@ -47,7 +47,7 @@
 					goto(resolve('/admin'));
 					return;
 				}
-				goto(resolve('/dashboard'));
+				goto(resolve('/(app)/dashboard'));
 			}
 		} catch (err: unknown) {
 			const message =

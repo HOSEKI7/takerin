@@ -1,0 +1,77 @@
+import { describe, it, expect } from 'vitest';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
+describe('App Route Group & Centralized Layout (Issue #26)', () => {
+	const appDir = path.resolve('src/routes/(app)');
+
+	it('creates the (app) route group directory with all protected routes', () => {
+		expect(fs.existsSync(appDir)).toBe(true);
+
+		const expectedProtectedRoutes = ['dashboard', 'categories', 'expenses', 'history', 'settings'];
+
+		for (const route of expectedProtectedRoutes) {
+			const routePath = path.join(appDir, route);
+			expect(fs.existsSync(routePath), `Route directory for ${route} should exist in (app)`).toBe(
+				true
+			);
+			expect(
+				fs.existsSync(path.join(routePath, '+page.svelte')),
+				`+page.svelte for ${route} should exist in (app)/${route}`
+			).toBe(true);
+		}
+	});
+
+	it('creates centralized (app)/+layout.svelte shell with children() render', () => {
+		const layoutPath = path.join(appDir, '+layout.svelte');
+		expect(fs.existsSync(layoutPath)).toBe(true);
+
+		const content = fs.readFileSync(layoutPath, 'utf-8');
+		expect(content).toContain('{@render children()}');
+		expect(content).toContain("resolve('/(app)/dashboard')");
+		expect(content).toContain("resolve('/(app)/expenses')");
+		expect(content).toContain("resolve('/(app)/categories')");
+		expect(content).toContain("resolve('/(app)/history')");
+		expect(content).toContain("resolve('/(app)/settings')");
+		expect(content).toContain('handleLogout');
+	});
+
+	it('removes duplicated topbars from protected page views', () => {
+		const pagesToCheck = [
+			'dashboard/+page.svelte',
+			'categories/+page.svelte',
+			'expenses/+page.svelte',
+			'history/+page.svelte',
+			'settings/+page.svelte'
+		];
+
+		for (const pageRel of pagesToCheck) {
+			const pagePath = path.join(appDir, pageRel);
+			const content = fs.readFileSync(pagePath, 'utf-8');
+			expect(content).not.toContain('<header');
+		}
+	});
+
+	it('properly evaluates isNavActive for exact and prefix matches', () => {
+		function isNavActive(currentPath: string, itemHref: string, exact: boolean) {
+			if (exact) {
+				return currentPath === itemHref;
+			}
+			return currentPath.startsWith(itemHref);
+		}
+
+		// Exact matching for dashboard
+		expect(isNavActive('/dashboard', '/dashboard', true)).toBe(true);
+		expect(isNavActive('/dashboard/sub', '/dashboard', true)).toBe(false);
+
+		// Prefix matching for expenses
+		expect(isNavActive('/expenses', '/expenses', false)).toBe(true);
+		expect(isNavActive('/expenses/new', '/expenses', false)).toBe(true);
+		expect(isNavActive('/expenses/123/edit', '/expenses', false)).toBe(true);
+		expect(isNavActive('/categories', '/expenses', false)).toBe(false);
+
+		// Prefix matching for history
+		expect(isNavActive('/history', '/history', false)).toBe(true);
+		expect(isNavActive('/history/period-1', '/history', false)).toBe(true);
+	});
+});

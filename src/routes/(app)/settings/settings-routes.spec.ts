@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { load, actions } from './+page.server.js';
-import { GET as getCsvExport } from '../api/export/csv/+server.js';
-import { GET as getPdfExport } from '../api/export/pdf/+server.js';
+import { GET as getCsvExport } from '../../api/export/csv/+server.js';
+import { GET as getPdfExport } from '../../api/export/pdf/+server.js';
 import * as settingsDb from '#lib/server/db/settings.js';
 
 describe('Settings Route Server Logic & Export Endpoints (Seam 4)', () => {
