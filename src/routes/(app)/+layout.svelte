@@ -49,7 +49,12 @@
 	class="min-h-screen bg-paper font-sans text-charcoal transition-colors dark:bg-dark-surface dark:text-linen-mist"
 >
 	<!-- Desktop Sidebar Navigation (≥ 1024px) -->
-	<DesktopSidebar user={data?.user} bind:isCollapsed={isSidebarCollapsed} onLogout={handleLogout} />
+	<DesktopSidebar
+		user={data?.user}
+		bind:isCollapsed={isSidebarCollapsed}
+		{isLoggingOut}
+		onLogout={handleLogout}
+	/>
 
 	<!-- Centralized App Header Shell (Mobile & Tablet < 1024px) -->
 	<header

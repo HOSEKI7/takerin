@@ -8,6 +8,7 @@
 </script>
 
 <script lang="ts">
+	import type { ComponentProps } from 'svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -16,6 +17,8 @@
 	import Button from './Button.svelte';
 	import { t } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
+
+	type HugeIcon = ComponentProps<typeof HugeiconsIcon>['icon'];
 	import {
 		LayoutDashboardIcon,
 		Wallet01Icon,
@@ -37,13 +40,18 @@
 			image?: string | null;
 		} | null;
 		isCollapsed?: boolean;
+		isLoggingOut?: boolean;
 		currentPath?: string;
 		onLogout?: () => void;
 	}
 
-	let { user = null, isCollapsed = $bindable(false), currentPath, onLogout }: Props = $props();
-
-	let isLoggingOut = $state(false);
+	let {
+		user = null,
+		isCollapsed = $bindable(false),
+		isLoggingOut = false,
+		currentPath,
+		onLogout
+	}: Props = $props();
 
 	const effectivePath = $derived(
 		currentPath ?? (typeof page !== 'undefined' && page?.url ? page.url.pathname : '')
@@ -71,9 +79,8 @@
 		}
 	}
 
-	async function handleLogout() {
+	function handleLogout() {
 		if (isLoggingOut) return;
-		isLoggingOut = true;
 		if (onLogout) {
 			onLogout();
 		}
@@ -116,6 +123,17 @@
 	]);
 </script>
 
+<!-- eslint-disable svelte/no-navigation-without-resolve -->
+
+{#snippet tooltip(text: string)}
+	<div
+		role="tooltip"
+		class="pointer-events-none absolute left-full z-50 ml-3 rounded-md bg-charcoal px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-paper opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:bg-paper dark:text-charcoal"
+	>
+		{text}
+	</div>
+{/snippet}
+
 {#snippet userAvatar()}
 	{#if user?.image}
 		<img
@@ -132,7 +150,7 @@
 	{/if}
 {/snippet}
 
-{#snippet navLink(item: { href: string; label: string; icon: any; exact: boolean })}
+{#snippet navLink(item: { href: string; label: string; icon: HugeIcon; exact: boolean })}
 	{@const active = isRouteActive(effectivePath, item.href, item.exact)}
 	<li>
 		<a
@@ -150,12 +168,7 @@
 			{/if}
 
 			{#if isCollapsed}
-				<div
-					role="tooltip"
-					class="pointer-events-none absolute left-full z-50 ml-3 rounded-md bg-charcoal px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-paper opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:bg-paper dark:text-charcoal"
-				>
-					{item.label}
-				</div>
+				{@render tooltip(item.label)}
 			{/if}
 		</a>
 	</li>
@@ -173,31 +186,17 @@
 			? 'flex-col justify-center gap-3 px-2'
 			: 'px-4'}"
 	>
-		{#if isCollapsed}
-			<BrandLogo href="/(app)/dashboard" size="sm" variant="mark" />
-			<button
-				type="button"
-				onclick={toggleCollapse}
-				class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate transition-colors hover:bg-fog hover:text-charcoal focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:text-pebble dark:hover:bg-dark-card dark:hover:text-linen-mist dark:focus-visible:ring-lime-voltage"
-				aria-label={t('nav.expandSidebar')}
-				aria-expanded="false"
-				title={t('nav.expandSidebar')}
-			>
-				<HugeiconsIcon icon={ArrowRight02Icon} size={18} />
-			</button>
-		{:else}
-			<BrandLogo href="/(app)/dashboard" size="sm" variant="combined" />
-			<button
-				type="button"
-				onclick={toggleCollapse}
-				class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate transition-colors hover:bg-fog hover:text-charcoal focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:text-pebble dark:hover:bg-dark-card dark:hover:text-linen-mist dark:focus-visible:ring-lime-voltage"
-				aria-label={t('nav.collapseSidebar')}
-				aria-expanded="true"
-				title={t('nav.collapseSidebar')}
-			>
-				<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
-			</button>
-		{/if}
+		<BrandLogo href="/(app)/dashboard" size="sm" variant={isCollapsed ? 'mark' : 'combined'} />
+		<button
+			type="button"
+			onclick={toggleCollapse}
+			class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate transition-colors hover:bg-fog hover:text-charcoal focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:text-pebble dark:hover:bg-dark-card dark:hover:text-linen-mist dark:focus-visible:ring-lime-voltage"
+			aria-label={isCollapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')}
+			aria-expanded={!isCollapsed}
+			title={isCollapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')}
+		>
+			<HugeiconsIcon icon={isCollapsed ? ArrowRight02Icon : ArrowLeft02Icon} size={18} />
+		</button>
 	</div>
 
 	<!-- Quick Action CTA: + Catat Pengeluaran -->
@@ -213,12 +212,7 @@
 				>
 					<HugeiconsIcon icon={PlusSignIcon} size={20} />
 				</div>
-				<div
-					role="tooltip"
-					class="pointer-events-none absolute left-full z-50 ml-3 rounded-md bg-charcoal px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-paper opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:bg-paper dark:text-charcoal"
-				>
-					{t('nav.newExpense')}
-				</div>
+				{@render tooltip(t('nav.newExpense'))}
 			</a>
 		{:else}
 			<a href={resolve('/(app)/expenses/new')} class="block w-full">
@@ -332,12 +326,7 @@
 					aria-label={t('nav.logout')}
 				>
 					<HugeiconsIcon icon={Logout01Icon} size={18} />
-					<div
-						role="tooltip"
-						class="pointer-events-none absolute left-full z-50 ml-3 rounded-md bg-charcoal px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-paper opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:bg-paper dark:text-charcoal"
-					>
-						{isLoggingOut ? t('nav.loggingOut') : t('nav.logout')}
-					</div>
+					{@render tooltip(isLoggingOut ? t('nav.loggingOut') : t('nav.logout'))}
 				</button>
 			</div>
 		{:else}
