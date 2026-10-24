@@ -16,10 +16,11 @@ Single-context layout: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `do
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-### SKILLS md
+### MCP Servers
 
-**Load /agent-browser when you need real interact with website**.
-**Load /frontend-design** when designing anything.
+**Use MCP context7 to find the latest documentation for a library**. Use this official documentation as a reference to follow current best practices.
+**Use sequential thinking to analyze the root cause of any bugs or issues.**
+**Open localhost using MCP Playwright or Chrome DevTools and use it for testing**. Carefully check for any errors in the console or network errors when the application is accessed.
 
 ## Device
 
