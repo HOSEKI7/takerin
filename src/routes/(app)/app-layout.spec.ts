@@ -89,4 +89,30 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		expect(isNavActive('/history', '/history', false)).toBe(true);
 		expect(isNavActive('/history/period-1', '/history', false)).toBe(true);
 	});
+
+	it('integrates ContentHeader with dynamic breadcrumbs inside (app)/+layout.svelte (Issue #29)', () => {
+		const layoutPath = path.join(appDir, '+layout.svelte');
+		const content = fs.readFileSync(layoutPath, 'utf-8');
+
+		expect(content).toContain('ContentHeader');
+		expect(content).toContain('<ContentHeader');
+	});
+
+	it('removes redundant manual back buttons from sub-route pages (Issue #29)', () => {
+		const expensesNew = fs.readFileSync(path.join(appDir, 'expenses/new/+page.svelte'), 'utf-8');
+		const expensesEdit = fs.readFileSync(
+			path.join(appDir, 'expenses/[id]/edit/+page.svelte'),
+			'utf-8'
+		);
+		const historyPeriod = fs.readFileSync(
+			path.join(appDir, 'history/[periodId]/+page.svelte'),
+			'utf-8'
+		);
+
+		// Manual back button with aria-label common.back should be removed in favor of breadcrumbs
+		expect(expensesNew).not.toContain("aria-label={t('common.back')}");
+		expect(expensesEdit).not.toContain("aria-label={t('common.back')}");
+		expect(historyPeriod).not.toContain("aria-label={t('common.back')}");
+		expect(historyPeriod).not.toContain("{t('history.periodList')}");
+	});
 });

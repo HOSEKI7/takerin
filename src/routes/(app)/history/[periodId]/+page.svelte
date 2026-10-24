@@ -10,7 +10,6 @@
 	import { untrack } from 'svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
-		ArrowLeft02Icon,
 		Wallet01Icon,
 		Coins01Icon,
 		PiggyBankIcon,
@@ -62,39 +61,23 @@
 <main class="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
 	<!-- Period Header -->
 	<div class="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-		<div class="flex items-center gap-3">
-			<a
-				href={resolve('/(app)/history')}
-				class="flex h-9 w-9 items-center justify-center rounded-xl border border-fog bg-paper text-slate transition hover:bg-fog hover:text-obsidian dark:border-dark-border dark:bg-dark-surface dark:text-pebble dark:hover:text-paper"
-				aria-label={t('common.back')}
-			>
-				<HugeiconsIcon icon={ArrowLeft02Icon} class="h-4 w-4" />
-			</a>
-			<div>
-				<div class="flex items-center gap-2">
-					<span
-						class="rounded-full bg-fog px-2.5 py-0.5 text-xs font-semibold text-slate dark:bg-spruce/40 dark:text-linen-mist"
-					>
-						{t('history.periodCompleted')}
-					</span>
-					<span class="text-xs text-slate dark:text-pebble">
-						{t('dashboard.payDayPrefix', { day: data.period.payDay })}
-					</span>
-				</div>
-				<h1 class="mt-1 text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-					{formatDateIndonesian(data.period.startDate)} – {formatDateIndonesian(
-						data.period.endDate
-					)}
-				</h1>
+		<div>
+			<div class="flex items-center gap-2">
+				<span
+					class="rounded-full bg-fog px-2.5 py-0.5 text-xs font-semibold text-slate dark:bg-spruce/40 dark:text-linen-mist"
+				>
+					{t('history.periodCompleted')}
+				</span>
+				<span class="text-xs text-slate dark:text-pebble">
+					{t('dashboard.payDayPrefix', { day: data.period.payDay })}
+				</span>
 			</div>
+			<h1 class="mt-1 text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
+				{formatDateIndonesian(data.period.startDate)} – {formatDateIndonesian(
+					data.period.endDate
+				)}
+			</h1>
 		</div>
-
-		<a href={resolve('/(app)/history')}>
-			<Button variant="secondary" size="sm" class="flex items-center gap-1.5 self-start">
-				<HugeiconsIcon icon={ArrowLeft02Icon} class="h-4 w-4" />
-				<span>{t('history.periodList')}</span>
-			</Button>
-		</a>
 	</div>
 
 	<!-- AI Summary Phrase Section -->

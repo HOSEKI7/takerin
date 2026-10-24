@@ -2,6 +2,7 @@
 	import type { LayoutProps } from './$types.js';
 	import DesktopSidebar from '#lib/components/DesktopSidebar.svelte';
 	import MobileNav from '#lib/components/MobileNav.svelte';
+	import ContentHeader from '#lib/components/ContentHeader.svelte';
 	import { authClient } from '#lib/auth-client.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -47,8 +48,13 @@
 			? 'lg:pl-[72px]'
 			: 'lg:pl-64'}"
 	>
-		<div class="app-content-shell">
-			{@render children()}
+		<div class="app-content-shell flex min-h-screen flex-col">
+			<!-- Minimalist Content Header with Dynamic Breadcrumbs (Issue #29) -->
+			<ContentHeader />
+
+			<div class="flex-1">
+				{@render children()}
+			</div>
 		</div>
 	</div>
 </div>

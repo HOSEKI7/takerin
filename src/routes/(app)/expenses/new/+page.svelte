@@ -10,7 +10,7 @@
 	import { isOverBudget } from '#lib/validation/expense.js';
 	import { t } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { ArrowLeft02Icon, Alert02Icon } from '@hugeicons/core-free-icons';
+	import { Alert02Icon } from '@hugeicons/core-free-icons';
 
 	let { data, form }: PageProps = $props();
 
@@ -49,22 +49,13 @@
 
 <main class="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
 	<div class="mb-6 flex flex-col justify-between gap-1 sm:flex-row sm:items-baseline">
-		<div class="flex items-center gap-3">
-			<a
-				href={resolve('/(app)/expenses')}
-				class="flex h-9 w-9 items-center justify-center rounded-xl border border-fog bg-paper text-slate transition hover:bg-fog hover:text-obsidian dark:border-dark-border dark:bg-dark-surface dark:text-pebble dark:hover:text-paper"
-				aria-label={t('common.back')}
-			>
-				<HugeiconsIcon icon={ArrowLeft02Icon} class="h-4 w-4" />
-			</a>
-			<div>
-				<h1 class="text-2xl font-bold text-obsidian sm:text-3xl dark:text-paper">
-					{t('expenses.newTitle')}
-				</h1>
-				<p class="mt-1 text-xs text-slate sm:text-sm dark:text-pebble">
-					{t('expenses.newSubtitle')}
-				</p>
-			</div>
+		<div>
+			<h1 class="text-2xl font-bold text-obsidian sm:text-3xl dark:text-paper">
+				{t('expenses.newTitle')}
+			</h1>
+			<p class="mt-1 text-xs text-slate sm:text-sm dark:text-pebble">
+				{t('expenses.newSubtitle')}
+			</p>
 		</div>
 		{#if data.period}
 			<div class="text-xs text-slate dark:text-pebble">
