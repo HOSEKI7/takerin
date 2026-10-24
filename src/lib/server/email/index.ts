@@ -219,13 +219,15 @@ Tautan ini berlaku selama 1 jam. Jika Anda tidak meminta reset password, Anda da
 				'Gunakan kode OTP berikut untuk melanjutkan pengaturan ulang password akun Anda:';
 		}
 
+		const expiryMinutes = type === 'sign-in-2fa' ? 3 : 5;
+
 		const text = `Halo,
 
 ${explanation}
 
 ${otp}
 
-Kode ini berlaku selama 3 menit. Demi keamanan akun Anda, jangan berikan kode ini kepada siapa pun.
+Kode ini berlaku selama ${expiryMinutes} menit. Demi keamanan akun Anda, jangan berikan kode ini kepada siapa pun.
 Jika Anda tidak melakukan permintaan ini, segera amankan akun Anda.`;
 
 		const html = `
@@ -254,7 +256,7 @@ Jika Anda tidak melakukan permintaan ini, segera amankan akun Anda.`;
     <div class="otp-box">
       <div class="otp-code">${otp}</div>
     </div>
-    <p class="notice">Kode ini berlaku selama 3 menit. Demi keamanan, jangan berikan kode ini kepada siapa pun termasuk pihak Takerin.</p>
+    <p class="notice">Kode ini berlaku selama ${expiryMinutes} menit. Demi keamanan, jangan berikan kode ini kepada siapa pun termasuk pihak Takerin.</p>
     <div class="footer">
       <p>Jika Anda tidak merasa melakukan permintaan ini, abaikan email ini atau segera hubungi kami.</p>
     </div>

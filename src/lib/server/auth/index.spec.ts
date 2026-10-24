@@ -89,7 +89,7 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 		}
 	});
 
-	it('registers a user with email + password and assigns default role "user"', async () => {
+	it('registers a user with email + password, sends 6-digit OTP email, and does not auto-sign-in before verification', async () => {
 		const res = await auth.api.signUpEmail({
 			body: {
 				name: 'Budi Santoso',
@@ -103,12 +103,79 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 		expect(res.user.name).toBe('Budi Santoso');
 		expect((res.user as { role?: string }).role).toBe('user');
 		expect(res.user.emailVerified).toBe(false);
+		expect(res.token).toBeNull();
 
-		// Verify verification email was triggered
-		expect(sentVerificationEmails.length).toBeGreaterThan(0);
-		const lastEmail = sentVerificationEmails[sentVerificationEmails.length - 1];
-		expect(lastEmail.to).toBe('budi@example.com');
-		expect(lastEmail.url).toBeDefined();
+		// Verify 6-digit OTP email was triggered instead of magic link
+		expect(sentOTPEmails.length).toBeGreaterThan(0);
+		const lastOtp = sentOTPEmails[sentOTPEmails.length - 1];
+		expect(lastOtp.to).toBe('budi@example.com');
+		expect(lastOtp.type).toBe('email-verification');
+		expect(lastOtp.otp).toMatch(/^\d{6}$/);
+	});
+
+	it('fails email verification with wrong OTP and invalidates after 5 attempts', async () => {
+		const lastOtp = sentOTPEmails[sentOTPEmails.length - 1];
+		expect(lastOtp).toBeDefined();
+
+		// Attempt 1 to 4 with invalid OTP
+		for (let i = 0; i < 4; i++) {
+			await expect(
+				auth.api.verifyEmailOTP({
+					body: {
+						email: 'budi@example.com',
+						otp: '000000'
+					}
+				})
+			).rejects.toThrow();
+		}
+
+		// Attempt 5 exceeds allowedAttempts
+		await expect(
+			auth.api.verifyEmailOTP({
+				body: {
+					email: 'budi@example.com',
+					otp: '000000'
+				}
+			})
+		).rejects.toThrow();
+
+		// Even correct OTP should now be rejected as code is invalidated / too many attempts
+		await expect(
+			auth.api.verifyEmailOTP({
+				body: {
+					email: 'budi@example.com',
+					otp: lastOtp.otp
+				}
+			})
+		).rejects.toThrow();
+	});
+
+	it('verifies email with valid OTP, creates session and sets emailVerified true', async () => {
+		// Register a new user to verify fresh OTP flow
+		const regRes = await auth.api.signUpEmail({
+			body: {
+				name: 'Siti Aminah',
+				email: 'siti@example.com',
+				password: 'securePassword123'
+			}
+		});
+		expect(regRes.token).toBeNull();
+
+		const otpRecord = sentOTPEmails.find(
+			(e) => e.to === 'siti@example.com' && e.type === 'email-verification'
+		);
+		expect(otpRecord).toBeDefined();
+
+		const verifyRes = await auth.api.verifyEmailOTP({
+			body: {
+				email: 'siti@example.com',
+				otp: otpRecord!.otp
+			}
+		});
+
+		expect(verifyRes.status).toBe(true);
+		expect(verifyRes.user.emailVerified).toBe(true);
+		expect(verifyRes.token).toBeTruthy();
 	});
 
 	it('logs in user with email + password, creating a valid session', async () => {
@@ -466,6 +533,45 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 				.bind('customer@example.com')
 				.first<{ role: string }>();
 			expect(dbUser?.role).toBe('user');
+		});
+
+		it('requires Bootstrap Admin to verify OTP before receiving active session', async () => {
+			const adminOtpEmails: Array<{ to: string; otp: string; type?: string }> = [];
+			const customAuth = createAuth(proxy.env.DB, {
+				adminEmails: 'adminbootstrap@example.com',
+				emailService: {
+					sendVerificationEmail: async () => ({ success: true }),
+					sendResetPasswordEmail: async () => ({ success: true }),
+					sendOTPEmail: async (opts) => {
+						adminOtpEmails.push(opts);
+						return { success: true };
+					}
+				}
+			});
+
+			const regRes = await customAuth.api.signUpEmail({
+				body: {
+					name: 'Admin Bootstrap',
+					email: 'adminbootstrap@example.com',
+					password: 'adminPassword123'
+				}
+			});
+
+			expect(regRes.user.role).toBe('admin');
+			expect(regRes.token).toBeNull();
+			expect(adminOtpEmails.length).toBe(1);
+			expect(adminOtpEmails[0].type).toBe('email-verification');
+
+			const verifyRes = await customAuth.api.verifyEmailOTP({
+				body: {
+					email: 'adminbootstrap@example.com',
+					otp: adminOtpEmails[0].otp
+				}
+			});
+
+			expect(verifyRes.status).toBe(true);
+			expect(verifyRes.user.role).toBe('admin');
+			expect(verifyRes.token).toBeTruthy();
 		});
 	});
 });

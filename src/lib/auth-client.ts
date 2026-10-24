@@ -10,6 +10,20 @@ export interface AuthClientExtended {
 		newPassword: string;
 		token: string;
 	}) => Promise<{ error: { message?: string } | null }>;
+	emailOtp: {
+		sendVerificationOtp: (opts: {
+			email: string;
+			type: 'email-verification' | 'sign-in';
+		}) => Promise<{ data?: unknown; error?: { message?: string; code?: string } | null }>;
+		verifyEmail: (opts: { email: string; otp: string }) => Promise<{
+			data?: {
+				status: boolean;
+				token?: string;
+				user?: { id?: string; email?: string; role?: string; onboardingCompleted?: boolean };
+			} | null;
+			error?: { message?: string; code?: string } | null;
+		}>;
+	};
 }
 
 export const authClient = createAuthClient({
@@ -68,5 +82,6 @@ export const {
 	useSession,
 	requestPasswordReset,
 	resetPassword,
-	twoFactor
+	twoFactor,
+	emailOtp
 } = authClient;

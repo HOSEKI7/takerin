@@ -103,9 +103,20 @@
 			"loginLink": "Masuk di sini",
 			"termsNote": "Dengan mendaftar, Anda menyetujui ketentuan layanan dan kebijakan privasi Takerin.",
 			"successTitle": "Akun Berhasil Dibuat!",
-			"successDesc": "Kami telah mengirimkan tautan verifikasi ke alamat email {{email}}. Silakan periksa kotak masuk atau spam Anda untuk mengaktifkan akun.",
+			"successDesc": "Kami telah mengirimkan kode verifikasi OTP ke alamat email {{email}}. Silakan periksa kotak masuk atau spam Anda.",
 			"toLogin": "Ke Halaman Masuk",
-			"startOnboarding": "Mulai Onboarding"
+			"startOnboarding": "Mulai Onboarding",
+			"otpTitle": "Verifikasi Kode OTP",
+			"otpSubtitle": "Masukkan 6 digit kode OTP yang telah dikirim ke {{email}}.",
+			"otpLabel": "Kode OTP",
+			"otpPlaceholder": "6 digit kode OTP",
+			"verifyButton": "Verifikasi & Lanjutkan",
+			"verifying": "Memverifikasi...",
+			"resendCooldown": "Kirim ulang dalam {{seconds}} detik",
+			"resendButton": "Kirim Ulang Kode OTP",
+			"resending": "Mengirim ulang...",
+			"resendSuccess": "Kode OTP baru telah dikirim ke email Anda.",
+			"changeEmail": "Salah memasukkan email? Ubah data pendaftaran"
 		},
 		"forgotPassword": {
 			"title": "Lupa Password?",

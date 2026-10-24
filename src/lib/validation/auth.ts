@@ -107,17 +107,26 @@ export function validateAdminInviteActivationInput(
 	return null;
 }
 
-export function formatAuthError(error?: { message?: string } | string | null): string {
+export function formatAuthError(
+	error?: { message?: string; code?: string } | string | null
+): string {
 	if (!error) return 'Terjadi kesalahan. Silakan coba lagi.';
 	const msg = typeof error === 'string' ? error : error.message || '';
-	const lower = msg.toLowerCase();
+	const code = typeof error === 'string' ? '' : error.code || '';
+	const lower = (msg + ' ' + code).toLowerCase();
 	if (lower.includes('backup')) {
 		return 'Kode cadangan tidak valid atau sudah digunakan.';
 	}
-	if (lower.includes('invalid') && (lower.includes('code') || lower.includes('otp'))) {
+	if (lower.includes('too many attempts') || lower.includes('too_many_attempts')) {
+		return 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat atau minta kode baru.';
+	}
+	if (
+		(lower.includes('invalid') && (lower.includes('code') || lower.includes('otp'))) ||
+		lower.includes('invalid_otp')
+	) {
 		return 'Kode verifikasi salah atau tidak valid.';
 	}
-	if (lower.includes('expired')) {
+	if (lower.includes('expired') || lower.includes('otp_expired')) {
 		return 'Kode verifikasi sudah kedaluwarsa. Silakan minta kode baru.';
 	}
 	if (lower.includes('invalid') && lower.includes('password')) {
@@ -125,9 +134,6 @@ export function formatAuthError(error?: { message?: string } | string | null): s
 	}
 	if (lower.includes('invalid') && lower.includes('cookie')) {
 		return 'Sesi verifikasi dua langkah tidak valid atau kedaluwarsa. Silakan masuk kembali.';
-	}
-	if (lower.includes('too many attempts')) {
-		return 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat atau minta kode baru.';
 	}
 	return 'Terjadi kesalahan saat memproses permintaan Anda.';
 }

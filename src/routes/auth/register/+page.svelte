@@ -6,21 +6,51 @@
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
 	import { t } from '#lib/i18n/index.js';
 	import { authClient } from '#lib/auth-client.js';
-	import { validateRegisterInput } from '#lib/validation/auth.js';
+	import {
+		validateRegisterInput,
+		validateOTPInput,
+		formatAuthError
+	} from '#lib/validation/auth.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
+	let step = $state<'form' | 'otp'>('form');
 	let name = $state('');
 	let email = $state('');
 	let password = $state('');
 	let confirmPassword = $state('');
+	let otp = $state('');
 	let errorMessage = $state('');
-	let isSuccess = $state(false);
+	let successMessage = $state('');
 	let isLoading = $state(false);
+	let isResending = $state(false);
+	let resendCooldown = $state(60);
+
+	let timer: ReturnType<typeof setInterval> | null = null;
+
+	function startCooldown(seconds = 60) {
+		resendCooldown = seconds;
+		if (timer) clearInterval(timer);
+		timer = setInterval(() => {
+			if (resendCooldown > 0) {
+				resendCooldown -= 1;
+			} else {
+				if (timer) clearInterval(timer);
+				timer = null;
+			}
+		}, 1000);
+	}
+
+	$effect(() => {
+		return () => {
+			if (timer) clearInterval(timer);
+		};
+	});
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		errorMessage = '';
+		successMessage = '';
 
 		const validationError = validateRegisterInput({
 			name,
@@ -36,34 +66,100 @@
 
 		isLoading = true;
 		try {
-			const { data, error } = await authClient.signUp.email({
+			const { error } = await authClient.signUp.email({
 				name: name.trim(),
 				email: email.trim(),
 				password
 			});
 
 			if (error) {
-				errorMessage = error.message || 'Gagal mendaftarkan akun. Silakan coba lagi.';
+				errorMessage = formatAuthError(error);
 				isLoading = false;
 				return;
 			}
 
-			if (data) {
-				if ((data as { user?: { role?: string } })?.user?.role === 'admin') {
-					isLoading = false;
-					goto(resolve('/admin'));
-					return;
-				}
-				isSuccess = true;
-				isLoading = false;
-			}
-		} catch (err: unknown) {
-			const message =
-				err instanceof Error
-					? err.message
-					: 'Terjadi kesalahan saat pendaftaran. Silakan coba lagi.';
-			errorMessage = message;
+			step = 'otp';
+			startCooldown(60);
 			isLoading = false;
+		} catch (err: unknown) {
+			errorMessage = formatAuthError(err as { message?: string });
+			isLoading = false;
+		}
+	}
+
+	async function handleVerifyOtp(event: SubmitEvent) {
+		event.preventDefault();
+		errorMessage = '';
+		successMessage = '';
+
+		const otpError = validateOTPInput(otp);
+		if (otpError) {
+			errorMessage = otpError;
+			return;
+		}
+
+		isLoading = true;
+		try {
+			const { data, error } = await authClient.emailOtp.verifyEmail({
+				email: email.trim(),
+				otp: otp.trim()
+			});
+
+			if (error) {
+				errorMessage = formatAuthError(error);
+				isLoading = false;
+				return;
+			}
+
+			if (data?.user?.role === 'admin') {
+				isLoading = false;
+				goto(resolve('/admin'));
+				return;
+			}
+
+			isLoading = false;
+			goto(resolve('/onboarding'));
+		} catch (err: unknown) {
+			errorMessage = formatAuthError(err as { message?: string });
+			isLoading = false;
+		}
+	}
+
+	async function handleResendOtp() {
+		if (resendCooldown > 0 || isResending || isLoading) return;
+		errorMessage = '';
+		successMessage = '';
+		isResending = true;
+
+		try {
+			const { error } = await authClient.emailOtp.sendVerificationOtp({
+				email: email.trim(),
+				type: 'email-verification'
+			});
+
+			if (error) {
+				errorMessage = formatAuthError(error);
+				isResending = false;
+				return;
+			}
+
+			successMessage = t('auth.register.resendSuccess');
+			startCooldown(60);
+			isResending = false;
+		} catch (err: unknown) {
+			errorMessage = formatAuthError(err as { message?: string });
+			isResending = false;
+		}
+	}
+
+	function handleBackToForm() {
+		step = 'form';
+		errorMessage = '';
+		successMessage = '';
+		otp = '';
+		if (timer) {
+			clearInterval(timer);
+			timer = null;
 		}
 	}
 </script>
@@ -79,33 +175,81 @@
 	<main class="flex flex-1 items-center justify-center px-4 py-8 sm:px-6">
 		<div class="w-full max-w-md">
 			<Card variant="default" padding="lg" class="shadow-lg">
-				{#if isSuccess}
-					<div class="space-y-4 text-center">
-						<div
-							class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-linen-mist dark:bg-spruce/60"
-						>
-							<span class="text-2xl">✉️</span>
-						</div>
+				{#if step === 'otp'}
+					<div class="mb-6">
 						<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
-							{t('auth.register.successTitle')}
+							{t('auth.register.otpTitle')}
 						</h1>
-						<p class="text-sm leading-relaxed text-slate dark:text-stone-300">
-							{t('auth.register.successDesc', { email })}
+						<p class="mt-1 text-sm text-slate dark:text-stone-300">
+							{t('auth.register.otpSubtitle', { email })}
 						</p>
-						<div class="flex flex-col gap-3 pt-4 sm:flex-row">
-							<a href={resolve('/auth/login')} class="flex-1">
-								<Button variant="secondary" size="md" class="w-full">
-									{t('auth.register.toLogin')}
-								</Button>
-							</a>
-							<Button
-								variant="primary"
-								size="md"
-								class="flex-1"
-								onclick={() => goto(resolve('/onboarding'))}
-							>
-								{t('auth.register.startOnboarding')}
+					</div>
+
+					{#if errorMessage}
+						<div
+							role="alert"
+							class="mb-6 rounded-lg border border-alarm-red/30 bg-red-50 p-3.5 text-sm font-medium text-alarm-red dark:bg-red-950/30 dark:text-red-300"
+						>
+							{errorMessage}
+						</div>
+					{/if}
+
+					{#if successMessage}
+						<div
+							role="status"
+							class="mb-6 rounded-lg border border-lime-500/30 bg-lime-50 p-3.5 text-sm font-medium text-forest-ink dark:bg-lime-950/30 dark:text-lime-300"
+						>
+							{successMessage}
+						</div>
+					{/if}
+
+					<form onsubmit={handleVerifyOtp} class="space-y-4">
+						<Input
+							id="register-otp"
+							label={t('auth.register.otpLabel')}
+							type="text"
+							inputmode="numeric"
+							maxlength={6}
+							placeholder={t('auth.register.otpPlaceholder')}
+							autocomplete="one-time-code"
+							required
+							bind:value={otp}
+							disabled={isLoading}
+						/>
+
+						<div class="pt-2">
+							<Button type="submit" variant="primary" size="md" class="w-full" disabled={isLoading}>
+								{isLoading ? t('auth.register.verifying') : t('auth.register.verifyButton')}
 							</Button>
+						</div>
+					</form>
+
+					<div class="mt-4 space-y-3">
+						<Button
+							type="button"
+							variant="secondary"
+							size="md"
+							class="w-full"
+							onclick={handleResendOtp}
+							disabled={resendCooldown > 0 || isResending || isLoading}
+						>
+							{#if isResending}
+								{t('auth.register.resending')}
+							{:else if resendCooldown > 0}
+								{t('auth.register.resendCooldown', { seconds: resendCooldown })}
+							{:else}
+								{t('auth.register.resendButton')}
+							{/if}
+						</Button>
+
+						<div class="text-center">
+							<button
+								type="button"
+								class="text-xs font-medium text-slate transition-colors hover:text-forest-ink hover:underline dark:text-stone-400 dark:hover:text-lime-voltage"
+								onclick={handleBackToForm}
+							>
+								{t('auth.register.changeEmail')}
+							</button>
 						</div>
 					</div>
 				{:else}

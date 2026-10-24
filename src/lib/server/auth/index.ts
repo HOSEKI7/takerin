@@ -107,6 +107,9 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 				}
 			}),
 			emailOTP({
+				overrideDefaultEmailVerification: true,
+				expiresIn: 300,
+				allowedAttempts: 5,
 				async sendVerificationOTP({ email, otp, type }) {
 					if (emailService.sendOTPEmail) {
 						await emailService.sendOTPEmail({
@@ -134,13 +137,11 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 		},
 		emailVerification: {
 			sendOnSignUp: true,
-			autoSignInAfterVerification: true,
-			sendVerificationEmail: async ({ user, url, token }) => {
-				await emailService.sendVerificationEmail({ to: user.email, url, token });
-			}
+			autoSignInAfterVerification: true
 		},
 		emailAndPassword: {
 			enabled: true,
+			autoSignIn: false,
 			sendResetPassword: async ({ user, url, token }) => {
 				await emailService.sendResetPasswordEmail({ to: user.email, url, token });
 			}

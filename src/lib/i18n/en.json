@@ -103,9 +103,20 @@
 			"loginLink": "Sign in here",
 			"termsNote": "By creating an account, you agree to Takerin's terms of service and privacy policy.",
 			"successTitle": "Account Successfully Created!",
-			"successDesc": "We have sent a verification link to {{email}}. Please check your inbox or spam folder to activate your account.",
+			"successDesc": "We have sent a verification OTP code to {{email}}. Please check your inbox or spam folder.",
 			"toLogin": "Go to Sign In",
-			"startOnboarding": "Start Onboarding"
+			"startOnboarding": "Start Onboarding",
+			"otpTitle": "Verify OTP Code",
+			"otpSubtitle": "Enter the 6-digit OTP code sent to {{email}}.",
+			"otpLabel": "OTP Code",
+			"otpPlaceholder": "6-digit OTP code",
+			"verifyButton": "Verify & Continue",
+			"verifying": "Verifying...",
+			"resendCooldown": "Resend in {{seconds}}s",
+			"resendButton": "Resend OTP Code",
+			"resending": "Resending...",
+			"resendSuccess": "A new OTP code has been sent to your email.",
+			"changeEmail": "Mistyped email? Edit registration details"
 		},
 		"forgotPassword": {
 			"title": "Forgot Password?",

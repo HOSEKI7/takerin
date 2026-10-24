@@ -131,7 +131,7 @@ describe('Email Service (Resend)', () => {
 		expect(callArg.text).toContain('123456');
 	});
 
-	it('formats OTP email for email verification and password reset', async () => {
+	it('formats OTP email for email verification and password reset with 5-minute notice', async () => {
 		const mockSend = vi.fn().mockResolvedValue({ data: { id: 'msg_otp_456' }, error: null });
 		const mockResend: NonNullable<EmailServiceConfig['resendClient']> = {
 			emails: {
@@ -151,6 +151,7 @@ describe('Email Service (Resend)', () => {
 		expect(verifyRes.success).toBe(true);
 		expect(mockSend.mock.calls[0][0].subject).toContain('Verifikasi Email');
 		expect(mockSend.mock.calls[0][0].html).toContain('654321');
+		expect(mockSend.mock.calls[0][0].text).toContain('5 menit');
 
 		const resetRes = await service.sendOTPEmail({
 			to: 'user@example.com',
@@ -160,6 +161,7 @@ describe('Email Service (Resend)', () => {
 		expect(resetRes.success).toBe(true);
 		expect(mockSend.mock.calls[1][0].subject).toContain('Reset Password');
 		expect(mockSend.mock.calls[1][0].html).toContain('987654');
+		expect(mockSend.mock.calls[1][0].text).toContain('5 menit');
 	});
 
 	it('formats admin invitation email with 48-hour expiration notice and sends via Resend', async () => {

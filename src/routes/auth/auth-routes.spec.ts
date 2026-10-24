@@ -6,7 +6,8 @@ import {
 	signOut,
 	requestPasswordReset,
 	resetPassword,
-	twoFactor
+	twoFactor,
+	emailOtp
 } from '#lib/auth-client.js';
 import {
 	validateRegisterInput,
@@ -25,6 +26,10 @@ import {
 import * as adminDb from '#lib/server/db/admin.js';
 import * as authServer from '#lib/server/auth/index.js';
 import * as dbModule from '#lib/server/db/index.js';
+import RegisterPage from './register/+page.svelte';
+import { render } from 'svelte/server';
+import idDict from '#lib/i18n/id.json';
+import enDict from '#lib/i18n/en.json';
 
 describe('Auth Client & Route Interfaces', () => {
 	it('exports working client methods from auth-client', () => {
@@ -40,6 +45,9 @@ describe('Auth Client & Route Interfaces', () => {
 		expect(typeof twoFactor.sendOtp).toBe('function');
 		expect(typeof twoFactor.verifyOtp).toBe('function');
 		expect(typeof twoFactor.verifyBackupCode).toBe('function');
+		expect(emailOtp).toBeDefined();
+		expect(typeof emailOtp.sendVerificationOtp).toBe('function');
+		expect(typeof emailOtp.verifyEmail).toBe('function');
 	});
 
 	it('validates registration input requirements', () => {
@@ -149,8 +157,20 @@ describe('Auth Client & Route Interfaces', () => {
 		expect(formatAuthError({ message: 'Invalid code' })).toBe(
 			'Kode verifikasi salah atau tidak valid.'
 		);
+		expect(formatAuthError({ code: 'INVALID_OTP' })).toBe(
+			'Kode verifikasi salah atau tidak valid.'
+		);
 		expect(formatAuthError({ message: 'OTP has expired' })).toBe(
 			'Kode verifikasi sudah kedaluwarsa. Silakan minta kode baru.'
+		);
+		expect(formatAuthError({ code: 'OTP_EXPIRED' })).toBe(
+			'Kode verifikasi sudah kedaluwarsa. Silakan minta kode baru.'
+		);
+		expect(formatAuthError({ code: 'TOO_MANY_ATTEMPTS' })).toBe(
+			'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat atau minta kode baru.'
+		);
+		expect(formatAuthError({ message: 'Too many attempts' })).toBe(
+			'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat atau minta kode baru.'
 		);
 		expect(formatAuthError({ message: 'Invalid password' })).toBe(
 			'Password yang Anda masukkan salah.'
@@ -196,6 +216,34 @@ describe('Auth Client & Route Interfaces', () => {
 				confirmPassword: 'password123'
 			})
 		).toBeNull();
+	});
+
+	describe('Register Page Multi-step OTP Flow (Issue #33)', () => {
+		it('defines required registration OTP translation keys in id.json and en.json', () => {
+			const idRegister = idDict.auth.register as Record<string, string>;
+			const enRegister = enDict.auth.register as Record<string, string>;
+
+			expect(idRegister.otpTitle).toBe('Verifikasi Kode OTP');
+			expect(idRegister.otpLabel).toBe('Kode OTP');
+			expect(idRegister.verifyButton).toBe('Verifikasi & Lanjutkan');
+			expect(idRegister.resendButton).toBe('Kirim Ulang Kode OTP');
+			expect(idRegister.changeEmail).toBeDefined();
+
+			expect(enRegister.otpTitle).toBe('Verify OTP Code');
+			expect(enRegister.otpLabel).toBe('OTP Code');
+			expect(enRegister.verifyButton).toBe('Verify & Continue');
+			expect(enRegister.resendButton).toBe('Resend OTP Code');
+			expect(enRegister.changeEmail).toBeDefined();
+		});
+
+		it('renders RegisterPage in initial form step', () => {
+			const { html } = render(RegisterPage);
+			expect(html).toContain('Daftar Akun Takerin');
+			expect(html).toContain('register-name');
+			expect(html).toContain('register-email');
+			expect(html).toContain('register-password');
+			expect(html).toContain('register-confirm-password');
+		});
 	});
 });
 
