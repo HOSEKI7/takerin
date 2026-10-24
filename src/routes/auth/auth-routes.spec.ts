@@ -13,7 +13,6 @@ import {
 	validateRegisterInput,
 	validateLoginInput,
 	validateForgotPasswordInput,
-	validateResetPasswordInput,
 	validateResetPasswordWithOTPInput,
 	validateOTPInput,
 	validateBackupCodeInput,
@@ -112,40 +111,6 @@ describe('Auth Client & Route Interfaces', () => {
 		expect(validateForgotPasswordInput({ email: 'user@example.com' })).toBeNull();
 	});
 
-	it('validates password reset token requirement', () => {
-		expect(
-			validateResetPasswordInput({
-				token: null,
-				password: 'newPassword123',
-				confirmPassword: 'newPassword123'
-			})
-		).toBe('Token reset password tidak valid atau tidak ditemukan.');
-
-		expect(
-			validateResetPasswordInput({
-				token: 'valid-token',
-				password: 'short',
-				confirmPassword: 'short'
-			})
-		).toBe('Password baru minimal terdiri dari 8 karakter.');
-
-		expect(
-			validateResetPasswordInput({
-				token: 'valid-token',
-				password: 'validpass1',
-				confirmPassword: 'validpass2'
-			})
-		).toBe('Konfirmasi password baru tidak cocok.');
-
-		expect(
-			validateResetPasswordInput({
-				token: 'valid-token',
-				password: 'validpass1',
-				confirmPassword: 'validpass1'
-			})
-		).toBeNull();
-	});
-
 	it('validates unified password reset with OTP inputs', () => {
 		expect(
 			validateResetPasswordWithOTPInput({
@@ -181,7 +146,7 @@ describe('Auth Client & Route Interfaces', () => {
 				password: 'short',
 				confirmPassword: 'short'
 			})
-		).toBe('Password baru minimal terdiri dari 8 karakter.');
+		).toBe('Kata sandi baru minimal terdiri dari 8 karakter.');
 
 		expect(
 			validateResetPasswordWithOTPInput({
@@ -190,7 +155,7 @@ describe('Auth Client & Route Interfaces', () => {
 				password: 'newPassword123',
 				confirmPassword: 'differentPassword123'
 			})
-		).toBe('Konfirmasi password baru tidak cocok.');
+		).toBe('Konfirmasi kata sandi baru tidak cocok.');
 
 		expect(
 			validateResetPasswordWithOTPInput({

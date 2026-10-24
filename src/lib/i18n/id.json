@@ -127,8 +127,6 @@
 			"submitButton": "Kirim Kode OTP",
 			"submitting": "Mengirim...",
 			"backToLogin": "← Kembali ke Halaman Masuk",
-			"checkEmailTitle": "Periksa Email Anda",
-			"checkEmailDesc": "Jika email {{email}} terdaftar di Takerin, tautan untuk mereset password telah dikirim ke email tersebut.",
 			"rememberPassword": "Ingat kata sandi Anda?",
 			"loginAgain": "Masuk di sini",
 			"resetTitle": "Atur Ulang Kata Sandi",
@@ -148,21 +146,7 @@
 			"changeEmail": "Salah memasukkan email? Ubah email"
 		},
 		"resetPassword": {
-			"redirecting": "Mengalihkan ke halaman lupa kata sandi...",
-			"invalidTitle": "Tautan Tidak Valid",
-			"invalidDesc": "Tautan reset password ini tidak valid atau token tidak ditemukan di parameter URL.",
-			"requestNewLink": "Minta Tautan Baru",
-			"successTitle": "Password Berhasil Diubah!",
-			"successDesc": "Password akun Takerin Anda telah berhasil diperbarui. Silakan masuk menggunakan password baru Anda.",
-			"loginNow": "Masuk Sekarang",
-			"title": "Buat Password Baru",
-			"subtitle": "Masukkan password baru untuk akun Takerin Anda.",
-			"passwordLabel": "Password Baru",
-			"passwordPlaceholder": "Minimal 8 karakter",
-			"confirmPasswordLabel": "Konfirmasi Password Baru",
-			"confirmPasswordPlaceholder": "Ulangi password baru",
-			"submitButton": "Simpan Password Baru",
-			"submitting": "Memperbarui..."
+			"redirecting": "Mengalihkan ke halaman lupa kata sandi..."
 		},
 		"twoFactor": {
 			"otpTitle": "Verifikasi Email OTP",

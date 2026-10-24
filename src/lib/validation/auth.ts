@@ -63,29 +63,10 @@ export function validateResetPasswordWithOTPInput(input: ResetPasswordWithOTPInp
 		return otpError;
 	}
 	if (!input.password || input.password.length < 8) {
-		return 'Password baru minimal terdiri dari 8 karakter.';
+		return 'Kata sandi baru minimal terdiri dari 8 karakter.';
 	}
 	if (input.password !== input.confirmPassword) {
-		return 'Konfirmasi password baru tidak cocok.';
-	}
-	return null;
-}
-
-export interface ResetPasswordInput {
-	token?: string | null;
-	password?: string;
-	confirmPassword?: string;
-}
-
-export function validateResetPasswordInput(input: ResetPasswordInput): string | null {
-	if (!input.token) {
-		return 'Token reset password tidak valid atau tidak ditemukan.';
-	}
-	if (!input.password || input.password.length < 8) {
-		return 'Password baru minimal terdiri dari 8 karakter.';
-	}
-	if (input.password !== input.confirmPassword) {
-		return 'Konfirmasi password baru tidak cocok.';
+		return 'Konfirmasi kata sandi baru tidak cocok.';
 	}
 	return null;
 }

@@ -127,8 +127,6 @@
 			"submitButton": "Send OTP Code",
 			"submitting": "Sending...",
 			"backToLogin": "← Back to Sign In",
-			"checkEmailTitle": "Check Your Email",
-			"checkEmailDesc": "If {{email}} is registered with Takerin, a password reset link has been sent to that address.",
 			"rememberPassword": "Remember your password?",
 			"loginAgain": "Sign in here",
 			"resetTitle": "Reset Password",
@@ -148,21 +146,7 @@
 			"changeEmail": "Mistyped email? Change email"
 		},
 		"resetPassword": {
-			"redirecting": "Redirecting to forgot password page...",
-			"invalidTitle": "Invalid Link",
-			"invalidDesc": "This password reset link is invalid or the token was not found in URL parameters.",
-			"requestNewLink": "Request New Link",
-			"successTitle": "Password Changed Successfully!",
-			"successDesc": "Your Takerin account password has been updated. Please sign in with your new password.",
-			"loginNow": "Sign In Now",
-			"title": "Create New Password",
-			"subtitle": "Enter a new password for your Takerin account.",
-			"passwordLabel": "New Password",
-			"passwordPlaceholder": "Minimum 8 characters",
-			"confirmPasswordLabel": "Confirm New Password",
-			"confirmPasswordPlaceholder": "Repeat new password",
-			"submitButton": "Save New Password",
-			"submitting": "Updating..."
+			"redirecting": "Redirecting to forgot password page..."
 		},
 		"twoFactor": {
 			"otpTitle": "Email OTP Verification",
