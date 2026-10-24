@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import idDict from '../i18n/id.json';
 import enDict from '../i18n/en.json';
-import DesktopSidebar from './DesktopSidebar.svelte';
-import { isRouteActive } from '../navigation/route.js';
+import DesktopSidebar, { isRouteActive } from './DesktopSidebar.svelte';
 import { render } from 'svelte/server';
 
 describe('DesktopSidebar Component & Navigation Seam (Issue #27)', () => {

@@ -1,9 +1,13 @@
+<script module lang="ts">
+	import { isRouteActive as _isRouteActive } from '#lib/navigation/route.js';
+	export const isRouteActive = _isRouteActive;
+</script>
+
 <script lang="ts">
 	import type { ComponentProps } from 'svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { isRouteActive } from '#lib/navigation/route.js';
 	import BrandLogo from './BrandLogo.svelte';
 	import ThemeToggle from './ThemeToggle.svelte';
 	import Button from './Button.svelte';
@@ -128,14 +132,15 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#snippet tooltip(text: string)}
-	{#if !activeTooltipDismissed}
-		<div
-			role="tooltip"
-			class="pointer-events-none absolute left-full z-50 ml-3 rounded-md bg-charcoal px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-paper opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:bg-paper dark:text-charcoal"
-		>
-			{text}
-		</div>
-	{/if}
+	<div
+		role="tooltip"
+		aria-hidden={activeTooltipDismissed ? 'true' : undefined}
+		class="pointer-events-none absolute left-full z-50 ml-3 rounded-md bg-charcoal px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-paper shadow-md transition-opacity dark:bg-paper dark:text-charcoal {activeTooltipDismissed
+			? 'opacity-0'
+			: 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'}"
+	>
+		{text}
+	</div>
 {/snippet}
 
 {#snippet userAvatar()}

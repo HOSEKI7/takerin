@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { render } from 'svelte/server';
-import DesktopSidebar from './DesktopSidebar.svelte';
+import fs from 'node:fs';
+import path from 'node:path';
+import DesktopSidebar, { isRouteActive } from './DesktopSidebar.svelte';
 import MobileNav from './MobileNav.svelte';
 import AdminDesktopSidebar from './AdminDesktopSidebar.svelte';
 import AdminMobileNav from './AdminMobileNav.svelte';
@@ -20,16 +22,19 @@ describe('Layout Integration & Accessibility Verification (Issue #31)', () => {
 	};
 
 	describe('ARIA Landmarks and Semantic Attributes', () => {
-		it('renders explicit accessible labels for navigation landmarks in user app', () => {
+		it('provides navigation landmark semantics (implicit role="navigation") with accessible labels', () => {
 			const { html: desktopHtml } = render(DesktopSidebar, {
 				props: { user: mockUser, isCollapsed: false, currentPath: '/dashboard' }
 			});
+			// Standard HTML5 <nav> element implicitly possesses the role="navigation" landmark
+			expect(desktopHtml).toContain('<nav');
 			expect(desktopHtml).toContain('aria-label="Navigasi Desktop Sidebar"');
 			expect(desktopHtml).toContain('aria-label="Menu Utama dan Preferensi"');
 
 			const { html: mobileHtml } = render(MobileNav, {
 				props: { user: mockUser, isOpen: true, currentPath: '/dashboard' }
 			});
+			expect(mobileHtml).toContain('<nav');
 			expect(mobileHtml).toContain('aria-label="Menu Utama dan Preferensi Mobile"');
 			expect(mobileHtml).toContain('aria-label="Navigasi Mobile"');
 		});
@@ -38,12 +43,14 @@ describe('Layout Integration & Accessibility Verification (Issue #31)', () => {
 			const { html: adminDesktopHtml } = render(AdminDesktopSidebar, {
 				props: { user: mockAdmin, isCollapsed: false, currentPath: '/admin' }
 			});
+			expect(adminDesktopHtml).toContain('<nav');
 			expect(adminDesktopHtml).toContain('aria-label="Navigasi Admin Desktop Sidebar"');
 			expect(adminDesktopHtml).toContain('aria-label="Menu Konsol Administrator"');
 
 			const { html: adminMobileHtml } = render(AdminMobileNav, {
 				props: { user: mockAdmin, isOpen: true, currentPath: '/admin' }
 			});
+			expect(adminMobileHtml).toContain('<nav');
 			expect(adminMobileHtml).toContain('aria-label="Menu Konsol Administrator Mobile"');
 			expect(adminMobileHtml).toContain('aria-label="Navigasi Admin"');
 		});
@@ -52,6 +59,7 @@ describe('Layout Integration & Accessibility Verification (Issue #31)', () => {
 			const { html } = render(ContentHeader, {
 				props: { currentPath: '/expenses/new' }
 			});
+			expect(html).toContain('<nav');
 			expect(html).toContain('aria-label="Rekam jejak"');
 			expect(html).toContain('aria-current="page"');
 		});
@@ -161,6 +169,47 @@ describe('Layout Integration & Accessibility Verification (Issue #31)', () => {
 			});
 			expect(collapsedAdminSidebar).toContain('group-focus-visible:opacity-100');
 			expect(collapsedAdminSidebar).toContain('role="tooltip"');
+		});
+
+		it('preserves DesktopSidebar module export for isRouteActive helper', () => {
+			expect(typeof isRouteActive).toBe('function');
+			expect(isRouteActive('/dashboard', '/dashboard', true)).toBe(true);
+			expect(isRouteActive('/expenses/new', '/expenses', false)).toBe(true);
+		});
+	});
+
+	describe('Layout Shells and Responsive Breakpoints', () => {
+		it('verifies (app)/+layout.svelte shell responds to sidebar collapse state', () => {
+			const appLayoutContent = fs.readFileSync(
+				path.resolve(process.cwd(), 'src/routes/(app)/+layout.svelte'),
+				'utf-8'
+			);
+
+			// Checks dynamic padding classes
+			expect(appLayoutContent).toContain('DesktopSidebar');
+			expect(appLayoutContent).toContain('MobileNav');
+			expect(appLayoutContent).toContain('ContentHeader');
+			expect(appLayoutContent).toContain('isSidebarCollapsed');
+			expect(appLayoutContent).toContain('lg:pl-[72px]');
+			expect(appLayoutContent).toContain('lg:pl-64');
+		});
+
+		it('verifies admin/+layout.svelte shell responds to sidebar collapse state with strict isolation', () => {
+			const adminLayoutContent = fs.readFileSync(
+				path.resolve(process.cwd(), 'src/routes/admin/+layout.svelte'),
+				'utf-8'
+			);
+
+			// Checks dynamic padding classes and components
+			expect(adminLayoutContent).toContain('AdminDesktopSidebar');
+			expect(adminLayoutContent).toContain('AdminMobileNav');
+			expect(adminLayoutContent).toContain('isSidebarCollapsed');
+			expect(adminLayoutContent).toContain('lg:pl-[72px]');
+			expect(adminLayoutContent).toContain('lg:pl-64');
+
+			// Strict isolation
+			expect(adminLayoutContent).not.toContain('href="/dashboard"');
+			expect(adminLayoutContent).not.toContain('href="/(app)/dashboard"');
 		});
 	});
 
