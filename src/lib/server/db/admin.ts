@@ -461,3 +461,43 @@ export async function getSystemHealth(d1: D1Database): Promise<SystemHealthData>
 		databaseLatencyMs
 	};
 }
+
+export interface PurgeAdminDataResult {
+	success: boolean;
+	purgedAdminsCount: number;
+}
+
+/**
+ * Purges budget and financial data (monthly_period, category, expense, income_source, user_settings)
+ * belonging to admin accounts to maintain system analytics integrity.
+ */
+export async function purgeAdminBudgetData(d1: D1Database): Promise<PurgeAdminDataResult> {
+	const db = getDb(d1);
+	const adminUsers = await db
+		.select({ id: schema.user.id })
+		.from(schema.user)
+		.where(eq(schema.user.role, 'admin'));
+	const adminIds = adminUsers.map((u) => u.id);
+
+	if (adminIds.length === 0) {
+		return { success: true, purgedAdminsCount: 0 };
+	}
+
+	const batchStatements = [];
+	for (const id of adminIds) {
+		batchStatements.push(
+			d1.prepare('DELETE FROM expense WHERE user_id = ?').bind(id),
+			d1.prepare('DELETE FROM category WHERE user_id = ?').bind(id),
+			d1.prepare('DELETE FROM monthly_period WHERE user_id = ?').bind(id),
+			d1.prepare('DELETE FROM income_source WHERE user_id = ?').bind(id),
+			d1.prepare('DELETE FROM user_settings WHERE user_id = ?').bind(id)
+		);
+	}
+
+	await d1.batch(batchStatements);
+
+	return {
+		success: true,
+		purgedAdminsCount: adminIds.length
+	};
+}

@@ -443,6 +443,107 @@ describe('Server Hooks & Route Protection', () => {
 		expect(mockResolve).not.toHaveBeenCalled();
 	});
 
+	it('redirects admin users targeting regular user routes (/dashboard, /expenses, /categories, /history, /onboarding) to /admin with 303', async () => {
+		const adminUser = {
+			id: 'admin_1',
+			name: 'Admin User',
+			email: 'admin@example.com',
+			role: 'admin',
+			emailVerified: true,
+			onboardingCompleted: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: adminUser,
+			session: { id: 'sess_admin', userId: 'admin_1' }
+		});
+
+		const userPaths = ['/dashboard', '/expenses', '/categories', '/history', '/onboarding'];
+
+		for (const path of userPaths) {
+			const mockEvent = {
+				url: new URL(`http://localhost:5173${path}`),
+				request: new Request(`http://localhost:5173${path}`),
+				platform: { env: { DB: {} as unknown as D1Database } },
+				locals: {} as App.Locals
+			} as unknown as RequestEvent;
+
+			const mockResolve = vi.fn().mockResolvedValue(new Response('User Route'));
+
+			await expect(handle({ event: mockEvent, resolve: mockResolve })).rejects.toMatchObject({
+				status: 303,
+				location: '/admin'
+			});
+			expect(mockResolve).not.toHaveBeenCalled();
+		}
+	});
+
+	it('bypasses onboarding check for admin users even if onboardingCompleted is false', async () => {
+		const adminWithoutOnboarding = {
+			id: 'admin_no_ob',
+			name: 'New Admin',
+			email: 'newadmin@example.com',
+			role: 'admin',
+			emailVerified: true,
+			onboardingCompleted: false,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: adminWithoutOnboarding,
+			session: { id: 'sess_no_ob', userId: 'admin_no_ob' }
+		});
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/admin'),
+			request: new Request('http://localhost:5173/admin'),
+			platform: { env: { DB: {} as unknown as D1Database } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('Admin content'));
+
+		const response = await handle({ event: mockEvent, resolve: mockResolve });
+		expect(response.status).toBe(200);
+		expect(mockResolve).toHaveBeenCalled();
+	});
+
+	it('does not call ensureActivePeriod for admin users', async () => {
+		const adminUser = {
+			id: 'admin_active',
+			name: 'Admin Active',
+			email: 'admin_active@example.com',
+			role: 'admin',
+			emailVerified: true,
+			onboardingCompleted: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: adminUser,
+			session: { id: 'sess_admin_active', userId: 'admin_active' }
+		});
+
+		const mockDb = { prepare: vi.fn() } as unknown as D1Database;
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/admin'),
+			request: new Request('http://localhost:5173/admin'),
+			platform: { env: { DB: mockDb } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('Admin content'));
+
+		const response = await handle({ event: mockEvent, resolve: mockResolve });
+		expect(response.status).toBe(200);
+		expect(mockEnsureActivePeriod).not.toHaveBeenCalled();
+	});
+
 	it('populates event.platform and event.platform.env when platform is undefined', async () => {
 		mockGetSession.mockResolvedValue(null);
 

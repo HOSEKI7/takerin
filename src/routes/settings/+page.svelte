@@ -307,14 +307,6 @@
 				>
 					{t('nav.history')}
 				</a>
-				{#if data.user?.role === 'admin'}
-					<a
-						href={resolve('/admin')}
-						class="rounded-full bg-forest-ink/10 px-2.5 py-1 text-xs font-bold text-forest-ink transition hover:bg-forest-ink/20 dark:bg-lime-voltage/20 dark:text-lime-voltage"
-					>
-						{t('nav.admin')}
-					</a>
-				{/if}
 				<ThemeToggle />
 				<Button variant="secondary" size="sm" onclick={handleLogout} disabled={isLoggingOut}>
 					{isLoggingOut ? t('nav.loggingOut') : t('nav.logout')}
@@ -356,7 +348,9 @@
 		<div class="space-y-8">
 			<!-- SECTION 1: PROFIL PENGGUNA -->
 			<Card variant="default" padding="lg">
-				<h2 class="text-lg font-bold text-obsidian dark:text-paper">{t('settings.profileSection')}</h2>
+				<h2 class="text-lg font-bold text-obsidian dark:text-paper">
+					{t('settings.profileSection')}
+				</h2>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
 					{t('settings.profileSaved')}
 				</p>
@@ -420,7 +414,9 @@
 
 			<!-- SECTION 2: KEAMANAN & KATA SANDI -->
 			<Card variant="default" padding="lg">
-				<h2 class="text-lg font-bold text-obsidian dark:text-paper">{t('settings.securitySection')}</h2>
+				<h2 class="text-lg font-bold text-obsidian dark:text-paper">
+					{t('settings.securitySection')}
+				</h2>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
 					{t('settings.subtitle')}
 				</p>
@@ -430,7 +426,9 @@
 					<div
 						class="border-b border-fog pb-6 lg:border-r lg:border-b-0 lg:pr-6 dark:border-dark-border"
 					>
-						<h3 class="text-sm font-bold text-obsidian dark:text-paper">{t('settings.changePassword')}</h3>
+						<h3 class="text-sm font-bold text-obsidian dark:text-paper">
+							{t('settings.changePassword')}
+						</h3>
 
 						{#if passwordSuccess}
 							<div
@@ -496,7 +494,9 @@
 									? 'bg-linen-mist text-forest-ink dark:bg-spruce dark:text-lime-voltage'
 									: 'bg-fog text-slate dark:bg-dark-border dark:text-pebble'}"
 							>
-								{twoFactorEnabled ? t('settings.twoFactorEnabledBadge') : t('settings.twoFactorDisabledBadge')}
+								{twoFactorEnabled
+									? t('settings.twoFactorEnabledBadge')
+									: t('settings.twoFactorDisabledBadge')}
 							</span>
 						</div>
 
@@ -600,7 +600,9 @@
 										onsubmit={handleDisable2FA}
 										class="space-y-3 rounded-lg border border-alarm-red/30 bg-paper p-4 dark:border-alarm-red/40 dark:bg-dark-surface"
 									>
-										<p class="text-xs font-semibold text-alarm-red">{t('settings.disableTwoFactor')}</p>
+										<p class="text-xs font-semibold text-alarm-red">
+											{t('settings.disableTwoFactor')}
+										</p>
 										<Input
 											id="disable-2fa-pwd"
 											label={t('auth.login.passwordLabel')}
@@ -646,7 +648,9 @@
 										/>
 										<div class="flex items-center gap-2 pt-1">
 											<Button type="submit" variant="primary" size="sm" disabled={twoFactorLoading}>
-												{twoFactorLoading ? t('common.processing') : t('settings.generateBackupCodes')}
+												{twoFactorLoading
+													? t('common.processing')
+													: t('settings.generateBackupCodes')}
 											</Button>
 											<Button
 												type="button"
@@ -821,14 +825,18 @@
 					</div>
 
 					<div class="flex justify-end pt-2">
-						<Button type="submit" variant="primary" size="sm">{t('settings.savePreferences')}</Button>
+						<Button type="submit" variant="primary" size="sm"
+							>{t('settings.savePreferences')}</Button
+						>
 					</div>
 				</form>
 			</Card>
 
 			<!-- SECTION 4: EKSPOR DATA -->
 			<Card variant="default" padding="lg">
-				<h2 class="text-lg font-bold text-obsidian dark:text-paper">{t('settings.exportSection')}</h2>
+				<h2 class="text-lg font-bold text-obsidian dark:text-paper">
+					{t('settings.exportSection')}
+				</h2>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
 					{t('settings.exportDesc')}
 				</p>
@@ -894,8 +902,9 @@
 								>
 									{#each data.periods as p (p.id)}
 										<option value={p.id}>
-											{formatDateIndonesian(p.startDate)} {t('common.to')} {formatDateIndonesian(p.endDate)} ({p.status ===
-											'active'
+											{formatDateIndonesian(p.startDate)}
+											{t('common.to')}
+											{formatDateIndonesian(p.endDate)} ({p.status === 'active'
 												? t('history.periodActive')
 												: t('history.periodCompleted')})
 										</option>

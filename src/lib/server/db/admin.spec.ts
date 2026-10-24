@@ -1,7 +1,17 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
+import { eq } from 'drizzle-orm';
 import { getDb } from './index.js';
-import { user, session, monthlyPeriod, category, expense, healthCheck } from './schema.js';
+import {
+	user,
+	session,
+	monthlyPeriod,
+	category,
+	expense,
+	incomeSource,
+	userSettings,
+	healthCheck
+} from './schema.js';
 import {
 	getAdminAnalytics,
 	getAdminUsers,
@@ -9,7 +19,8 @@ import {
 	createCategoryTemplate,
 	updateCategoryTemplate,
 	deleteCategoryTemplate,
-	getSystemHealth
+	getSystemHealth,
+	purgeAdminBudgetData
 } from './admin.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -341,6 +352,177 @@ describe('Admin D1 Database Operations (Seam 2)', () => {
 			expect(health.aiCallsCount).toBeGreaterThanOrEqual(1);
 			expect(health.resendUsageLink).toContain('https://resend.com');
 			expect(health.databaseStatus).toBe('healthy');
+		});
+	});
+
+	describe('purgeAdminBudgetData', () => {
+		it('purges budget data (period, category, expense, incomeSource, userSettings) for all admin accounts without touching regular users', async () => {
+			const now = new Date();
+
+			// 1. Seed admin user
+			const adminId = 'admin-purge-all';
+			await db.insert(user).values({
+				id: adminId,
+				name: 'Purge Admin',
+				email: 'purge-admin@example.com',
+				role: 'admin',
+				createdAt: now,
+				updatedAt: now,
+				onboardingCompleted: true
+			});
+
+			// 2. Seed regular user
+			const regularId = 'user-keep-data';
+			await db.insert(user).values({
+				id: regularId,
+				name: 'Keep User',
+				email: 'keep-user@example.com',
+				role: 'user',
+				createdAt: now,
+				updatedAt: now,
+				onboardingCompleted: true
+			});
+
+			// 3. Seed budget data for admin
+			await db.insert(userSettings).values({
+				id: 's-admin',
+				userId: adminId,
+				payDay: 25,
+				createdAt: now,
+				updatedAt: now
+			});
+			await db.insert(incomeSource).values({
+				id: 'inc-admin',
+				userId: adminId,
+				name: 'Gaji Admin',
+				amount: 10000000,
+				createdAt: now,
+				updatedAt: now
+			});
+			await db.insert(monthlyPeriod).values({
+				id: 'period-admin',
+				userId: adminId,
+				startDate: '2026-10-01',
+				endDate: '2026-10-31',
+				payDay: 25,
+				totalIncome: 10000000,
+				createdAt: now
+			});
+			await db.insert(category).values({
+				id: 'cat-admin',
+				userId: adminId,
+				periodId: 'period-admin',
+				name: 'Admin Cat',
+				percentage: 50,
+				createdAt: now,
+				updatedAt: now
+			});
+			await db.insert(expense).values({
+				id: 'exp-admin',
+				userId: adminId,
+				periodId: 'period-admin',
+				categoryId: 'cat-admin',
+				name: 'Admin Expense',
+				amount: 50000,
+				date: '2026-10-10',
+				createdAt: now,
+				updatedAt: now
+			});
+
+			// 4. Seed budget data for regular user
+			await db.insert(userSettings).values({
+				id: 's-user',
+				userId: regularId,
+				payDay: 25,
+				createdAt: now,
+				updatedAt: now
+			});
+			await db.insert(incomeSource).values({
+				id: 'inc-user',
+				userId: regularId,
+				name: 'Gaji User',
+				amount: 5000000,
+				createdAt: now,
+				updatedAt: now
+			});
+			await db.insert(monthlyPeriod).values({
+				id: 'period-user',
+				userId: regularId,
+				startDate: '2026-10-01',
+				endDate: '2026-10-31',
+				payDay: 25,
+				totalIncome: 5000000,
+				createdAt: now
+			});
+			await db.insert(category).values({
+				id: 'cat-user',
+				userId: regularId,
+				periodId: 'period-user',
+				name: 'User Cat',
+				percentage: 50,
+				createdAt: now,
+				updatedAt: now
+			});
+			await db.insert(expense).values({
+				id: 'exp-user',
+				userId: regularId,
+				periodId: 'period-user',
+				categoryId: 'cat-user',
+				name: 'User Expense',
+				amount: 25000,
+				date: '2026-10-10',
+				createdAt: now,
+				updatedAt: now
+			});
+
+			// 5. Purge admin data
+			const result = await purgeAdminBudgetData(proxy.env.DB);
+			expect(result.success).toBe(true);
+			expect(result.purgedAdminsCount).toBeGreaterThanOrEqual(1);
+
+			// 6. Assert admin budget records are purged
+			const adminExpenses = await db.select().from(expense).where(eq(expense.userId, adminId));
+			const adminCategories = await db.select().from(category).where(eq(category.userId, adminId));
+			const adminPeriods = await db
+				.select()
+				.from(monthlyPeriod)
+				.where(eq(monthlyPeriod.userId, adminId));
+			const adminIncomes = await db
+				.select()
+				.from(incomeSource)
+				.where(eq(incomeSource.userId, adminId));
+			const adminSettings = await db
+				.select()
+				.from(userSettings)
+				.where(eq(userSettings.userId, adminId));
+
+			expect(adminExpenses).toHaveLength(0);
+			expect(adminCategories).toHaveLength(0);
+			expect(adminPeriods).toHaveLength(0);
+			expect(adminIncomes).toHaveLength(0);
+			expect(adminSettings).toHaveLength(0);
+
+			// 7. Assert regular user budget records are untouched
+			const userExpenses = await db.select().from(expense).where(eq(expense.userId, regularId));
+			const userCategories = await db.select().from(category).where(eq(category.userId, regularId));
+			const userPeriods = await db
+				.select()
+				.from(monthlyPeriod)
+				.where(eq(monthlyPeriod.userId, regularId));
+			const userIncomes = await db
+				.select()
+				.from(incomeSource)
+				.where(eq(incomeSource.userId, regularId));
+			const userSettingsRows = await db
+				.select()
+				.from(userSettings)
+				.where(eq(userSettings.userId, regularId));
+
+			expect(userExpenses).toHaveLength(1);
+			expect(userCategories).toHaveLength(1);
+			expect(userPeriods).toHaveLength(1);
+			expect(userIncomes).toHaveLength(1);
+			expect(userSettingsRows).toHaveLength(1);
 		});
 	});
 });

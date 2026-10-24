@@ -182,14 +182,6 @@
 				>
 					{t('nav.settings')}
 				</a>
-				{#if data.user?.role === 'admin'}
-					<a
-						href={resolve('/admin')}
-						class="rounded-full bg-forest-ink/10 px-2.5 py-1 text-xs font-bold text-forest-ink transition hover:bg-forest-ink/20 dark:bg-lime-voltage/20 dark:text-lime-voltage"
-					>
-						{t('nav.admin')}
-					</a>
-				{/if}
 				<ThemeToggle />
 				<Button variant="secondary" size="sm" onclick={handleLogout} disabled={isLoggingOut}>
 					{isLoggingOut ? t('nav.loggingOut') : t('nav.logout')}
@@ -326,7 +318,9 @@
 						<div
 							class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
 						>
-							<span class="text-xs font-medium text-slate dark:text-pebble">{t('dashboard.totalIncome')}</span>
+							<span class="text-xs font-medium text-slate dark:text-pebble"
+								>{t('dashboard.totalIncome')}</span
+							>
 							<p
 								class="mt-1.5 text-lg font-black tracking-tight text-forest-ink sm:text-2xl dark:text-paper"
 							>
@@ -341,7 +335,9 @@
 						<div
 							class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
 						>
-							<span class="text-xs font-medium text-slate dark:text-pebble">{t('dashboard.totalSpent')}</span>
+							<span class="text-xs font-medium text-slate dark:text-pebble"
+								>{t('dashboard.totalSpent')}</span
+							>
 							<p
 								class="mt-1.5 text-lg font-black tracking-tight text-obsidian sm:text-2xl dark:text-paper"
 							>
@@ -360,7 +356,9 @@
 						<div
 							class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
 						>
-							<span class="text-xs font-medium text-slate dark:text-pebble">{t('dashboard.remainingBudget')}</span>
+							<span class="text-xs font-medium text-slate dark:text-pebble"
+								>{t('dashboard.remainingBudget')}</span
+							>
 							<p
 								class="mt-1.5 text-lg font-black tracking-tight {data.summary.remaining < 0
 									? 'text-alarm-red'
@@ -369,7 +367,9 @@
 								{formatRupiah(data.summary.remaining)}
 							</p>
 							<span class="mt-1 block text-[11px] text-slate dark:text-pebble">
-								{t('dashboard.remainingHelp', { percent: Math.max(0, 100 - data.summary.spentPercentage) })}
+								{t('dashboard.remainingHelp', {
+									percent: Math.max(0, 100 - data.summary.spentPercentage)
+								})}
 							</span>
 						</div>
 
@@ -377,7 +377,9 @@
 						<div
 							class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
 						>
-							<span class="text-xs font-medium text-slate dark:text-pebble">{t('dashboard.usageStatus')}</span>
+							<span class="text-xs font-medium text-slate dark:text-pebble"
+								>{t('dashboard.usageStatus')}</span
+							>
 							<p
 								class="mt-1.5 text-lg font-black tracking-tight sm:text-2xl {data.summary
 									.isWarning80
@@ -477,7 +479,10 @@
 													{/if}
 												</div>
 												<span class="text-xs text-slate dark:text-pebble">
-													{t('dashboard.allocationLabel', { amount: formatRupiah(cat.allocation), percent: cat.percentage })}
+													{t('dashboard.allocationLabel', {
+														amount: formatRupiah(cat.allocation),
+														percent: cat.percentage
+													})}
 												</span>
 											</div>
 										</div>
@@ -485,14 +490,18 @@
 										<!-- Balance / Spent display -->
 										<div class="text-right">
 											{#if cat.isSavings}
-												<span class="text-xs text-slate dark:text-pebble">{t('dashboard.collected')}</span>
+												<span class="text-xs text-slate dark:text-pebble"
+													>{t('dashboard.collected')}</span
+												>
 												<p
 													class="text-sm font-black text-spruce sm:text-base dark:text-lime-voltage"
 												>
 													{formatRupiah(cat.spent)}
 												</p>
 											{:else}
-												<span class="text-xs text-slate dark:text-pebble">{t('dashboard.balanceRemaining')}</span>
+												<span class="text-xs text-slate dark:text-pebble"
+													>{t('dashboard.balanceRemaining')}</span
+												>
 												<p
 													class="text-sm font-black sm:text-base {cat.balance < 0
 														? 'text-alarm-red'
@@ -512,7 +521,11 @@
 											<div
 												class="mt-1.5 flex items-center justify-between text-[11px] text-slate dark:text-pebble"
 											>
-												<span>{t('dashboard.balanceLabel', { amount: formatRupiah(cat.balance) })}</span>
+												<span
+													>{t('dashboard.balanceLabel', {
+														amount: formatRupiah(cat.balance)
+													})}</span
+												>
 												<span class="font-semibold text-spruce dark:text-lime-voltage">
 													{t('dashboard.targetAchieved', { percent: cat.spentPercentage })}
 												</span>
@@ -527,13 +540,16 @@
 											<div
 												class="mt-1.5 flex items-center justify-between text-[11px] text-slate dark:text-pebble"
 											>
-												<span>{t('dashboard.spentLabel', { amount: formatRupiah(cat.spent) })}</span>
+												<span>{t('dashboard.spentLabel', { amount: formatRupiah(cat.spent) })}</span
+												>
 												<span
 													class="font-semibold {cat.remainingPercentage <= 20
 														? 'font-bold text-alarm-red'
 														: 'text-slate dark:text-linen-mist'}"
 												>
-													{t('dashboard.balanceRemainingPercent', { percent: cat.remainingPercentage })}
+													{t('dashboard.balanceRemainingPercent', {
+														percent: cat.remainingPercentage
+													})}
 												</span>
 											</div>
 										{/if}

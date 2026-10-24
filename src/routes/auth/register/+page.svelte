@@ -49,6 +49,10 @@
 			}
 
 			if (data) {
+				if ((data as { user?: { role?: string } })?.user?.role === 'admin') {
+					goto(resolve('/admin'));
+					return;
+				}
 				isSuccess = true;
 				isLoading = false;
 			}

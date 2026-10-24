@@ -108,33 +108,44 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	if (event.locals.user) {
 		const isAdminRoute = event.url.pathname.startsWith('/admin');
-		if (isAdminRoute && event.locals.user.role !== 'admin') {
+		const isAdmin = event.locals.user.role === 'admin';
+
+		if (isAdminRoute && !isAdmin) {
 			throw redirect(303, '/dashboard');
 		}
 
-		const isOnboardingRoute = event.url.pathname.startsWith('/onboarding');
-		const hasCompletedOnboarding = Boolean(event.locals.user.onboardingCompleted);
+		const USER_PREFIXES = ['/dashboard', '/expenses', '/categories', '/history', '/onboarding'];
+		const isUserRoute = USER_PREFIXES.some((prefix) => event.url.pathname.startsWith(prefix));
 
-		if (!hasCompletedOnboarding && isProtected && !isOnboardingRoute && !isAdminRoute) {
-			throw redirect(303, '/onboarding');
+		if (isAdmin && isUserRoute) {
+			throw redirect(303, '/admin');
 		}
 
-		if (hasCompletedOnboarding && isOnboardingRoute) {
-			throw redirect(303, '/dashboard');
-		}
+		if (!isAdmin) {
+			const isOnboardingRoute = event.url.pathname.startsWith('/onboarding');
+			const hasCompletedOnboarding = Boolean(event.locals.user.onboardingCompleted);
 
-		if (
-			d1 &&
-			typeof (d1 as { prepare?: unknown }).prepare === 'function' &&
-			isProtected &&
-			!isOnboardingRoute &&
-			!isAdminRoute &&
-			hasCompletedOnboarding
-		) {
-			try {
-				await ensureActivePeriod(d1, event.locals.user.id);
-			} catch (err) {
-				console.error('Error ensuring active period in hook:', err);
+			if (!hasCompletedOnboarding && isProtected && !isOnboardingRoute && !isAdminRoute) {
+				throw redirect(303, '/onboarding');
+			}
+
+			if (hasCompletedOnboarding && isOnboardingRoute) {
+				throw redirect(303, '/dashboard');
+			}
+
+			if (
+				d1 &&
+				typeof (d1 as { prepare?: unknown }).prepare === 'function' &&
+				isProtected &&
+				!isOnboardingRoute &&
+				!isAdminRoute &&
+				hasCompletedOnboarding
+			) {
+				try {
+					await ensureActivePeriod(d1, event.locals.user.id);
+				} catch (err) {
+					console.error('Error ensuring active period in hook:', err);
+				}
 			}
 		}
 	}

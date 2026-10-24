@@ -64,6 +64,16 @@ describe('Admin Routes Server Logic (Seam 4)', () => {
 
 			expect(result).toEqual({ user: adminUser });
 		});
+
+		it('enforces strict role boundary: admin users are authenticated and allowed on admin console routes', async () => {
+			const adminEvent = {
+				locals: { user: adminUser },
+				url: new URL('http://localhost:5173/admin/health')
+			} as unknown as Parameters<typeof layoutLoad>[0];
+
+			const result = (await layoutLoad(adminEvent)) as { user: typeof adminUser };
+			expect(result.user.role).toBe('admin');
+		});
 	});
 
 	describe('/admin (+page.server.ts)', () => {

@@ -43,6 +43,10 @@
 					goto(resolve('/auth/two-factor'));
 					return;
 				}
+				if ((data as { user?: { role?: string } })?.user?.role === 'admin') {
+					goto(resolve('/admin'));
+					return;
+				}
 				goto(resolve('/dashboard'));
 			}
 		} catch (err: unknown) {
@@ -66,7 +70,9 @@
 		<div class="w-full max-w-md">
 			<Card variant="default" padding="lg" class="shadow-lg">
 				<div class="mb-6">
-					<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">{t('auth.login.title')}</h1>
+					<h1 class="text-2xl font-extrabold text-obsidian dark:text-paper">
+						{t('auth.login.title')}
+					</h1>
 					<p class="mt-1 text-sm text-slate dark:text-stone-300">
 						{t('auth.login.subtitle')}
 					</p>

@@ -15,7 +15,6 @@
 		UserGroupIcon,
 		Layers01Icon,
 		Activity01Icon,
-		ArrowLeft02Icon,
 		Logout01Icon
 	} from '@hugeicons/core-free-icons';
 
@@ -36,7 +35,12 @@
 
 	const navItems = $derived([
 		{ href: resolve('/admin'), label: t('admin.navOverview'), icon: Analytics01Icon, exact: true },
-		{ href: resolve('/admin/users'), label: t('admin.navUsers'), icon: UserGroupIcon, exact: false },
+		{
+			href: resolve('/admin/users'),
+			label: t('admin.navUsers'),
+			icon: UserGroupIcon,
+			exact: false
+		},
 		{
 			href: resolve('/admin/templates'),
 			label: t('admin.navTemplates'),
@@ -92,13 +96,6 @@
 
 			<!-- Right: Actions -->
 			<div class="flex items-center gap-2 sm:gap-3">
-				<a
-					href={resolve('/dashboard')}
-					class="inline-flex items-center gap-1.5 rounded-full border border-fog px-3 py-1 text-xs font-semibold text-charcoal transition hover:border-pebble hover:text-forest-ink dark:border-dark-border dark:text-linen-mist dark:hover:border-lime-voltage dark:hover:text-lime-voltage"
-				>
-					<HugeiconsIcon icon={ArrowLeft02Icon} size={14} />
-					<span class="hidden sm:inline">{t('admin.toApp')}</span>
-				</a>
 				<ThemeToggle />
 				<Button
 					variant="secondary"
@@ -108,7 +105,9 @@
 					class="text-xs"
 				>
 					<HugeiconsIcon icon={Logout01Icon} size={14} class="sm:hidden" />
-					<span class="hidden sm:inline">{isLoggingOut ? t('admin.loggingOut') : t('admin.logout')}</span>
+					<span class="hidden sm:inline"
+						>{isLoggingOut ? t('admin.loggingOut') : t('admin.logout')}</span
+					>
 				</Button>
 			</div>
 		</div>
