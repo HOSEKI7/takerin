@@ -51,3 +51,16 @@ _Avoid_: Budget rule, preset
 **Onboarding**:
 Alur setup pertama kali setelah register: Set Tanggal Gajian → Input Sumber Pemasukan → Pilih Template Kategori → Customize kategori → Selesai. Termasuk tutorial dasar alur penggunaan app.
 _Avoid_: Setup wizard, first-run
+
+**Administrator (Admin)**:
+Akun pengelola sistem dengan role `admin`. Ruang lingkupnya terbatas pada Admin Console (`/admin/*`) untuk mengelola template kategori, memantau metrik & kesehatan sistem, dan mengelola pengguna. Administrator tidak memiliki data keuangan pribadi (Periode Bulan, Kategori, atau Pengeluaran).
+_Avoid_: Admin pengguna, super user, staff
+
+**Pengguna (User)**:
+Akun pemilik anggaran finansial dengan role `user`. Mengelola pemasukan bulanan, kategori, dan pengeluaran harian melalui dashboard utama. Tidak memiliki akses ke Admin Console.
+_Avoid_: Member, nasabah, klien
+
+**Undangan Admin (Admin Invitation)**:
+Mekanisme pendaftaran akun Administrator baru melalui tautan token berbatas waktu yang dikirimkan ke email tujuan oleh Administrator yang sudah aktif dari Admin Console.
+_Avoid_: Referral link, admin signup, kode aktivasi
+
