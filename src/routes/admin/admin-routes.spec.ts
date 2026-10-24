@@ -272,7 +272,7 @@ describe('Admin Routes Server Logic (Seam 4)', () => {
 		const mockAdmins: adminDb.AdminUserRecord[] = [
 			{
 				id: 'u-admin-1',
-				name: 'Super Admin',
+				name: 'Admin Takerin',
 				email: 'admin@takerin.my.id',
 				role: 'admin',
 				emailVerified: true,
@@ -291,7 +291,7 @@ describe('Admin Routes Server Logic (Seam 4)', () => {
 				status: 'pending',
 				expiresAt: new Date(Date.now() + 48 * 3600 * 1000),
 				createdAt: new Date(),
-				inviterName: 'Super Admin',
+				inviterName: 'Admin Takerin',
 				inviterEmail: 'admin@takerin.my.id'
 			}
 		];
@@ -519,7 +519,7 @@ describe('Admin Routes Server Logic (Seam 4)', () => {
 
 			expect(result2).toMatchObject({
 				status: 400,
-				data: { error: 'Hanya undangan berstatus pending yang dapat dibatalkan.' }
+				data: { error: 'Hanya undangan tertunda yang dapat dibatalkan.' }
 			});
 		});
 

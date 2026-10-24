@@ -118,7 +118,7 @@ export const actions: Actions = {
 			if (result.reason === 'not_found') {
 				return fail(404, { error: 'Undangan tidak ditemukan.' });
 			}
-			return fail(400, { error: 'Hanya undangan berstatus pending yang dapat dibatalkan.' });
+			return fail(400, { error: 'Hanya undangan tertunda yang dapat dibatalkan.' });
 		}
 
 		return {

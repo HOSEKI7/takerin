@@ -32,6 +32,7 @@
 	let inviteEmail = $state('');
 	let isSubmitting = $state(false);
 	let modalCopySuccess = $state(false);
+	let inviteResult = $state<{ email: string; url: string } | null>(null);
 
 	// Revoke Modal state
 	let revokingInvitation = $state<AdminInvitationRecord | null>(null);
@@ -42,6 +43,7 @@
 
 	function openInviteModal() {
 		inviteEmail = '';
+		inviteResult = null;
 		modalCopySuccess = false;
 		isInviteModalOpen = true;
 	}
@@ -49,6 +51,7 @@
 	function closeInviteModal() {
 		isInviteModalOpen = false;
 		inviteEmail = '';
+		inviteResult = null;
 		modalCopySuccess = false;
 	}
 
@@ -81,16 +84,6 @@
 		try {
 			if (navigator?.clipboard?.writeText) {
 				await navigator.clipboard.writeText(text);
-			} else {
-				const textarea = document.createElement('textarea');
-				textarea.value = text;
-				textarea.style.position = 'fixed';
-				textarea.style.opacity = '0';
-				document.body.appendChild(textarea);
-				textarea.focus();
-				textarea.select();
-				document.execCommand('copy');
-				document.body.removeChild(textarea);
 			}
 
 			if (invitationId) {
@@ -162,7 +155,6 @@
 						<tr>
 							<th class="px-5 py-3.5">{t('admin.admins.colAdmin')}</th>
 							<th class="px-5 py-3.5">{t('admin.admins.colEmail')}</th>
-							<th class="px-5 py-3.5">{t('admin.admins.colRole')}</th>
 							<th class="px-5 py-3.5">{t('admin.admins.colRegistered')}</th>
 							<th class="px-5 py-3.5">{t('admin.admins.colStatus')}</th>
 						</tr>
@@ -195,14 +187,6 @@
 										{admin.email}
 									</td>
 
-									<!-- Role -->
-									<td class="px-5 py-4">
-										<Badge variant="forest">
-											<HugeiconsIcon icon={ShieldCheckIcon} size={13} />
-											<span>{t('admin.users.roleAdmin')}</span>
-										</Badge>
-									</td>
-
 									<!-- Registered Date -->
 									<td class="px-5 py-4 text-xs text-slate dark:text-pebble">
 										{formatDateTime(admin.createdAt)}
@@ -219,7 +203,7 @@
 							{/each}
 						{:else}
 							<tr>
-								<td colspan="5" class="px-5 py-10 text-center text-slate dark:text-pebble">
+								<td colspan="4" class="px-5 py-10 text-center text-slate dark:text-pebble">
 									<div class="mx-auto flex max-w-xs flex-col items-center gap-2">
 										<HugeiconsIcon icon={ShieldCheckIcon} size={32} class="opacity-40" />
 										<p class="text-sm font-medium">{t('admin.admins.noAdmins')}</p>
@@ -262,7 +246,8 @@
 						{#if invitations.length > 0}
 							{#each invitations as inv (inv.id)}
 								{@const expired = isExpired(inv)}
-								{@const isPending = inv.status === 'pending' && !expired}
+								{@const isPending = inv.status === 'pending'}
+								{@const canCopy = isPending && !expired}
 								{@const directUrl = getInvitationUrl(inv.token)}
 								<tr class="transition hover:bg-fog/30 dark:hover:bg-dark-card/40">
 									<!-- Invited Email -->
@@ -332,7 +317,7 @@
 									<!-- Actions -->
 									<td class="px-5 py-4 text-right">
 										<div class="flex items-center justify-end gap-2">
-											{#if isPending}
+											{#if canCopy}
 												<!-- Salin Tautan -->
 												<button
 													type="button"
@@ -352,7 +337,9 @@
 														<span>{t('admin.admins.copyLink')}</span>
 													{/if}
 												</button>
+											{/if}
 
+											{#if isPending}
 												<!-- Revoke Button -->
 												<button
 													type="button"
@@ -363,7 +350,9 @@
 													<HugeiconsIcon icon={Delete02Icon} size={14} />
 													<span>{t('admin.admins.revokeButton')}</span>
 												</button>
-											{:else}
+											{/if}
+
+											{#if !canCopy && !isPending}
 												<span class="text-xs text-slate/40 dark:text-pebble/40">-</span>
 											{/if}
 										</div>
@@ -398,7 +387,7 @@
 		<div
 			class="w-full max-w-md rounded-2xl border border-fog bg-paper p-6 shadow-2xl transition-all sm:p-7 dark:border-dark-border dark:bg-dark-surface"
 		>
-			{#if form?.success && form?.inviteUrl}
+			{#if inviteResult}
 				<!-- SUKSES KARTU -->
 				<div class="space-y-5 text-center">
 					<div
@@ -420,7 +409,7 @@
 					<div
 						class="rounded-xl border border-fog bg-fog/40 p-3 text-left font-mono text-xs break-all text-obsidian dark:border-dark-border dark:bg-dark-card dark:text-linen-mist"
 					>
-						{form.inviteUrl}
+						{inviteResult.url}
 					</div>
 
 					<!-- Actions -->
@@ -429,7 +418,7 @@
 							type="button"
 							variant="primary"
 							size="md"
-							onclick={() => copyToClipboard(form.inviteUrl)}
+							onclick={() => inviteResult && copyToClipboard(inviteResult.url)}
 							class="w-full justify-center"
 						>
 							{#if modalCopySuccess}
@@ -459,9 +448,15 @@
 					action="?/invite"
 					use:enhance={() => {
 						isSubmitting = true;
-						return async ({ update }) => {
+						return async ({ result, update }) => {
 							isSubmitting = false;
-							await update();
+							if (result.type === 'success' && result.data && 'inviteUrl' in result.data) {
+								inviteResult = {
+									email: String(result.data.invitedEmail || ''),
+									url: String(result.data.inviteUrl || '')
+								};
+							}
+							await update({ reset: false });
 						};
 					}}
 					class="space-y-4"
