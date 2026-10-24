@@ -10,6 +10,12 @@ export interface AuthClientExtended {
 		newPassword: string;
 		token: string;
 	}) => Promise<{ error: { message?: string } | null }>;
+	verifyPassword: (opts: {
+		password: string;
+	}) => Promise<{
+		data?: { status?: boolean } | null;
+		error?: { message?: string; code?: string } | null;
+	}>;
 	emailOtp: {
 		sendVerificationOtp: (opts: {
 			email: string;
@@ -27,17 +33,25 @@ export interface AuthClientExtended {
 			data?: { success?: boolean } | null;
 			error?: { message?: string; code?: string } | null;
 		}>;
+		requestEmailChange: (opts: { newEmail: string }) => Promise<{
+			data?: { success?: boolean; status?: boolean } | null;
+			error?: { message?: string; code?: string } | null;
+		}>;
+		changeEmail: (opts: { newEmail: string; otp: string }) => Promise<{
+			data?: { user?: unknown; status?: boolean; success?: boolean } | null;
+			error?: { message?: string; code?: string } | null;
+		}>;
 	};
 }
 
-export const authClient = createAuthClient({
+export const authClient = (createAuthClient({
 	plugins: [
 		twoFactorClient({
 			twoFactorPage: '/auth/two-factor'
 		}),
 		emailOTPClient()
 	]
-}) as ReturnType<typeof createAuthClient> &
+}) as unknown) as ReturnType<typeof createAuthClient> &
 	AuthClientExtended & {
 		twoFactor: {
 			enable: (opts: { password: string; issuer?: string }) => Promise<{
@@ -86,6 +100,7 @@ export const {
 	useSession,
 	requestPasswordReset,
 	resetPassword,
+	verifyPassword,
 	twoFactor,
 	emailOtp
 } = authClient;

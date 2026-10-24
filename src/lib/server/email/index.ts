@@ -217,6 +217,11 @@ Tautan ini berlaku selama 1 jam. Jika Anda tidak meminta reset password, Anda da
 			title = 'Reset Password Akun Takerin';
 			explanation =
 				'Gunakan kode OTP berikut untuk melanjutkan pengaturan ulang password akun Anda:';
+		} else if (type === 'change-email') {
+			subject = 'Kode Verifikasi Penggantian Email Akun Takerin';
+			title = 'Verifikasi Penggantian Email';
+			explanation =
+				'Gunakan kode OTP berikut untuk memverifikasi dan melanjutkan penggantian alamat email akun Takerin Anda:';
 		}
 
 		const expiryMinutes = type === 'sign-in-2fa' ? 3 : 5;

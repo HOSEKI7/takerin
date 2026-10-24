@@ -404,6 +404,170 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 		});
 	});
 
+	describe('Account Email Change with 6-digit OTP (Issue #35)', () => {
+		let andiHeaders: Headers;
+
+		beforeAll(async () => {
+			// Register a dedicated user for email change tests
+			await auth.api.signUpEmail({
+				body: {
+					name: 'Andi Pratama',
+					email: 'andi@example.com',
+					password: 'passwordAndi123'
+				}
+			});
+			const regOtp = sentOTPEmails.find((e) => e.to === 'andi@example.com');
+			if (regOtp) {
+				await auth.api.verifyEmailOTP({
+					body: {
+						email: 'andi@example.com',
+						otp: regOtp.otp
+					}
+				});
+			}
+
+			// Sign in to establish active session
+			const loginRes = await auth.api.signInEmail({
+				body: {
+					email: 'andi@example.com',
+					password: 'passwordAndi123'
+				},
+				asResponse: true
+			});
+
+			const setCookie = loginRes.headers.get('set-cookie');
+			andiHeaders = new Headers();
+			if (setCookie) {
+				andiHeaders.set('cookie', setCookie);
+			}
+		});
+
+		it('verifies current password before requesting email change', async () => {
+			// Wrong password rejected
+			await expect(
+				auth.api.verifyPassword({
+					body: {
+						password: 'wrongPassword'
+					},
+					headers: andiHeaders
+				})
+			).rejects.toThrow();
+
+			// Correct password accepted
+			const res = await auth.api.verifyPassword({
+				body: {
+					password: 'passwordAndi123'
+				},
+				headers: andiHeaders
+			});
+			expect(res.status).toBe(true);
+		});
+
+		it('requests email change OTP and delivers 6-digit code to new email address', async () => {
+			const initialCount = sentOTPEmails.length;
+			const res = await auth.api.requestEmailChangeEmailOTP({
+				body: {
+					newEmail: 'andi.baru@example.com'
+				},
+				headers: andiHeaders
+			});
+
+			expect(res.success).toBe(true);
+			expect(sentOTPEmails.length).toBe(initialCount + 1);
+
+			const lastOtp = sentOTPEmails[sentOTPEmails.length - 1];
+			expect(lastOtp.to).toBe('andi.baru@example.com');
+			expect(lastOtp.type).toBe('change-email');
+			expect(lastOtp.otp).toMatch(/^\d{6}$/);
+		});
+
+		it('rejects email change with invalid OTP and invalidates code after 5 attempts', async () => {
+			// Trigger fresh change-email OTP
+			await auth.api.requestEmailChangeEmailOTP({
+				body: {
+					newEmail: 'andi.baru@example.com'
+				},
+				headers: andiHeaders
+			});
+			const lastOtp = sentOTPEmails[sentOTPEmails.length - 1];
+			expect(lastOtp).toBeDefined();
+
+			// 4 invalid attempts
+			for (let i = 0; i < 4; i++) {
+				await expect(
+					auth.api.changeEmailEmailOTP({
+						body: {
+							newEmail: 'andi.baru@example.com',
+							otp: '000000'
+						},
+						headers: andiHeaders
+					})
+				).rejects.toThrow();
+			}
+
+			// 5th attempt exhausts attempts
+			await expect(
+				auth.api.changeEmailEmailOTP({
+					body: {
+						newEmail: 'andi.baru@example.com',
+						otp: '000000'
+					},
+					headers: andiHeaders
+				})
+			).rejects.toThrow();
+
+			// Even correct OTP is now rejected
+			await expect(
+				auth.api.changeEmailEmailOTP({
+					body: {
+						newEmail: 'andi.baru@example.com',
+						otp: lastOtp.otp
+					},
+					headers: andiHeaders
+				})
+			).rejects.toThrow();
+		});
+
+		it('updates user email with valid OTP and allows login with updated email', async () => {
+			// Request new OTP
+			await auth.api.requestEmailChangeEmailOTP({
+				body: {
+					newEmail: 'andi.update@example.com'
+				},
+				headers: andiHeaders
+			});
+			const validOtp = sentOTPEmails[sentOTPEmails.length - 1];
+
+			const res = await auth.api.changeEmailEmailOTP({
+				body: {
+					newEmail: 'andi.update@example.com',
+					otp: validOtp.otp
+				},
+				headers: andiHeaders
+			});
+			expect(res.success).toBe(true);
+
+			// Old email login must fail
+			await expect(
+				auth.api.signInEmail({
+					body: {
+						email: 'andi@example.com',
+						password: 'passwordAndi123'
+					}
+				})
+			).rejects.toThrow();
+
+			// New email login succeeds
+			const loginRes = await auth.api.signInEmail({
+				body: {
+					email: 'andi.update@example.com',
+					password: 'passwordAndi123'
+				}
+			});
+			expect(loginRes.user.email).toBe('andi.update@example.com');
+		});
+	});
+
 	it('allows updating user role to admin via setUserRole', async () => {
 		const loginRes = await auth.api.signInEmail({
 			body: {

@@ -4,6 +4,8 @@ import {
 	validatePayDate,
 	validateLanguage,
 	validateTheme,
+	validateChangeEmailRequest,
+	validateChangeEmailOtp,
 	formatExpensesCsv,
 	type CsvExpenseItem
 } from './settings.js';
@@ -96,6 +98,71 @@ describe('Settings Validation & Formatting (Seam 1)', () => {
 		it('rejects unsupported themes', () => {
 			expect(validateTheme('system').valid).toBe(false);
 			expect(validateTheme('sepia').valid).toBe(false);
+		});
+	});
+
+	describe('validateChangeEmailRequest (Issue #35)', () => {
+		const currentEmail = 'user@example.com';
+
+		it('accepts valid password and distinct new email', () => {
+			const res = validateChangeEmailRequest({
+				currentPassword: 'secretpassword123',
+				newEmail: 'newuser@example.com',
+				currentEmail
+			});
+			expect(res.valid).toBe(true);
+			expect(res.error).toBeUndefined();
+		});
+
+		it('rejects empty or missing current password', () => {
+			const res1 = validateChangeEmailRequest({
+				currentPassword: '',
+				newEmail: 'new@example.com',
+				currentEmail
+			});
+			expect(res1.valid).toBe(false);
+			expect(res1.error).toMatch(/kata sandi saat ini/i);
+
+			const res2 = validateChangeEmailRequest({
+				newEmail: 'new@example.com',
+				currentEmail
+			});
+			expect(res2.valid).toBe(false);
+		});
+
+		it('rejects invalid new email format', () => {
+			const res = validateChangeEmailRequest({
+				currentPassword: 'secretpassword123',
+				newEmail: 'invalid-email',
+				currentEmail
+			});
+			expect(res.valid).toBe(false);
+			expect(res.error).toMatch(/tidak valid/i);
+		});
+
+		it('rejects new email identical to current email', () => {
+			const res = validateChangeEmailRequest({
+				currentPassword: 'secretpassword123',
+				newEmail: 'USER@EXAMPLE.COM',
+				currentEmail
+			});
+			expect(res.valid).toBe(false);
+			expect(res.error).toMatch(/tidak boleh sama/i);
+		});
+	});
+
+	describe('validateChangeEmailOtp (Issue #35)', () => {
+		it('accepts valid 6-digit numeric OTP', () => {
+			expect(validateChangeEmailOtp('123456').valid).toBe(true);
+			expect(validateChangeEmailOtp('000000').valid).toBe(true);
+		});
+
+		it('rejects empty, non-digit, or wrong length OTP', () => {
+			expect(validateChangeEmailOtp('').valid).toBe(false);
+			expect(validateChangeEmailOtp('12345').valid).toBe(false);
+			expect(validateChangeEmailOtp('1234567').valid).toBe(false);
+			expect(validateChangeEmailOtp('12345a').valid).toBe(false);
+			expect(validateChangeEmailOtp(null).valid).toBe(false);
 		});
 	});
 

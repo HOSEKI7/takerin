@@ -111,6 +111,64 @@ export function validateTheme(theme: unknown): {
 	};
 }
 
+export interface ChangeEmailRequestInput {
+	currentPassword?: string;
+	newEmail?: string;
+	currentEmail?: string;
+}
+
+/**
+ * Validates request to change email:
+ * - Current password is required
+ * - New email must be a valid email format
+ * - New email must not be the same as current email
+ */
+export function validateChangeEmailRequest(input: ChangeEmailRequestInput): {
+	valid: boolean;
+	error?: string;
+} {
+	if (!input.currentPassword || !input.currentPassword.trim()) {
+		return { valid: false, error: 'Kata sandi saat ini wajib diisi.' };
+	}
+
+	if (!input.newEmail || !input.newEmail.trim()) {
+		return { valid: false, error: 'Alamat email baru wajib diisi.' };
+	}
+
+	const trimmedEmail = input.newEmail.trim().toLowerCase();
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	if (!emailRegex.test(trimmedEmail)) {
+		return { valid: false, error: 'Format alamat email baru tidak valid.' };
+	}
+
+	if (input.currentEmail && trimmedEmail === input.currentEmail.trim().toLowerCase()) {
+		return {
+			valid: false,
+			error: 'Alamat email baru tidak boleh sama dengan email saat ini.'
+		};
+	}
+
+	return { valid: true };
+}
+
+/**
+ * Validates 6-digit OTP code for email change.
+ */
+export function validateChangeEmailOtp(otp: unknown): {
+	valid: boolean;
+	error?: string;
+} {
+	if (typeof otp !== 'string' || !otp.trim()) {
+		return { valid: false, error: 'Kode OTP wajib diisi.' };
+	}
+
+	if (!/^\d{6}$/.test(otp.trim())) {
+		return { valid: false, error: 'Kode OTP harus berupa 6 digit angka.' };
+	}
+
+	return { valid: true };
+}
+
 /**
  * Escapes a single CSV value according to RFC 4180.
  * If the value contains a comma, newline, or double quote, wrap in quotes

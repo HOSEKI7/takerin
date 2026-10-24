@@ -5,12 +5,19 @@
 	import Input from '#lib/components/Input.svelte';
 	import { authClient } from '#lib/auth-client.js';
 	import { formatAuthError } from '#lib/validation/auth.js';
-	import { formatDateIndonesian, formatDateISO } from '#lib/validation/onboarding.js';
+	import {
+		formatDateIndonesian,
+		formatDateISO
+	} from '#lib/validation/onboarding.js';
+	import {
+		validateChangeEmailRequest,
+		validateChangeEmailOtp
+	} from '#lib/validation/settings.js';
 	import { setTheme } from '#lib/theme.js';
 	import { t, setLocale, type Locale } from '#lib/i18n/index.js';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Calendar01Icon, Download01Icon, Alert02Icon } from '@hugeicons/core-free-icons';
 
@@ -20,6 +27,153 @@
 	// svelte-ignore state_referenced_locally
 	let displayName = $state(data.profile.name);
 	let isUpdatingProfile = $state(false);
+
+	// 1b. Change Email State (Better Auth emailOTP plugin)
+	// svelte-ignore state_referenced_locally
+	let userEmail = $state(data.profile.email);
+	let changeEmailOpen = $state(false);
+	let changeEmailStep = $state<'request' | 'verify'>('request');
+	let changeEmailCurrentPassword = $state('');
+	let changeEmailNewEmail = $state('');
+	let changeEmailOtp = $state('');
+	let isRequestingOtp = $state(false);
+	let isSubmittingOtp = $state(false);
+	let changeEmailError = $state('');
+	let changeEmailSuccess = $state('');
+	let resendCooldown = $state(0);
+	let cooldownTimer: ReturnType<typeof setInterval> | null = null;
+
+	function startCooldown(seconds = 60) {
+		resendCooldown = seconds;
+		if (cooldownTimer) clearInterval(cooldownTimer);
+		cooldownTimer = setInterval(() => {
+			resendCooldown -= 1;
+			if (resendCooldown <= 0) {
+				if (cooldownTimer) clearInterval(cooldownTimer);
+				cooldownTimer = null;
+			}
+		}, 1000);
+	}
+
+	function resetChangeEmailForm() {
+		changeEmailOpen = false;
+		changeEmailStep = 'request';
+		changeEmailCurrentPassword = '';
+		changeEmailNewEmail = '';
+		changeEmailOtp = '';
+		changeEmailError = '';
+		isRequestingOtp = false;
+		isSubmittingOtp = false;
+		if (cooldownTimer) {
+			clearInterval(cooldownTimer);
+			cooldownTimer = null;
+		}
+		resendCooldown = 0;
+	}
+
+	onDestroy(() => {
+		if (cooldownTimer) clearInterval(cooldownTimer);
+	});
+
+	async function handleRequestEmailChange(e?: SubmitEvent) {
+		if (e) e.preventDefault();
+		changeEmailError = '';
+		changeEmailSuccess = '';
+
+		const validation = validateChangeEmailRequest({
+			currentPassword: changeEmailCurrentPassword,
+			newEmail: changeEmailNewEmail,
+			currentEmail: userEmail
+		});
+		if (!validation.valid) {
+			changeEmailError = validation.error || 'Data yang dimasukkan tidak valid.';
+			return;
+		}
+
+		isRequestingOtp = true;
+		try {
+			// 1. Verifikasi kata sandi saat ini terlebih dahulu
+			const pwdRes = await authClient.verifyPassword({
+				password: changeEmailCurrentPassword
+			});
+			if (pwdRes.error) {
+				changeEmailError = formatAuthError(pwdRes.error);
+				return;
+			}
+
+			// 2. Request pengiriman OTP ke email baru
+			const otpRes = await authClient.emailOtp.requestEmailChange({
+				newEmail: changeEmailNewEmail.trim().toLowerCase()
+			});
+			if (otpRes.error) {
+				changeEmailError = formatAuthError(otpRes.error);
+				return;
+			}
+
+			changeEmailStep = 'verify';
+			startCooldown(60);
+		} catch (err) {
+			changeEmailError = err instanceof Error ? err.message : 'Gagal menghubungi server.';
+		} finally {
+			isRequestingOtp = false;
+		}
+	}
+
+	async function handleResendEmailOtp() {
+		if (resendCooldown > 0 || isRequestingOtp) return;
+		changeEmailError = '';
+		isRequestingOtp = true;
+		try {
+			const otpRes = await authClient.emailOtp.requestEmailChange({
+				newEmail: changeEmailNewEmail.trim().toLowerCase()
+			});
+			if (otpRes.error) {
+				changeEmailError = formatAuthError(otpRes.error);
+			} else {
+				startCooldown(60);
+			}
+		} catch (err) {
+			changeEmailError = err instanceof Error ? err.message : 'Gagal mengirim ulang kode OTP.';
+		} finally {
+			isRequestingOtp = false;
+		}
+	}
+
+	async function handleVerifyChangeEmail(e: SubmitEvent) {
+		e.preventDefault();
+		changeEmailError = '';
+		changeEmailSuccess = '';
+
+		const otpValidation = validateChangeEmailOtp(changeEmailOtp);
+		if (!otpValidation.valid) {
+			changeEmailError = otpValidation.error || 'Kode OTP tidak valid.';
+			return;
+		}
+
+		isSubmittingOtp = true;
+		try {
+			const res = await authClient.emailOtp.changeEmail({
+				newEmail: changeEmailNewEmail.trim().toLowerCase(),
+				otp: changeEmailOtp.trim()
+			});
+
+			if (res.error) {
+				changeEmailError = formatAuthError(res.error);
+				return;
+			}
+
+			const updatedEmail = changeEmailNewEmail.trim().toLowerCase();
+			userEmail = updatedEmail;
+			data.profile.email = updatedEmail;
+			changeEmailSuccess = t('settings.emailChangedSuccess', { email: updatedEmail });
+			resetChangeEmailForm();
+		} catch (err) {
+			changeEmailError =
+				err instanceof Error ? err.message : 'Gagal memverifikasi pergantian email.';
+		} finally {
+			isSubmittingOtp = false;
+		}
+	}
 
 	// 2. Change Password State (via Better Auth)
 	let currentPassword = $state('');
@@ -283,24 +437,22 @@
 			<h2 class="text-lg font-bold text-obsidian dark:text-paper">
 				{t('settings.profileSection')}
 			</h2>
-			<p class="mt-1 text-xs text-slate dark:text-pebble">
-				{t('settings.profileSaved')}
-			</p>
 
-			<form
-				method="POST"
-				action="?/updateProfile"
-				use:enhance={() => {
-					isUpdatingProfile = true;
-					return async ({ update }) => {
-						await update();
-						isUpdatingProfile = false;
-					};
-				}}
-				class="mt-6 space-y-4"
-			>
-				<div class="grid gap-4 sm:grid-cols-2">
-					<div>
+			<div class="mt-6 space-y-6">
+				<div class="grid gap-6 sm:grid-cols-2">
+					<!-- Form Update Nama Tampilan -->
+					<form
+						method="POST"
+						action="?/updateProfile"
+						use:enhance={() => {
+							isUpdatingProfile = true;
+							return async ({ update }) => {
+								await update();
+								isUpdatingProfile = false;
+							};
+						}}
+						class="space-y-4"
+					>
 						<Input
 							id="profile-name"
 							name="name"
@@ -310,38 +462,229 @@
 							bind:value={displayName}
 							disabled={isUpdatingProfile}
 						/>
-					</div>
-					<div>
-						<Input
-							id="profile-email"
-							label={t('auth.login.emailLabel')}
-							value={data.profile.email}
-							disabled
-						/>
+
+						<div class="flex items-center justify-between pt-1">
+							<span
+								class="rounded-full bg-fog px-2 py-0.5 text-xs font-semibold text-slate dark:bg-dark-border dark:text-pebble"
+							>
+								{t('settings.roleLabel')}: {data.profile.role === 'admin'
+									? t('admin.users.roleAdmin')
+									: t('admin.users.roleUser')}
+							</span>
+
+							<Button type="submit" variant="primary" size="sm" disabled={isUpdatingProfile}>
+								{isUpdatingProfile ? t('common.saving') : t('settings.saveProfile')}
+							</Button>
+						</div>
+					</form>
+
+					<!-- Kolom Alamat Email & Aksi Ubah Email -->
+					<div class="space-y-4">
+						<div>
+							<div class="flex items-center justify-between pb-1">
+								<label
+									for="profile-email"
+									class="text-xs font-semibold text-obsidian dark:text-paper"
+								>
+									{t('auth.login.emailLabel')}
+								</label>
+								{#if !changeEmailOpen}
+									<button
+										type="button"
+										class="text-xs font-semibold text-forest-ink hover:underline dark:text-lime-voltage"
+										data-testid="btn-action-change-email"
+										onclick={() => {
+											changeEmailOpen = true;
+											changeEmailStep = 'request';
+											changeEmailCurrentPassword = '';
+											changeEmailNewEmail = '';
+											changeEmailOtp = '';
+											changeEmailError = '';
+										}}
+									>
+										{t('settings.changeEmailButton')}
+									</button>
+								{/if}
+							</div>
+							<div class="flex gap-2">
+								<div class="flex-1">
+									<Input id="profile-email" value={userEmail} disabled />
+								</div>
+								{#if !changeEmailOpen}
+									<Button
+										type="button"
+										variant="secondary"
+										size="md"
+										onclick={() => {
+											changeEmailOpen = true;
+											changeEmailStep = 'request';
+											changeEmailCurrentPassword = '';
+											changeEmailNewEmail = '';
+											changeEmailOtp = '';
+											changeEmailError = '';
+										}}
+									>
+										{t('settings.changeEmailButton')}
+									</Button>
+								{/if}
+							</div>
+						</div>
+
+						<div class="flex items-center gap-2 text-xs">
+							<span
+								class="rounded-full px-2 py-0.5 font-semibold {data.profile.emailVerified
+									? 'bg-linen-mist text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage'
+									: 'bg-alarm-red/10 text-alarm-red'}"
+							>
+								{data.profile.emailVerified ? 'Email Terverifikasi' : 'Belum Verifikasi'}
+							</span>
+						</div>
 					</div>
 				</div>
 
-				<div class="flex items-center justify-between pt-2">
-					<div class="flex items-center gap-2 text-xs">
-						<span
-							class="rounded-full px-2 py-0.5 font-semibold {data.profile.emailVerified
-								? 'bg-linen-mist text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage'
-								: 'bg-alarm-red/10 text-alarm-red'}"
-						>
-							{data.profile.emailVerified ? 'Email Terverifikasi' : 'Belum Verifikasi'}
-						</span>
-						<span
-							class="rounded-full bg-fog px-2 py-0.5 font-semibold text-slate dark:bg-dark-border dark:text-pebble"
-						>
-							{t('admin.roleCol')}: {data.profile.role === 'admin' ? t('nav.admin') : 'User'}
-						</span>
+				<!-- Notifikasi Sukses Ganti Email -->
+				{#if changeEmailSuccess}
+					<div
+						class="rounded-lg border border-lime-voltage/40 bg-linen-mist/60 p-3 text-xs font-semibold text-forest-ink dark:bg-spruce/30 dark:text-lime-voltage"
+						data-testid="change-email-success-msg"
+					>
+						{changeEmailSuccess}
 					</div>
+				{/if}
 
-					<Button type="submit" variant="primary" size="sm" disabled={isUpdatingProfile}>
-						{isUpdatingProfile ? t('common.saving') : t('settings.saveProfile')}
-					</Button>
-				</div>
-			</form>
+				<!-- Form Panel Ubah Email -->
+				{#if changeEmailOpen}
+					<div
+						class="space-y-4 rounded-xl border border-fog bg-fog/40 p-4 dark:border-dark-border dark:bg-dark-card/80"
+						data-testid="change-email-panel"
+					>
+						<div
+							class="flex items-center justify-between border-b border-fog pb-2 dark:border-dark-border"
+						>
+							<div>
+								<h3 class="text-sm font-bold text-obsidian dark:text-paper">
+									{t('settings.changeEmailTitle')}
+								</h3>
+								<p class="text-xs text-slate dark:text-pebble">
+									{t('settings.changeEmailDesc')}
+								</p>
+							</div>
+							<button
+								type="button"
+								class="text-xs font-semibold text-slate hover:text-obsidian dark:text-pebble dark:hover:text-paper"
+								onclick={resetChangeEmailForm}
+							>
+								{t('common.cancel')}
+							</button>
+						</div>
+
+						{#if changeEmailError}
+							<div
+								class="rounded-lg border border-alarm-red/30 bg-alarm-red/10 p-3 text-xs font-semibold text-alarm-red"
+								data-testid="change-email-error-msg"
+							>
+								{changeEmailError}
+							</div>
+						{/if}
+
+						{#if changeEmailStep === 'request'}
+							<form onsubmit={handleRequestEmailChange} class="space-y-3">
+								<Input
+									id="change-email-password"
+									label={t('settings.currentPasswordLabel')}
+									type="password"
+									placeholder="••••••••"
+									required
+									bind:value={changeEmailCurrentPassword}
+									disabled={isRequestingOtp}
+								/>
+								<Input
+									id="change-email-new"
+									label={t('settings.newEmailLabel')}
+									type="email"
+									placeholder={t('settings.newEmailPlaceholder')}
+									required
+									bind:value={changeEmailNewEmail}
+									disabled={isRequestingOtp}
+								/>
+								<div class="flex items-center gap-2 pt-2">
+									<Button
+										type="submit"
+										variant="primary"
+										size="sm"
+										disabled={isRequestingOtp}
+										data-testid="btn-request-change-email-otp"
+									>
+										{isRequestingOtp ? t('settings.sendingOtp') : t('settings.requestOtpButton')}
+									</Button>
+									<Button
+										type="button"
+										variant="secondary"
+										size="sm"
+										onclick={resetChangeEmailForm}
+										disabled={isRequestingOtp}
+									>
+										{t('settings.cancelChangeEmail')}
+									</Button>
+								</div>
+							</form>
+						{:else if changeEmailStep === 'verify'}
+							<form onsubmit={handleVerifyChangeEmail} class="space-y-3">
+								<div
+									class="rounded-lg border border-spruce/30 bg-linen-mist/50 p-3 text-xs text-forest-ink dark:bg-spruce/20 dark:text-lime-voltage"
+								>
+									{t('settings.otpSentNotice', { email: changeEmailNewEmail })}
+								</div>
+								<Input
+									id="change-email-otp"
+									label={t('settings.otpLabel')}
+									type="text"
+									inputmode="numeric"
+									maxlength={6}
+									placeholder={t('settings.otpPlaceholder')}
+									required
+									bind:value={changeEmailOtp}
+									disabled={isSubmittingOtp}
+								/>
+								<div class="flex flex-wrap items-center gap-3 pt-2">
+									<Button
+										type="submit"
+										variant="primary"
+										size="sm"
+										disabled={isSubmittingOtp}
+										data-testid="btn-submit-change-email-otp"
+									>
+										{isSubmittingOtp
+											? t('settings.verifyingChangeEmail')
+											: t('settings.verifyChangeEmailButton')}
+									</Button>
+									<Button
+										type="button"
+										variant="secondary"
+										size="sm"
+										disabled={resendCooldown > 0 || isRequestingOtp}
+										onclick={handleResendEmailOtp}
+										data-testid="btn-resend-change-email-otp"
+									>
+										{resendCooldown > 0
+											? t('settings.resendCooldown', { seconds: resendCooldown })
+											: t('settings.resendOtpButton')}
+									</Button>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										onclick={resetChangeEmailForm}
+										disabled={isSubmittingOtp}
+									>
+										{t('settings.cancelChangeEmail')}
+									</Button>
+								</div>
+							</form>
+						{/if}
+					</div>
+				{/if}
+			</div>
 		</Card>
 
 		<!-- SECTION 2: KEAMANAN & KATA SANDI -->

@@ -110,6 +110,9 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 				overrideDefaultEmailVerification: true,
 				expiresIn: 300,
 				allowedAttempts: 5,
+				changeEmail: {
+					enabled: true
+				},
 				async sendVerificationOTP({ email, otp, type }) {
 					if (emailService.sendOTPEmail) {
 						await emailService.sendOTPEmail({
