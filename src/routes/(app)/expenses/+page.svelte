@@ -7,6 +7,7 @@
 	import { t } from '#lib/i18n/index.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { enhance } from '$app/forms';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		PlusSignIcon,
@@ -22,6 +23,7 @@
 
 	let deleteCandidateId = $state<string | null>(null);
 	let isDeleting = $state(false);
+	let deleteError = $state<string | null>(null);
 
 	function handleCategoryFilter(categoryId: string) {
 		const url = new URL(page.url.href);
@@ -227,7 +229,10 @@
 								type="button"
 								class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-alarm-red/30 bg-alarm-red/10 text-alarm-red transition hover:bg-alarm-red/20"
 								aria-label={t('common.delete')}
-								onclick={() => (deleteCandidateId = exp.id)}
+								onclick={() => {
+									deleteCandidateId = exp.id;
+									deleteError = null;
+								}}
 							>
 								<HugeiconsIcon icon={Delete02Icon} class="h-4 w-4" />
 							</button>
@@ -267,7 +272,35 @@
 					: ''})
 			</p>
 
-			<form method="POST" action="?/delete" class="mt-6 flex items-center justify-end gap-3">
+			{#if deleteError}
+				<div
+					role="alert"
+					class="mt-3 rounded-lg border border-alarm-red/40 bg-alarm-red/10 p-2.5 text-xs text-alarm-red dark:border-alarm-red/50 dark:bg-alarm-red/20"
+				>
+					{deleteError}
+				</div>
+			{/if}
+
+			<form
+				method="POST"
+				action="?/delete"
+				use:enhance={() => {
+					isDeleting = true;
+					deleteError = null;
+					return async ({ result, update }) => {
+						isDeleting = false;
+						if (result.type === 'success') {
+							deleteCandidateId = null;
+							await update();
+						} else if (result.type === 'failure') {
+							deleteError = (result.data?.error as string) ?? 'Gagal menghapus pengeluaran.';
+						} else {
+							await update();
+						}
+					};
+				}}
+				class="mt-6 flex items-center justify-end gap-3"
+			>
 				<input type="hidden" name="id" value={deleteCandidateId} />
 
 				<Button
@@ -275,7 +308,10 @@
 					variant="secondary"
 					size="sm"
 					disabled={isDeleting}
-					onclick={() => (deleteCandidateId = null)}
+					onclick={() => {
+						deleteCandidateId = null;
+						deleteError = null;
+					}}
 				>
 					{t('common.cancel')}
 				</Button>
@@ -284,7 +320,6 @@
 					type="submit"
 					disabled={isDeleting}
 					class="inline-flex cursor-pointer items-center justify-center rounded-full bg-alarm-red px-4 py-1.5 text-xs font-semibold text-paper transition hover:brightness-95 active:brightness-90 disabled:opacity-50"
-					onclick={() => (isDeleting = true)}
 				>
 					{isDeleting ? t('common.deleting') : t('common.delete')}
 				</button>
