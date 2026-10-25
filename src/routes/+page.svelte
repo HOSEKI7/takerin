@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Button, BrandLogo, ThemeToggle, Badge, SupportMascot } from '#lib';
+	import { Button, BrandLogo, Badge, SupportMascot, PublicNavbar } from '#lib';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		SparklesIcon,
@@ -10,13 +10,10 @@
 		Cancel01Icon,
 		Shield01Icon,
 		GithubIcon,
-		Menu01Icon,
 		Wallet02Icon,
 		PiggyBankIcon,
 		AlertCircleIcon
 	} from '@hugeicons/core-free-icons';
-
-	let mobileMenuOpen = $state(false);
 
 	const navLinks = [
 		{ label: 'Masalah', href: '#masalah' },
@@ -164,82 +161,7 @@
 	class="min-h-screen bg-paper font-sans text-obsidian transition-colors dark:bg-dark-canvas dark:text-paper"
 >
 	<!-- Navigation Bar -->
-	<header
-		class="sticky top-0 z-50 h-16 border-b border-fog bg-paper transition-colors dark:border-dark-border dark:bg-dark-surface"
-	>
-		<div class="mx-auto flex h-full max-w-6xl items-center justify-between px-4 sm:px-6">
-			<div class="flex items-center gap-8">
-				<BrandLogo href="/" size="md" />
-				<nav
-					class="hidden items-center gap-6 text-sm font-medium text-charcoal md:flex dark:text-fog"
-				>
-					{#each navLinks as link (link.href)}
-						<a
-							href={link.href}
-							class="transition-colors hover:text-forest-ink dark:hover:text-lime-voltage"
-						>
-							{link.label}
-						</a>
-					{/each}
-				</nav>
-			</div>
-
-			<div class="hidden items-center gap-3 md:flex">
-				<ThemeToggle />
-				<a href={resolve('/auth/login')}>
-					<Button variant="secondary" size="sm">Masuk</Button>
-				</a>
-				<a href={resolve('/auth/register')}>
-					<Button variant="primary" size="sm">Mulai Gratis</Button>
-				</a>
-			</div>
-
-			<!-- Mobile Menu Button -->
-			<div class="flex items-center gap-2 md:hidden">
-				<ThemeToggle />
-				<button
-					type="button"
-					onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
-					class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-fog p-1.5 text-charcoal hover:bg-fog dark:border-dark-border dark:text-fog dark:hover:bg-dark-card"
-					aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu'}
-					aria-expanded={mobileMenuOpen}
-				>
-					{#if mobileMenuOpen}
-						<HugeiconsIcon icon={Cancel01Icon} size={20} />
-					{:else}
-						<HugeiconsIcon icon={Menu01Icon} size={20} />
-					{/if}
-				</button>
-			</div>
-		</div>
-
-		<!-- Mobile Navigation Dropdown -->
-		{#if mobileMenuOpen}
-			<div
-				class="border-b border-fog bg-paper px-4 py-4 md:hidden dark:border-dark-border dark:bg-dark-surface"
-			>
-				<nav class="flex flex-col gap-3 text-sm font-medium text-charcoal dark:text-fog">
-					{#each navLinks as link (link.href)}
-						<a
-							href={link.href}
-							onclick={() => (mobileMenuOpen = false)}
-							class="py-1 hover:text-forest-ink dark:hover:text-lime-voltage"
-						>
-							{link.label}
-						</a>
-					{/each}
-					<div class="mt-2 flex flex-col gap-2 border-t border-fog pt-2 dark:border-dark-border">
-						<a href={resolve('/auth/login')} class="w-full">
-							<Button variant="secondary" size="sm" class="w-full">Masuk</Button>
-						</a>
-						<a href={resolve('/auth/register')} class="w-full">
-							<Button variant="primary" size="sm" class="w-full">Mulai Gratis</Button>
-						</a>
-					</div>
-				</nav>
-			</div>
-		{/if}
-	</header>
+	<PublicNavbar />
 
 	<main>
 		<!-- Section 1: Hero Section -->

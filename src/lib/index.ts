@@ -12,6 +12,7 @@ export { default as MobileNav } from './components/MobileNav.svelte';
 export { default as PwaInstallPrompt } from './components/PwaInstallPrompt.svelte';
 export { default as OnboardingTutorial } from './components/OnboardingTutorial.svelte';
 export { default as SupportMascot } from './components/SupportMascot.svelte';
+export { default as PublicNavbar } from './components/PublicNavbar.svelte';
 
 // Theme Utilities
 export * from './theme';

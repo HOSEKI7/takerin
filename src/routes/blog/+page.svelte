@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Button, BrandLogo, ThemeToggle, Badge, formatBlogDate } from '#lib';
+	import { Button, BrandLogo, Badge, formatBlogDate, PublicNavbar } from '#lib';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		SparklesIcon,
@@ -51,53 +51,7 @@
 	class="min-h-screen bg-paper font-sans text-charcoal transition-colors duration-200 dark:bg-dark-canvas dark:text-fog"
 >
 	<!-- Navigation Header -->
-	<header
-		class="sticky top-0 z-50 h-16 border-b border-fog bg-paper/90 backdrop-blur-md transition-colors dark:border-dark-border dark:bg-dark-surface/90"
-	>
-		<div class="mx-auto flex h-full max-w-6xl items-center justify-between px-4 sm:px-6">
-			<div class="flex items-center gap-8">
-				<BrandLogo href="/" size="md" />
-				<nav
-					class="hidden items-center gap-6 text-sm font-medium text-charcoal md:flex dark:text-fog"
-				>
-					<a
-						href={resolve('/')}
-						class="transition-colors hover:text-forest-ink dark:hover:text-lime-voltage"
-					>
-						Beranda
-					</a>
-					<a
-						href={resolve('/#fitur')}
-						class="transition-colors hover:text-forest-ink dark:hover:text-lime-voltage"
-					>
-						Fitur
-					</a>
-					<a
-						href={resolve('/#cara-kerja')}
-						class="transition-colors hover:text-forest-ink dark:hover:text-lime-voltage"
-					>
-						Cara Kerja
-					</a>
-					<a href={resolve('/blog')} class="font-semibold text-forest-ink dark:text-lime-voltage">
-						Blog
-					</a>
-				</nav>
-			</div>
-
-			<div class="flex items-center gap-3">
-				<ThemeToggle />
-				<a
-					href={resolve('/auth/login')}
-					class="hidden rounded-full px-4 py-2 text-sm font-semibold text-charcoal transition-colors hover:text-forest-ink sm:inline-block dark:text-fog dark:hover:text-lime-voltage"
-				>
-					Masuk
-				</a>
-				<a href={resolve('/auth/register')}>
-					<Button variant="primary" size="sm">Mulai Gratis</Button>
-				</a>
-			</div>
-		</div>
-	</header>
+	<PublicNavbar />
 
 	<main>
 		<!-- Hero Section -->

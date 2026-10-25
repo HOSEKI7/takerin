@@ -7,8 +7,8 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "takerin-db-prod",
-			"database_id": "9e6694d5-a2f1-4946-afb8-12c1c46d4017",
+			"database_name": "takerin-db",
+			"database_id": "179bfa9c-5252-4a91-8c9f-272d6c358c4f",
 			"migrations_dir": "drizzle"
 		}
 	]
