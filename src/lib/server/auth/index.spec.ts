@@ -895,5 +895,45 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 			expect(body.user?.email).toBe('adminlive@takerin.my.id');
 			expect(body.user?.role).toBe('admin');
 		});
+
+		it('passes platformEnv to emailService.sendOTPEmail on sign-up', async () => {
+			let capturedOpts: unknown;
+			const customAuth = createAuth(proxy.env.DB, {
+				baseURL: 'https://takerin.my.id',
+				adminEmails: 'adminliveplatform@takerin.my.id',
+				platformEnv: {
+					RESEND_API_KEY: 'cf-secret-resend-key',
+					EMAIL_FROM: 'Takerin <noreply@takerin.my.id>'
+				},
+				emailService: {
+					sendVerificationEmail: async () => ({ success: true }),
+					sendResetPasswordEmail: async () => ({ success: true }),
+					sendOTPEmail: async (opts) => {
+						capturedOpts = opts;
+						return { success: true };
+					}
+				}
+			});
+
+			const request = new Request('https://takerin.my.id/api/auth/sign-up/email', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Origin: 'https://takerin.my.id'
+				},
+				body: JSON.stringify({
+					name: 'Live Admin Platform Test',
+					email: 'adminliveplatform@takerin.my.id',
+					password: 'secureLivePassword123'
+				})
+			});
+
+			const res = await customAuth.handler(request);
+			expect(res.status).toBe(200);
+			expect(capturedOpts).toBeDefined();
+			expect(
+				(capturedOpts as { platformEnv?: { RESEND_API_KEY: string } }).platformEnv?.RESEND_API_KEY
+			).toBe('cf-secret-resend-key');
+		});
 	});
 });

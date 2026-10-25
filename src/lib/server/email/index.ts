@@ -5,23 +5,27 @@ export interface EmailOptions {
 	to: string;
 	url: string;
 	token?: string;
+	platformEnv?: Record<string, unknown>;
 }
 
 export interface OTPEmailOptions {
 	to: string;
 	otp: string;
 	type?: 'sign-in' | 'email-verification' | 'forget-password' | 'sign-in-2fa' | string;
+	platformEnv?: Record<string, unknown>;
 }
 
 export interface AdminInvitationEmailOptions {
 	to: string;
 	url: string;
 	invitedByName?: string;
+	platformEnv?: Record<string, unknown>;
 }
 
 export interface EmailServiceConfig {
 	apiKey?: string;
 	fromEmail?: string;
+	platformEnv?: Record<string, unknown>;
 	resendClient?: {
 		emails: {
 			send: (payload: {
@@ -43,21 +47,26 @@ export interface EmailResult {
 }
 
 export function createEmailService(config: EmailServiceConfig = {}) {
-	function getClient() {
+	function getClient(platformEnv?: Record<string, unknown>) {
 		if (config.resendClient) {
 			return config.resendClient;
 		}
-		const apiKey = config.apiKey ?? getRuntimeEnv('RESEND_API_KEY');
+		const env = config.platformEnv ?? platformEnv;
+		const apiKey = config.apiKey ?? getRuntimeEnv('RESEND_API_KEY', env);
 		return apiKey ? new Resend(apiKey) : null;
 	}
 
-	function getFrom() {
-		return config.fromEmail ?? getRuntimeEnv('EMAIL_FROM') ?? 'Takerin <onboarding@resend.dev>';
+	function getFrom(platformEnv?: Record<string, unknown>) {
+		const env = config.platformEnv ?? platformEnv;
+		return (
+			config.fromEmail ?? getRuntimeEnv('EMAIL_FROM', env) ?? 'Takerin <noreply@takerin.my.id>'
+		);
 	}
 
-	async function sendVerificationEmail({ to, url }: EmailOptions): Promise<EmailResult> {
-		const client = getClient();
-		const from = getFrom();
+	async function sendVerificationEmail(opts: EmailOptions): Promise<EmailResult> {
+		const client = getClient(opts.platformEnv);
+		const from = getFrom(opts.platformEnv);
+		const { to, url } = opts;
 		const subject = 'Verifikasi Email Akun Takerin Anda';
 		const text = `Halo,
 
@@ -125,9 +134,10 @@ Tautan ini berlaku selama 1 jam. Jika Anda tidak merasa mendaftar di Takerin, ab
 		}
 	}
 
-	async function sendResetPasswordEmail({ to, url }: EmailOptions): Promise<EmailResult> {
-		const client = getClient();
-		const from = getFrom();
+	async function sendResetPasswordEmail(opts: EmailOptions): Promise<EmailResult> {
+		const client = getClient(opts.platformEnv);
+		const from = getFrom(opts.platformEnv);
+		const { to, url } = opts;
 		const subject = 'Reset Password Akun Takerin Anda';
 		const text = `Halo,
 
@@ -195,13 +205,10 @@ Tautan ini berlaku selama 1 jam. Jika Anda tidak meminta reset password, Anda da
 		}
 	}
 
-	async function sendOTPEmail({
-		to,
-		otp,
-		type = 'sign-in-2fa'
-	}: OTPEmailOptions): Promise<EmailResult> {
-		const client = getClient();
-		const from = getFrom();
+	async function sendOTPEmail(opts: OTPEmailOptions): Promise<EmailResult> {
+		const client = getClient(opts.platformEnv);
+		const from = getFrom(opts.platformEnv);
+		const { to, otp, type = 'sign-in-2fa' } = opts;
 
 		let subject = 'Kode Verifikasi 2FA Akun Takerin Anda';
 		let title = 'Kode Verifikasi Dua Langkah';
@@ -297,13 +304,10 @@ Jika Anda tidak melakukan permintaan ini, segera amankan akun Anda.`;
 		}
 	}
 
-	async function sendAdminInvitationEmail({
-		to,
-		url,
-		invitedByName
-	}: AdminInvitationEmailOptions): Promise<EmailResult> {
-		const client = getClient();
-		const from = getFrom();
+	async function sendAdminInvitationEmail(opts: AdminInvitationEmailOptions): Promise<EmailResult> {
+		const client = getClient(opts.platformEnv);
+		const from = getFrom(opts.platformEnv);
+		const { to, url, invitedByName } = opts;
 		const subject = 'Undangan Menjadi Administrator Takerin';
 		const inviterText = invitedByName ? `${invitedByName} mengundang Anda` : 'Anda telah diundang';
 		const text = `Halo,

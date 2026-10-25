@@ -239,4 +239,54 @@ describe('Email Service (Resend)', () => {
 		expect(result.success).toBe(false);
 		expect(result.error).toBe('Quota exceeded');
 	});
+
+	it('resolves apiKey and fromEmail from platformEnv and defaults fromEmail to Takerin <noreply@takerin.my.id>', async () => {
+		const mockSend = vi.fn().mockResolvedValue({ data: { id: 'msg_platform_1' }, error: null });
+		const mockResend: NonNullable<EmailServiceConfig['resendClient']> = {
+			emails: {
+				send: mockSend
+			}
+		};
+
+		const service = createEmailService({
+			resendClient: mockResend,
+			platformEnv: {
+				RESEND_API_KEY: 'test-key-from-platform'
+			}
+		});
+
+		const result = await service.sendOTPEmail({
+			to: 'user@example.com',
+			otp: '112233'
+		});
+
+		expect(result.success).toBe(true);
+		expect(mockSend).toHaveBeenCalledTimes(1);
+		expect(mockSend.mock.calls[0][0].from).toBe('Takerin <noreply@takerin.my.id>');
+	});
+
+	it('allows overriding platformEnv per individual send call', async () => {
+		const mockSend = vi.fn().mockResolvedValue({ data: { id: 'msg_platform_2' }, error: null });
+		const mockResend: NonNullable<EmailServiceConfig['resendClient']> = {
+			emails: {
+				send: mockSend
+			}
+		};
+
+		const service = createEmailService({
+			resendClient: mockResend
+		});
+
+		const result = await service.sendOTPEmail({
+			to: 'user@example.com',
+			otp: '445566',
+			platformEnv: {
+				EMAIL_FROM: 'Custom <custom@takerin.my.id>'
+			}
+		});
+
+		expect(result.success).toBe(true);
+		expect(mockSend).toHaveBeenCalledTimes(1);
+		expect(mockSend.mock.calls[0][0].from).toBe('Custom <custom@takerin.my.id>');
+	});
 });

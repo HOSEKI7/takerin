@@ -6,9 +6,7 @@ import { getDb } from '#lib/server/db/index.js';
 import * as schema from '#lib/server/db/schema.js';
 import { getRuntimeEnv } from '#lib/server/env.js';
 import {
-	sendVerificationEmail as defaultSendVerification,
-	sendResetPasswordEmail as defaultSendResetPassword,
-	sendOTPEmail as defaultSendOTP,
+	createEmailService,
 	type EmailOptions,
 	type OTPEmailOptions,
 	type EmailResult
@@ -56,11 +54,11 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 
 	const adminEmailsRaw = options.adminEmails ?? getRuntimeEnv('ADMIN_EMAILS', options.platformEnv);
 
-	const emailService = options.emailService || {
-		sendVerificationEmail: defaultSendVerification,
-		sendResetPasswordEmail: defaultSendResetPassword,
-		sendOTPEmail: defaultSendOTP
-	};
+	const emailService =
+		options.emailService ||
+		createEmailService({
+			platformEnv: options.platformEnv as Record<string, unknown>
+		});
 
 	const defaultOrigins = [
 		'https://takerin.my.id',
@@ -132,11 +130,15 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 				otpOptions: {
 					async sendOTP({ user, otp }) {
 						if (emailService.sendOTPEmail) {
-							await emailService.sendOTPEmail({
+							const result = await emailService.sendOTPEmail({
 								to: user.email,
 								otp,
-								type: 'sign-in-2fa'
+								type: 'sign-in-2fa',
+								platformEnv: options.platformEnv as Record<string, unknown>
 							});
+							if (!result.success && !result.mocked) {
+								throw new Error(result.error || 'Gagal mengirim email OTP 2FA');
+							}
 						}
 					}
 				}
@@ -150,11 +152,15 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 				},
 				async sendVerificationOTP({ email, otp, type }) {
 					if (emailService.sendOTPEmail) {
-						await emailService.sendOTPEmail({
+						const result = await emailService.sendOTPEmail({
 							to: email,
 							otp,
-							type
+							type,
+							platformEnv: options.platformEnv as Record<string, unknown>
 						});
+						if (!result.success && !result.mocked) {
+							throw new Error(result.error || 'Gagal mengirim email OTP verifikasi');
+						}
 					}
 				}
 			})
@@ -181,7 +187,15 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 			enabled: true,
 			autoSignIn: false,
 			sendResetPassword: async ({ user, url, token }) => {
-				await emailService.sendResetPasswordEmail({ to: user.email, url, token });
+				const result = await emailService.sendResetPasswordEmail({
+					to: user.email,
+					url,
+					token,
+					platformEnv: options.platformEnv as Record<string, unknown>
+				});
+				if (!result.success && !result.mocked) {
+					throw new Error(result.error || 'Gagal mengirim email reset password');
+				}
 			}
 		}
 	});
