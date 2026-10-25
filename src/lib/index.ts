@@ -11,6 +11,7 @@ export { default as DesktopSidebar } from './components/DesktopSidebar.svelte';
 export { default as MobileNav } from './components/MobileNav.svelte';
 export { default as PwaInstallPrompt } from './components/PwaInstallPrompt.svelte';
 export { default as OnboardingTutorial } from './components/OnboardingTutorial.svelte';
+export { default as SupportMascot } from './components/SupportMascot.svelte';
 
 // Theme Utilities
 export * from './theme';

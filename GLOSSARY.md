@@ -72,4 +72,8 @@ _Avoid_: Kode aktivasi, token rahasia, pin auth
 Mekanisme inisialisasi akun Administrator pertama kali melalui pendaftaran form registrasi publik saat sistem baru dipasang, di mana sistem mendeteksi kesesuaian email terhadap variabel lingkungan `ADMIN_EMAILS` dan mewajibkan verifikasi OTP sebelum hak akses admin aktif.
 _Avoid_: Admin default, auto-admin, admin tanpa verifikasi
 
+**Dukungan Pengembang (Developer Support)**:
+Kanal pemberian apresiasi atau tip sukarela dari pengguna kepada pengembang aplikasi (melalui QRIS universal atau platform pihak ketiga) untuk menjaga kelangsungan layanan gratis tanpa mengubah data anggaran pengguna.
+_Avoid_: Donasi wajib, langganan berbayar, paywall
+
 

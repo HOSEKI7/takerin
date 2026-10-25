@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Button, BrandLogo, ThemeToggle, Badge } from '#lib';
+	import { Button, BrandLogo, ThemeToggle, Badge, SupportMascot } from '#lib';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		SparklesIcon,
@@ -786,4 +786,6 @@
 			</div>
 		</div>
 	</footer>
+
+	<SupportMascot />
 </div>
