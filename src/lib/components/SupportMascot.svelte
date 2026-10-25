@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { fade, fly, scale } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
 	import { asset } from '$app/paths';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Cancel01Icon, LinkSquare02Icon, HeartIcon } from '@hugeicons/core-free-icons';
@@ -88,6 +88,8 @@
 		}
 	});
 </script>
+
+<!-- eslint-disable svelte/no-navigation-without-resolve -->
 
 <svelte:window onkeydown={handleKeydown} />
 
