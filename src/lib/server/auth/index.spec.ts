@@ -862,5 +862,38 @@ describe('Better Auth Server Integration (Miniflare D1)', () => {
 			expect(verifyRes.user.role).toBe('admin');
 			expect(verifyRes.token).toBeTruthy();
 		});
+
+		it('allows HTTP sign-up request with Origin https://takerin.my.id via auth handler without 403 Forbidden', async () => {
+			const customAuth = createAuth(proxy.env.DB, {
+				baseURL: 'https://takerin.my.id',
+				adminEmails: 'adminlive@takerin.my.id',
+				emailService: {
+					sendVerificationEmail: async () => ({ success: true }),
+					sendResetPasswordEmail: async () => ({ success: true }),
+					sendOTPEmail: async () => ({ success: true })
+				}
+			});
+
+			const request = new Request('https://takerin.my.id/api/auth/sign-up/email', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Origin: 'https://takerin.my.id'
+				},
+				body: JSON.stringify({
+					name: 'Live Admin First',
+					email: 'adminlive@takerin.my.id',
+					password: 'secureLivePassword123'
+				})
+			});
+
+			const res = await customAuth.handler(request);
+			expect(res.status).not.toBe(403);
+			expect(res.status).toBe(200);
+
+			const body = (await res.json()) as { user?: { email: string; role: string } };
+			expect(body.user?.email).toBe('adminlive@takerin.my.id');
+			expect(body.user?.role).toBe('admin');
+		});
 	});
 });

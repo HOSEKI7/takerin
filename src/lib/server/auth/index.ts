@@ -17,6 +17,7 @@ import {
 export interface AuthOptions {
 	secret?: string;
 	baseURL?: string;
+	trustedOrigins?: string[];
 	adminEmails?: string;
 	platformEnv?: Record<string, unknown>;
 	emailService?: {
@@ -61,6 +62,39 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 		sendOTPEmail: defaultSendOTP
 	};
 
+	const defaultOrigins = [
+		'https://takerin.my.id',
+		'https://*.takerin.my.id',
+		'https://*.pages.dev',
+		'http://localhost:5173',
+		'http://localhost:4173',
+		'http://127.0.0.1:5173',
+		'http://127.0.0.1:4173'
+	];
+
+	let baseOrigin: string | undefined;
+	try {
+		baseOrigin = new URL(baseURL).origin;
+	} catch {
+		baseOrigin = undefined;
+	}
+
+	const envTrustedOrigins = getRuntimeEnv('BETTER_AUTH_TRUSTED_ORIGINS', options.platformEnv);
+	const parsedEnvOrigins = envTrustedOrigins
+		? envTrustedOrigins
+				.split(',')
+				.map((o) => o.trim())
+				.filter(Boolean)
+		: [];
+	const customOrigins = options.trustedOrigins ?? [];
+	const trustedOrigins = Array.from(
+		new Set(
+			[...defaultOrigins, baseOrigin, ...parsedEnvOrigins, ...customOrigins].filter(
+				(origin): origin is string => Boolean(origin)
+			)
+		)
+	);
+
 	return betterAuth({
 		database: drizzleAdapter(db, {
 			provider: 'sqlite',
@@ -90,6 +124,7 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 		},
 		secret,
 		baseURL,
+		trustedOrigins,
 		plugins: [
 			twoFactor({
 				appName: 'Takerin',
