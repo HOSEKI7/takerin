@@ -34,11 +34,13 @@ export async function GET() {
 ${blogUrls}
 \t<url>
 \t\t<loc>https://takerin.my.id/auth/register</loc>
+\t\t<lastmod>${today}</lastmod>
 \t\t<changefreq>monthly</changefreq>
 \t\t<priority>0.8</priority>
 \t</url>
 \t<url>
 \t\t<loc>https://takerin.my.id/auth/login</loc>
+\t\t<lastmod>${today}</lastmod>
 \t\t<changefreq>monthly</changefreq>
 \t\t<priority>0.5</priority>
 \t</url>
