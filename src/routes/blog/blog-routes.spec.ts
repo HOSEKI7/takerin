@@ -31,6 +31,8 @@ describe('Blog Routes, Prerendering & SEO (Seams 2 & 3)', () => {
 		expect(entries).toContainEqual({ slug: 'cara-atur-gaji-bulanan-biar-nggak-boncos' });
 		expect(entries).toContainEqual({ slug: 'tips-hemat-anak-kos' });
 		expect(entries).toContainEqual({ slug: 'kenapa-mencatat-pengeluaran-saja-nggak-cukup' });
+		expect(entries).toContainEqual({ slug: 'cara-mengatur-gaji-3-juta-sampai-5-juta' });
+		expect(entries).toContainEqual({ slug: 'metode-50-30-20-vs-sistem-takaran-takerin' });
 
 		// Test loading valid post
 		const validData = (await blogSlugLoad({
@@ -65,6 +67,12 @@ describe('Blog Routes, Prerendering & SEO (Seams 2 & 3)', () => {
 		expect(xml).toContain('<loc>https://takerin.my.id/blog/tips-hemat-anak-kos</loc>');
 		expect(xml).toContain(
 			'<loc>https://takerin.my.id/blog/kenapa-mencatat-pengeluaran-saja-nggak-cukup</loc>'
+		);
+		expect(xml).toContain(
+			'<loc>https://takerin.my.id/blog/cara-mengatur-gaji-3-juta-sampai-5-juta</loc>'
+		);
+		expect(xml).toContain(
+			'<loc>https://takerin.my.id/blog/metode-50-30-20-vs-sistem-takaran-takerin</loc>'
 		);
 	});
 

@@ -1,0 +1,39 @@
+# Takerin
+
+> Takerin adalah aplikasi web dan PWA (Progressive Web App) gratis untuk mengelola keuangan pribadi dengan metode menakar pemasukan bulanan ke dalam jatah kategori berbasis persentase dan mencatat pengeluaran harian.
+
+Takerin mengedepankan pendekatan *budgeting proaktif*: membagi pemasukan bulanan begitu gaji diterima, sehingga setiap rupiah memiliki alokasi yang jelas sebelum dibelanjakan. Takerin 100% gratis selamanya, tanpa iklan, dan menjaga privasi pengguna tanpa integrasi rekening bank pihak ketiga.
+
+## Filosofi & Cara Kerja
+
+- **Bagi Jatah di Awal**: Pemasukan bulanan dialokasikan ke dalam beberapa kategori dengan proporsi persentase yang totalnya harus selalu pas 100%.
+- **Siklus Periode Bulan**: Setiap siklus anggaran dimulai dari Tanggal Gajian pengguna hingga satu hari sebelum Tanggal Gajian bulan berikutnya.
+- **Pencatatan Cepat & Tanpa Rasa Waswas**: Pengeluaran harian dicatat dalam hitungan detik. Takerin tidak pernah memblokir pengeluaran yang melebihi takaran, melainkan memberikan pengingat ramah (*friendly warning*).
+- **Kategori Tabungan**: Kategori yang ditandai sebagai tabungan/investasi diperlakukan secara positif (semakin banyak dialokasikan, semakin baik kondisi finansial).
+- **Ringkasan Bulanan**: Evaluasi berkala yang merangkum kebiasaan finansial tiap akhir periode untuk perencanaan bulan berikutnya.
+
+## Fitur Utama
+
+- Pengaturan Tanggal Gajian fleksibel (tanggal 1–31).
+- Template Kategori bawaan: Metode 50/30/20, Sistem 6 Toples, dan Kustom Mandiri.
+- Pencatatan Pengeluaran instan dengan kategori dan catatan opsional.
+- Ekspor laporan pengeluaran ke format CSV dan PDF.
+- PWA (Progressive Web App) dengan dukungan mode offline mandiri.
+- Autentikasi aman terenkripsi dengan opsi verifikasi dua langkah (OTP email).
+- Dukungan antarmuka bilingual (Bahasa Indonesia & English) serta mode gelap (*dark mode*).
+
+## Kebijakan Harga
+
+- **Harga**: 100% Gratis Selamanya (Rp 0).
+- **Iklan**: Nol iklan (*No ads*).
+- **Langganan**: Tidak ada paket berbayar, tidak ada biaya tersembunyi, dan tidak ada fitur berbayar (*No paywall*).
+- **Detail Harga**: Lihat berkas https://takerin.my.id/pricing.md
+
+## Tautan Resmi
+
+- Situs Resmi: https://takerin.my.id/
+- Blog & Edukasi Finansial: https://takerin.my.id/blog
+- Pendaftaran Gratis: https://takerin.my.id/auth/register
+- Masuk Akun: https://takerin.my.id/auth/login
+- Peta Situs: https://takerin.my.id/sitemap.xml
+- Repositori Sumber Terbuka: https://github.com/HOSEKI7/takerin

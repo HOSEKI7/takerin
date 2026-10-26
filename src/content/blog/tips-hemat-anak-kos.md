@@ -13,6 +13,18 @@ Menjadi anak kos yang baru pertama kali merantau dan bekerja (*first jobber*) ad
 
 Jika tidak hati-hati, gaji pertama bisa habis menguap tanpa sisa bahkan sebelum pertengahan bulan. Simak kumpulan **tips hemat anak kos** berikut yang realistis dan terbukti ampuh membantu menjaga stabilitas dompetmu.
 
+> **Ringkasan Formula Budget Anak Kos**: Alokasi ideal untuk first jobber adalah 30% untuk sewa tempat tinggal/kos, 35% kebutuhan makan pokok, 15% transportasi & tagihan, 10% tabungan masa depan, dan 10% hiburan/nongkrong. Kunci keberhasilannya adalah memisahkan jatah makan harian dengan jatah kafe.
+
+## Panduan Alokasi Takaran Gaji Anak Kos
+
+| Kategori Takaran | Porsi Gaji | Contoh (Gaji Rp 3.500.000) | Fokus Peruntukan |
+| :--- | :--- | :--- | :--- |
+| **Sewa Kos & Utilitas** | 30% | Rp 1.050.000 | Kamar kos, listrik, air, iuran kebersihan |
+| **Makan Pokok Harian** | 35% | Rp 1.225.000 | Sarapan, warteg, makan malam, beras/galon |
+| **Transportasi & Pulsa** | 15% | Rp 525.000 | Ongkos harian, bensin, paket data internet |
+| **Tabungan / Darurat** | 10% | Rp 350.000 | Dana darurat minimal 3x pengeluaran |
+| **Hiburan & Nongkrong** | 10% | Rp 350.000 | Ngopi, streaming, belanja akhir pekan |
+
 ## 1. Aturan Emas Biaya Kos: Maksimal 30% dari Gaji
 
 Tempat tinggal memang penting untuk istirahat setelah seharian bekerja. Namun, usahakan total biaya kos (termasuk listrik atau air jika terpisah) tidak menyedot lebih dari 25% hingga 30% dari penghasilan bersih bulananmu.

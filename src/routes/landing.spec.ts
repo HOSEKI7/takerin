@@ -38,12 +38,34 @@ describe('Landing Page & SEO (+page.svelte & routes)', () => {
 		expect(body).toContain('User-agent: *');
 		expect(body).toContain('Sitemap: https://takerin.my.id/sitemap.xml');
 		expect(body).toContain('Allow: /blog');
+		expect(body).toContain('Allow: /llms.txt');
+		expect(body).toContain('Allow: /pricing.md');
+		expect(body).toContain('User-agent: OAI-SearchBot');
+		expect(body).toContain('User-agent: PerplexityBot');
+		expect(body).toContain('User-agent: Claude-SearchBot');
 		expect(body).toContain('Disallow: /admin/');
 		expect(body).toContain('Disallow: /dashboard');
 		expect(body).toContain('Disallow: /api/');
 		expect(body).toContain('Disallow: /offline');
 		expect(body).toContain('Disallow: /auth/reset-password');
 		expect(body).toContain('Disallow: /auth/admin-invite/');
+	});
+
+	it('provides machine-readable AI files in static/', () => {
+		const llmsPath = path.resolve('static/llms.txt');
+		const pricingPath = path.resolve('static/pricing.md');
+
+		expect(fs.existsSync(llmsPath)).toBe(true);
+		expect(fs.existsSync(pricingPath)).toBe(true);
+
+		const llmsContent = fs.readFileSync(llmsPath, 'utf-8');
+		expect(llmsContent).toContain('# Takerin');
+		expect(llmsContent).toContain('Filosofi & Cara Kerja');
+		expect(llmsContent).toContain('100% Gratis Selamanya');
+
+		const pricingContent = fs.readFileSync(pricingPath, 'utf-8');
+		expect(pricingContent).toContain('Paket Gratis (Free Forever)');
+		expect(pricingContent).toContain('Rp 0 / bulan');
 	});
 
 	it('contains required SEO meta tags, Open Graph, Twitter Cards, and JSON-LD SoftwareApplication in +page.svelte', () => {
@@ -87,6 +109,8 @@ describe('Landing Page & SEO (+page.svelte & routes)', () => {
 		expect(pageContent).toContain("'FinanceApplication'");
 		expect(pageContent).toContain("'FAQPage'");
 		expect(pageContent).toContain("'WebSite'");
+		expect(pageContent).toContain('sameAs');
+		expect(pageContent).toContain('https://github.com/HOSEKI7/takerin');
 		expect(pageContent).toContain('faqItems.map');
 		expect(pageContent).toContain("'0'");
 	});

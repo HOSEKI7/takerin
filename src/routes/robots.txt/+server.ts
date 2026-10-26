@@ -7,6 +7,8 @@ Allow: /
 Allow: /blog
 Allow: /auth/login
 Allow: /auth/register
+Allow: /llms.txt
+Allow: /pricing.md
 Disallow: /admin/
 Disallow: /api/
 Disallow: /dashboard
@@ -18,6 +20,26 @@ Disallow: /onboarding
 Disallow: /offline
 Disallow: /auth/reset-password
 Disallow: /auth/admin-invite/
+
+# Explicitly permit AI search and discovery bots
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: PerplexityBot
+User-agent: Claude-SearchBot
+User-agent: meta-webindexer
+Allow: /
+Allow: /blog
+Allow: /llms.txt
+Allow: /pricing.md
+Disallow: /admin/
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /expenses
+Disallow: /categories
+Disallow: /history
+Disallow: /settings
+Disallow: /onboarding
+Disallow: /offline
 
 Sitemap: https://takerin.my.id/sitemap.xml`;
 

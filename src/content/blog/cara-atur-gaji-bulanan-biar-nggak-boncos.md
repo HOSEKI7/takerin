@@ -15,13 +15,27 @@ Kabar baiknya: masalah ini bukan selalu karena gajimu terlalu kecil, melainkan k
 
 ## Kenapa Cara Lama Sering Gagal?
 
+> **Penyebab Utama Gaji Cepat Habis**: Cara lama gagal karena mencatat pengeluaran setelah uang dibelanjakan bersifat pasif dan reaktif. Tanpa alokasi jatah persentase di awal bulan, Anda hanya menjadi saksi hilangnya uang tanpa memiliki batas pagu belanja harian yang mengikat.
+
 Banyak orang mengira kunci mengelola uang adalah mencatat setiap pengeluaran sekecil apa pun. Dari beli kopi, parkir, sampai jajan cemilan, semuanya dicatat di aplikasi atau buku catatan. 
 
 Namun, seminggu kemudian uangnya tetap habis. Mengapa?
 
 Karena mencatat pengeluaran setelah uang dibelanjakan adalah tindakan **reaktif**. Kamu hanya menjadi saksi bagaimana uangmu hilang tanpa ada batasan yang jelas di awal. Tanpa jatah yang dipatok sebelum belanja, kita mudah tergoda berpikir: *"Ah, saldo masih cukup kok, beli ini dulu."*
 
+## Perbandingan: Budgeting Reaktif vs Budgeting Proaktif
+
+| Aspek Evaluasi | Cara Konvensional (Reaktif) | Sistem Takaran Jatah Takerin (Proaktif) |
+| :--- | :--- | :--- |
+| **Waktu Penentuan** | Setelah uang habis dibelanjakan | Segera saat tanggal gajian diterima |
+| **Batasan Anggaran** | Tidak ada pagu kategori yang pasti | Kuota per kategori terkunci 100% seimbang |
+| **Dampak Psikologis** | Cemas dan merasa bersalah setiap belanja | Bebas belanja selama di dalam takaran jatah |
+| **Prioritas Tabungan** | Menyisakan uang jika masih ada sisa | Tabungan diamankan di muka (minimal 20%) |
+| **Alat Bantu** | Buku kas atau spreadsheet rumit | Aplikasi berbasis takaran instan ([Takerin](https://takerin.my.id)) |
+
 ## Solusi: Takar Gaji di Awal Bulan (Budgeting Proaktif)
+
+> **Metode Takaran Gaji**: Strategi membagi seluruh pemasukan bulanan ke dalam persentase kategori belanja sejak hari pertama gajian. Dengan mengunci total alokasi pas 100%, setiap rupiah memiliki fungsi terencana sehingga tabungan terlindungi dan pengeluaran harian terkontrol tanpa stres.
 
 Kunci agar tidak boncos adalah menentukan peran setiap rupiah segera setelah kamu menerima gaji. Metode ini dikenal dengan sistem **menakar jatah** berdasarkan persentase pemasukan bulanan:
 

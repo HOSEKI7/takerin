@@ -17,11 +17,19 @@ Namun di akhir bulan, rekeningmu tetap kosong melompong. Kenapa bisa begitu? Buk
 
 ## Paradoks Buku Kas: Dokumentasi Rapi Kebangkrutan
 
+> **Paradoks Pencatatan Pasif**: Mencatat pengeluaran harian tanpa alokasi takaran di awal hanya mendokumentasikan riwayat ke mana uang telah hilang, bukan mengarahkan ke mana uang seharusnya dialokasikan. Aktivitas mencatat baru berdampak nyata jika berfungsi sebagai kontrol batas saldo jatah harian.
+
 Mencatat pengeluaran setelah uang keluar hanya memberitahumu **ke mana uangmu pergi**, bukan **ke mana uangmu seharusnya pergi**.
 
 Jika kamu tidak menetapkan batasan jatah di awal, maka aktivitas catat pengeluaran hanyalah mendokumentasikan kebangkrutan pribadi secara rapi dan sistematis. Di akhir bulan kamu hanya akan menatap grafik indah seraya menghela napas: *"Wah, ternyata bulan ini aku habis 2 juta cuma buat kopi dan jajan online ya."*
 
 Penyesalan di akhir bulan tidak mengembalikan saldo yang sudah raib.
+
+| Perbedaan Pendekatan | Hanya Mencatat Pengeluaran | Menakar Jatah + Mencatat (Takerin) |
+| :--- | :--- | :--- |
+| **Fungsi Utama** | Melacak masa lalu (*History tracking*) | Memandu keputusan belanja sekarang (*Real-time budget control*) |
+| **Waktu Pengecekan** | Malam hari setelah uang dibelanjakan | Sebelum melakukan pembayaran di kasir/aplikasi |
+| **Target Akhir** | Mengetahui nominal uang yang terbuang | Mengamankan tabungan dan saldo kategori tetap aman |
 
 ## 3 Kelemahan Mencatat Pengeluaran Tanpa Jatah di Awal
 

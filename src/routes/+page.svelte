@@ -37,11 +37,14 @@
 		description:
 			'Aplikasi web gratis untuk membagi gaji bulanan ke dalam takaran jatah per kategori dan mencatat pengeluaran harian.',
 		url: 'https://takerin.my.id',
+		sameAs: ['https://github.com/HOSEKI7/takerin'],
 		inLanguage: 'id',
 		author: {
 			'@type': 'Organization',
 			name: 'Takerin',
-			url: 'https://takerin.my.id'
+			url: 'https://takerin.my.id',
+			sameAs: ['https://github.com/HOSEKI7/takerin'],
+			logo: 'https://takerin.my.id/brand/og-image.png'
 		}
 	};
 
@@ -127,6 +130,7 @@
 		'@type': 'WebSite',
 		name: 'Takerin',
 		url: 'https://takerin.my.id',
+		sameAs: ['https://github.com/HOSEKI7/takerin'],
 		description:
 			'Aplikasi web gratis untuk membagi gaji bulanan ke dalam takaran jatah per kategori dan mencatat pengeluaran harian.',
 		inLanguage: 'id'
