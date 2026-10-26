@@ -37,9 +37,13 @@ describe('Landing Page & SEO (+page.svelte & routes)', () => {
 		const body = await response.text();
 		expect(body).toContain('User-agent: *');
 		expect(body).toContain('Sitemap: https://takerin.my.id/sitemap.xml');
+		expect(body).toContain('Allow: /blog');
 		expect(body).toContain('Disallow: /admin/');
 		expect(body).toContain('Disallow: /dashboard');
 		expect(body).toContain('Disallow: /api/');
+		expect(body).toContain('Disallow: /offline');
+		expect(body).toContain('Disallow: /auth/reset-password');
+		expect(body).toContain('Disallow: /auth/admin-invite/');
 	});
 
 	it('contains required SEO meta tags, Open Graph, Twitter Cards, and JSON-LD SoftwareApplication in +page.svelte', () => {

@@ -4,6 +4,7 @@ export async function GET() {
 	const content = `# Takerin robots.txt
 User-agent: *
 Allow: /
+Allow: /blog
 Allow: /auth/login
 Allow: /auth/register
 Disallow: /admin/
@@ -14,6 +15,9 @@ Disallow: /categories
 Disallow: /history
 Disallow: /settings
 Disallow: /onboarding
+Disallow: /offline
+Disallow: /auth/reset-password
+Disallow: /auth/admin-invite/
 
 Sitemap: https://takerin.my.id/sitemap.xml`;
 

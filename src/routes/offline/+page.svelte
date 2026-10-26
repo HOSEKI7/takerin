@@ -13,10 +13,8 @@
 
 <svelte:head>
 	<title>{t('offline.title')}</title>
-	<meta
-		name="description"
-		content={t('offline.metaDesc')}
-	/>
+	<meta name="description" content={t('offline.metaDesc')} />
+	<meta name="robots" content="noindex, nofollow" />
 </svelte:head>
 
 <div class="flex min-h-[calc(100vh-80px)] items-center justify-center px-4 py-12">

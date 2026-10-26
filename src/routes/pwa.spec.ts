@@ -74,6 +74,8 @@ describe('PWA Manifest, Icons & Offline Fallback', () => {
 		expect(content).toContain('/dashboard');
 		expect(content).toContain('Buka Dashboard');
 		expect(content).toContain('Coba Lagi');
+		expect(content).toContain('name="robots"');
+		expect(content).toContain('noindex, nofollow');
 	});
 
 	it('configures service worker with offline caching in src/service-worker/index.ts', () => {
