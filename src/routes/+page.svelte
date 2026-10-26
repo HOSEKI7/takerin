@@ -109,19 +109,48 @@
 		}
 	];
 
-	const jsonLdString =
+	const faqPageSchema = {
+		'@context': 'https://schema.org',
+		'@type': 'FAQPage',
+		mainEntity: faqItems.map((item) => ({
+			'@type': 'Question',
+			name: item.q,
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: item.a
+			}
+		}))
+	};
+
+	const webSiteSchema = {
+		'@context': 'https://schema.org',
+		'@type': 'WebSite',
+		name: 'Takerin',
+		url: 'https://takerin.my.id',
+		description:
+			'Aplikasi web gratis untuk membagi gaji bulanan ke dalam takaran jatah per kategori dan mencatat pengeluaran harian.',
+		inLanguage: 'id'
+	};
+
+	const jsonLdSoftwareApp =
 		`<script type="application/ld+json">${JSON.stringify(softwareApplicationSchema)}` +
 		'</' +
 		'script>';
+
+	const jsonLdFaq =
+		`<script type="application/ld+json">${JSON.stringify(faqPageSchema)}` + '</' + 'script>';
+
+	const jsonLdWebSite =
+		`<script type="application/ld+json">${JSON.stringify(webSiteSchema)}` + '</' + 'script>';
 </script>
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 
 <svelte:head>
-	<title>Takerin - Takerin Gajimu, Tenangin Bulanmu | Aplikasi Keuangan Gratis</title>
+	<title>Takerin — Aplikasi Pembagi Gaji & Atur Keuangan Gratis</title>
 	<meta
 		name="description"
-		content="Aplikasi web gratis untuk membagi gaji bulanan ke dalam takaran jatah per kategori dan mencatat pengeluaran harian. Atur pengeluaran, catat keuangan, dan atur gaji agar tenang sampai akhir bulan."
+		content="Aplikasi web gratis untuk membagi gaji bulanan ke dalam takaran jatah per kategori dan mencatat pengeluaran harian. Atur gaji dan keuanganmu dengan tenang."
 	/>
 	<meta
 		name="keywords"
@@ -159,7 +188,11 @@
 
 	<!-- JSON-LD Structured Data -->
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-	{@html jsonLdString}
+	{@html jsonLdSoftwareApp}
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html jsonLdFaq}
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html jsonLdWebSite}
 </svelte:head>
 
 <div

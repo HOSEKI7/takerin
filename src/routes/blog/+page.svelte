@@ -12,6 +12,62 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	const blogCollectionSchema = $derived({
+		'@context': 'https://schema.org',
+		'@type': 'Blog',
+		name: 'Blog & Edukasi Finansial Takerin',
+		description:
+			'Kumpulan panduan praktis cara atur gaji bulanan, tips hemat anak kos, dan strategi alokasi takaran pengeluaran bersama Takerin.',
+		url: 'https://takerin.my.id/blog',
+		inLanguage: 'id',
+		publisher: {
+			'@type': 'Organization',
+			name: 'Takerin',
+			url: 'https://takerin.my.id',
+			logo: {
+				'@type': 'ImageObject',
+				url: 'https://takerin.my.id/brand/og-image.png'
+			}
+		},
+		blogPost: data.posts.map((post) => ({
+			'@type': 'BlogPosting',
+			headline: post.title,
+			description: post.excerpt,
+			url: `https://takerin.my.id/blog/${post.slug}`,
+			datePublished: post.date,
+			author: {
+				'@type': 'Organization',
+				name: post.author
+			}
+		}))
+	});
+
+	const blogBreadcrumbSchema = {
+		'@context': 'https://schema.org',
+		'@type': 'BreadcrumbList',
+		itemListElement: [
+			{
+				'@type': 'ListItem',
+				position: 1,
+				name: 'Beranda',
+				item: 'https://takerin.my.id'
+			},
+			{
+				'@type': 'ListItem',
+				position: 2,
+				name: 'Blog',
+				item: 'https://takerin.my.id/blog'
+			}
+		]
+	};
+
+	const jsonLdBlog = $derived(
+		`<script type="application/ld+json">${JSON.stringify(blogCollectionSchema)}` + '</' + 'script>'
+	);
+
+	const jsonLdBreadcrumb =
+		`<script type="application/ld+json">${JSON.stringify(blogBreadcrumbSchema)}` + '</' + 'script>';
 </script>
 
 <svelte:head>
@@ -51,6 +107,12 @@
 	/>
 	<meta name="twitter:image" content="https://takerin.my.id/brand/og-image.png" />
 	<meta name="twitter:image:alt" content="Blog & Edukasi Finansial — Takerin" />
+
+	<!-- Structured Data -->
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html jsonLdBlog}
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+	{@html jsonLdBreadcrumb}
 </svelte:head>
 
 <div

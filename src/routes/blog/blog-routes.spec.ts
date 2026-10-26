@@ -76,6 +76,8 @@ describe('Blog Routes, Prerendering & SEO (Seams 2 & 3)', () => {
 		expect(blogIndexContent).toMatch(/<meta[^>]*name="description"/);
 		expect(blogIndexContent).toMatch(/property="og:title"/);
 		expect(blogIndexContent).toContain('og-image.png');
+		expect(blogIndexContent).toContain("'@type': 'Blog'");
+		expect(blogIndexContent).toContain("'@type': 'BreadcrumbList'");
 
 		const blogSlugPath = path.resolve('src/routes/blog/[slug]/+page.svelte');
 		const blogSlugContent = fs.readFileSync(blogSlugPath, 'utf-8');

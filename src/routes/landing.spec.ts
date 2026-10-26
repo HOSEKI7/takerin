@@ -69,10 +69,21 @@ describe('Landing Page & SEO (+page.svelte & routes)', () => {
 		expect(pageContent).toMatch(/name="twitter:description"/);
 		expect(pageContent).toMatch(/name="twitter:image"/);
 
-		// JSON-LD SoftwareApplication
+		// Title Tag Length & Branding
+		const titleMatch = pageContent.match(/<title>([^<]+)<\/title>/);
+		expect(titleMatch).not.toBeNull();
+		const titleText = titleMatch ? titleMatch[1] : '';
+		expect(titleText).toContain('Takerin');
+		expect(titleText.length).toBeLessThanOrEqual(65);
+		expect(titleText.length).toBeGreaterThanOrEqual(40);
+
+		// JSON-LD Structured Data
 		expect(pageContent).toContain('application/ld+json');
 		expect(pageContent).toContain("'SoftwareApplication'");
 		expect(pageContent).toContain("'FinanceApplication'");
+		expect(pageContent).toContain("'FAQPage'");
+		expect(pageContent).toContain("'WebSite'");
+		expect(pageContent).toContain('faqItems.map');
 		expect(pageContent).toContain("'0'");
 	});
 
