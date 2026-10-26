@@ -71,7 +71,7 @@
 <div
 	role="region"
 	aria-roledescription="carousel"
-	aria-label="Tutorial Penggunaan Takerin"
+	aria-label={t('onboarding.tutorial.carouselAria')}
 	class={className}
 >
 	<Card
@@ -109,7 +109,7 @@
 			class="p-6 sm:p-8"
 			role="group"
 			aria-roledescription="slide"
-			aria-label={`Slide ${currentSlide + 1} dari ${TOTAL_SLIDES}`}
+			aria-label={t('onboarding.tutorial.slideAria', { current: currentSlide + 1, total: TOTAL_SLIDES })}
 		>
 			{#if currentSlide === 0}
 				<!-- Slide 1: Dashboard & Sisa Jatah -->
@@ -131,13 +131,13 @@
 									<HugeiconsIcon icon={DashboardSquare01Icon} size={18} />
 								</div>
 								<span class="text-xs font-bold text-obsidian dark:text-paper"
-									>Dashboard Anggaran</span
+									>{t('onboarding.tutorial.mockup.budgetDashboard')}</span
 								>
 							</div>
 							<span
 								class="rounded-full bg-lime-voltage/20 px-2 py-0.5 text-[11px] font-bold text-forest-ink dark:text-lime-voltage"
 							>
-								Sisa 72%
+								{t('onboarding.tutorial.mockup.remaining72')}
 							</span>
 						</div>
 
@@ -152,15 +152,15 @@
 											size={14}
 											class="text-forest-ink dark:text-lime-voltage"
 										/>
-										Kebutuhan Hidup (50%)
+										{t('onboarding.tutorial.mockup.needs50')}
 									</span>
 									<span class="font-black text-forest-ink dark:text-lime-voltage">Rp 2.450.000</span
 									>
 								</div>
 								<ProgressBar value={49} max={100} variant="lime" class="mt-2" />
 								<div class="mt-1 flex justify-between text-[10px] text-slate dark:text-pebble">
-									<span>Terpakai: Rp 2.550.000</span>
-									<span>Alokasi: Rp 5.000.000</span>
+									<span>{t('onboarding.tutorial.mockup.used2550')}</span>
+									<span>{t('onboarding.tutorial.mockup.alloc5000')}</span>
 								</div>
 							</div>
 
@@ -174,7 +174,7 @@
 											size={14}
 											class="text-spruce dark:text-lime-voltage"
 										/>
-										Tabungan & Investasi (20%)
+										{t('onboarding.tutorial.mockup.savings20')}
 									</span>
 									<span class="font-black text-forest-ink dark:text-lime-voltage">Rp 2.000.000</span
 									>
@@ -211,14 +211,14 @@
 									<HugeiconsIcon icon={Add01Icon} size={20} />
 								</span>
 								<span class="text-xs font-bold text-obsidian dark:text-paper"
-									>Catat Pengeluaran Cepat</span
+									>{t('onboarding.tutorial.mockup.quickExpense')}</span
 								>
 							</div>
 							<span
 								class="inline-flex items-center gap-1 rounded-full bg-forest-ink px-2 py-0.5 text-[11px] font-bold text-lime-voltage"
 							>
 								<HugeiconsIcon icon={Clock01Icon} size={12} />
-								5 Detik!
+								{t('onboarding.tutorial.mockup.fiveSeconds')}
 							</span>
 						</div>
 
@@ -228,7 +228,7 @@
 							<div
 								class="text-[11px] font-bold tracking-wider text-slate uppercase dark:text-pebble"
 							>
-								Nominal Pertama
+								{t('onboarding.tutorial.mockup.firstAmount')}
 							</div>
 							<div class="mt-1 text-2xl font-black text-forest-ink dark:text-lime-voltage">
 								Rp 35.000
@@ -237,12 +237,12 @@
 								<span
 									class="rounded-md bg-linen-mist/80 px-2.5 py-1 text-xs font-semibold text-forest-ink dark:bg-spruce/60 dark:text-linen-mist"
 								>
-									Kebutuhan
+									{t('onboarding.tutorial.mockup.needsTag')}
 								</span>
 								<span
 									class="rounded-md bg-fog px-2.5 py-1 text-xs font-medium text-charcoal dark:bg-dark-surface dark:text-linen-mist"
 								>
-									Makan Siang 🍜
+									{t('onboarding.tutorial.mockup.lunchTag')}
 								</span>
 							</div>
 						</div>
@@ -275,13 +275,13 @@
 									<HugeiconsIcon icon={SparklesIcon} size={18} />
 								</div>
 								<span class="text-xs font-bold text-obsidian dark:text-paper"
-									>Ringkasan & Tips AI</span
+									>{t('onboarding.tutorial.mockup.aiSummaryTitle')}</span
 								>
 							</div>
 							<span
 								class="rounded-full bg-forest-ink/10 px-2 py-0.5 text-[11px] font-bold text-forest-ink dark:bg-lime-voltage/20 dark:text-lime-voltage"
 							>
-								Tiap Akhir Bulan
+								{t('onboarding.tutorial.mockup.endOfMonth')}
 							</span>
 						</div>
 
@@ -292,11 +292,10 @@
 								class="flex items-center gap-1.5 text-xs font-bold text-forest-ink dark:text-lime-voltage"
 							>
 								<HugeiconsIcon icon={SparklesIcon} size={14} />
-								Analisis Otomatis Takerin
+								{t('onboarding.tutorial.mockup.autoAnalysis')}
 							</div>
 							<p class="mt-2 text-xs leading-relaxed text-charcoal dark:text-linen-mist">
-								"Keren! Pengeluaran kebutuhan kamu terkontrol rapi di 49%. Alokasi tabungan tercapai
-								penuh bulan ini! 🎉"
+								{t('onboarding.tutorial.mockup.aiQuote')}
 							</p>
 						</div>
 					</div>
@@ -327,19 +326,19 @@
 								class="inline-flex items-center gap-1 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage"
 							>
 								<HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} />
-								Gajian Diset
+								{t('onboarding.tutorial.mockup.payDaySet')}
 							</span>
 							<span
 								class="inline-flex items-center gap-1 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage"
 							>
 								<HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} />
-								Pemasukan Masuk
+								{t('onboarding.tutorial.mockup.incomeAdded')}
 							</span>
 							<span
 								class="inline-flex items-center gap-1 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage"
 							>
 								<HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} />
-								Kategori 100%
+								{t('onboarding.tutorial.mockup.categories100')}
 							</span>
 						</div>
 					</div>
@@ -359,12 +358,12 @@
 			class="flex flex-col gap-4 border-t border-fog bg-fog/20 px-6 py-5 sm:flex-row sm:items-center sm:justify-between dark:border-dark-border dark:bg-dark-surface/40"
 		>
 			<!-- Carousel Stepper Dots -->
-			<div class="flex items-center justify-center gap-1" aria-label="Indikator slide">
+			<div class="flex items-center justify-center gap-1" aria-label={t('onboarding.tutorial.indicatorAria')}>
 				{#each slideIndices as idx (idx)}
 					<button
 						type="button"
 						aria-current={currentSlide === idx ? 'step' : undefined}
-						aria-label={`Ke slide ${idx + 1}`}
+						aria-label={t('onboarding.tutorial.goToSlide', { slide: idx + 1 })}
 						onclick={() => goToSlide(idx)}
 						class="flex h-7 w-7 items-center justify-center rounded-full transition-all focus:outline-hidden focus-visible:ring-2 focus-visible:ring-forest-ink dark:focus-visible:ring-lime-voltage"
 					>

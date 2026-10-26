@@ -147,7 +147,7 @@
 	{#if user?.image}
 		<img
 			src={user.image}
-			alt={user?.name ?? 'Pengguna'}
+			alt={user?.name ?? t('common.user')}
 			class="h-9 w-9 rounded-full border border-fog object-cover dark:border-dark-border"
 		/>
 	{:else}
@@ -189,7 +189,7 @@
 	class="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-fog bg-fog/40 transition-all duration-300 ease-in-out lg:flex dark:border-dark-border dark:bg-dark-surface {isCollapsed
 		? 'w-[72px]'
 		: 'w-64'}"
-	aria-label="Navigasi Desktop Sidebar"
+	aria-label={t('nav.aria.desktopSidebar')}
 >
 	<!-- Header Branding & Collapse Toggle -->
 	<div
@@ -245,7 +245,7 @@
 	<!-- Navigation Menu Groups -->
 	<nav
 		class="flex-1 space-y-4 px-3 py-4 {isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}"
-		aria-label="Menu Utama dan Preferensi"
+		aria-label={t('nav.aria.mainAndPreferences')}
 	>
 		<!-- Group 1: Menu Utama -->
 		<div>
@@ -299,14 +299,14 @@
 		{#if isCollapsed}
 			<div
 				class="group relative flex items-center justify-center"
-				aria-label={user?.name ?? 'Pengguna'}
+				aria-label={user?.name ?? t('common.user')}
 			>
 				{@render userAvatar()}
 				<div
 					role="tooltip"
 					class="pointer-events-none absolute left-full z-50 ml-3 rounded-md bg-charcoal px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-paper opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:bg-paper dark:text-charcoal"
 				>
-					<span class="block font-bold">{user?.name ?? 'Pengguna'}</span>
+					<span class="block font-bold">{user?.name ?? t('common.user')}</span>
 					{#if user?.email}
 						<span class="block text-[10px] opacity-80">{user.email}</span>
 					{/if}
@@ -317,7 +317,7 @@
 				{@render userAvatar()}
 				<div class="min-w-0 flex-1">
 					<p class="truncate text-xs font-bold text-charcoal dark:text-linen-mist">
-						{user?.name ?? 'Pengguna'}
+						{user?.name ?? t('common.user')}
 					</p>
 					{#if user?.email}
 						<p class="truncate text-[11px] text-slate dark:text-pebble">{user.email}</p>

@@ -3,8 +3,8 @@
 	import Button from '#lib/components/Button.svelte';
 	import Card from '#lib/components/Card.svelte';
 	import { resolve } from '$app/paths';
-	import { formatRupiah, formatDateIndonesian } from '#lib/validation/onboarding.js';
-	import { t } from '#lib/i18n/index.js';
+	import { formatRupiah, formatDate } from '#lib/validation/onboarding.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
@@ -189,7 +189,7 @@
 							>
 								<span class="flex items-center gap-1">
 									<HugeiconsIcon icon={Calendar01Icon} class="h-3.5 w-3.5" />
-									<span>{formatDateIndonesian(exp.date)}</span>
+									<span>{formatDate(exp.date, getLocale())}</span>
 								</span>
 								{#if exp.time}
 									<span>•</span>
@@ -293,7 +293,7 @@
 							deleteCandidateId = null;
 							await update();
 						} else if (result.type === 'failure') {
-							deleteError = (result.data?.error as string) ?? 'Gagal menghapus pengeluaran.';
+							deleteError = (result.data?.error as string) ?? t('expenses.deleteFailed');
 						} else {
 							await update();
 						}

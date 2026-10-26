@@ -4,9 +4,9 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
-	import { t } from '#lib/i18n/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { authClient } from '#lib/auth-client.js';
-	import { validateLoginInput } from '#lib/validation/auth.js';
+	import { validateLoginInput, formatAuthError } from '#lib/validation/auth.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -22,7 +22,7 @@
 		event.preventDefault();
 		errorMessage = '';
 
-		const validationError = validateLoginInput({ email, password });
+		const validationError = validateLoginInput({ email, password }, getLocale());
 		if (validationError) {
 			errorMessage = validationError;
 			return;
@@ -36,7 +36,7 @@
 			});
 
 			if (error) {
-				errorMessage = error.message || 'Email atau password tidak sesuai.';
+				errorMessage = formatAuthError(error, getLocale());
 				isLoading = false;
 				return;
 			}
@@ -54,7 +54,9 @@
 			}
 		} catch (err: unknown) {
 			const message =
-				err instanceof Error ? err.message : 'Terjadi kesalahan saat masuk. Silakan coba lagi.';
+				err instanceof Error
+					? formatAuthError(err.message, getLocale())
+					: formatAuthError(null, getLocale());
 			errorMessage = message;
 			isLoading = false;
 		}

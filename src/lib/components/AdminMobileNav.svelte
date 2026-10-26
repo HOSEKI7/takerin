@@ -127,7 +127,7 @@
 	{#if user?.image}
 		<img
 			src={user.image}
-			alt={user?.name ?? 'Admin'}
+			alt={user?.name ?? t('common.admin')}
 			class="h-8 w-8 rounded-full border border-fog object-cover dark:border-dark-border"
 		/>
 	{:else}
@@ -183,7 +183,7 @@
 		id="admin-mobile-drawer"
 		role="dialog"
 		aria-modal="true"
-		aria-label="Navigasi Admin"
+		aria-label={t('nav.aria.adminMobileNav')}
 		transition:fly={{ x: -300, duration: 250 }}
 		class="fixed inset-y-0 left-0 z-50 flex h-full w-72 max-w-[85vw] flex-col border-r border-fog bg-paper shadow-2xl lg:hidden dark:border-dark-border dark:bg-dark-surface"
 	>
@@ -208,7 +208,7 @@
 		<!-- Navigation Menu Groups (Scrollable) -->
 		<nav
 			class="flex-1 space-y-4 overflow-y-auto px-3 py-4"
-			aria-label="Menu Konsol Administrator Mobile"
+			aria-label={t('nav.aria.adminMobileConsole')}
 		>
 			<div>
 				<h3
@@ -246,7 +246,7 @@
 				{@render userAvatar()}
 				<div class="min-w-0 flex-1">
 					<p class="truncate text-xs font-bold text-charcoal dark:text-linen-mist">
-						{user?.name ?? 'Admin'}
+						{user?.name ?? t('common.admin')}
 					</p>
 					{#if user?.email}
 						<p class="truncate text-[11px] text-slate dark:text-pebble">{user.email}</p>

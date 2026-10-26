@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Download01Icon, Cancel01Icon, Share01Icon } from '@hugeicons/core-free-icons';
+	import { t } from '#lib/i18n/index.js';
 	import {
 		isStandalone,
 		isIOS,
@@ -78,7 +79,7 @@
 <!-- PWA Install Prompt Banner -->
 {#if showPrompt && !installed}
 	<aside
-		aria-label="Pemasangan Aplikasi Takerin"
+		aria-label={t('pwa.bannerAria')}
 		class="fixed right-4 bottom-4 z-40 w-[calc(100%-2rem)] max-w-sm rounded-[10px] border border-[var(--color-fog)] bg-white p-4 shadow-xl transition-all sm:right-6 sm:bottom-6 dark:border-[var(--color-dark-border)] dark:bg-[var(--color-dark-card)]"
 	>
 		<div class="flex items-start gap-3">
@@ -92,12 +93,12 @@
 			<div class="min-w-0 flex-1">
 				<div class="flex items-center justify-between gap-1">
 					<h3 class="text-sm font-bold text-[var(--color-obsidian)] dark:text-white">
-						Pasang Takerin
+						{t('pwa.installTitle')}
 					</h3>
 					<button
 						type="button"
 						onclick={handleDismiss}
-						aria-label="Tutup saran pemasangan aplikasi"
+						aria-label={t('pwa.closeAria')}
 						class="text-[var(--color-pebble)] transition hover:text-[var(--color-charcoal)] dark:hover:text-white"
 					>
 						<HugeiconsIcon icon={Cancel01Icon} size={16} />
@@ -105,9 +106,9 @@
 				</div>
 				<p class="mt-1 text-xs text-[var(--color-slate)] dark:text-[var(--color-pebble)]">
 					{#if isIosDevice}
-						Akses cepat dan buka catatan keuangan saat offline dari layar utama iPhone/iPad.
+						{t('pwa.iosDesc')}
 					{:else}
-						Aplikasi lebih cepat dibuka dan dapat diakses saat offline dari layar utama.
+						{t('pwa.androidDesc')}
 					{/if}
 				</p>
 			</div>
@@ -119,12 +120,11 @@
 				class="mt-3 rounded-[10px] bg-[var(--color-fog)]/60 p-2.5 text-xs text-[var(--color-charcoal)] dark:bg-[var(--color-dark-surface)] dark:text-[var(--color-linen-mist)]"
 			>
 				<p class="flex items-center gap-1.5 font-medium">
-					<span>1. Ketuk ikon Bagikan</span>
+					<span>{t('pwa.iosStep1')}</span>
 					<HugeiconsIcon icon={Share01Icon} size={14} class="shrink-0" />
-					<span>di bilah Safari</span>
 				</p>
 				<p class="mt-1 font-medium">
-					2. Pilih menu <strong>"Tambah ke Layar Utama"</strong>
+					{t('pwa.iosStep2')}
 				</p>
 			</div>
 
@@ -134,7 +134,7 @@
 					onclick={handleDismiss}
 					class="inline-flex cursor-pointer items-center justify-center rounded-full bg-[var(--color-forest-ink)] px-4 py-1.5 text-xs font-semibold text-[var(--color-paper)] transition hover:opacity-90 dark:bg-[var(--color-lime-voltage)] dark:text-[var(--color-forest-ink)]"
 				>
-					Mengerti
+					{t('pwa.understand')}
 				</button>
 			</div>
 		{:else}
@@ -145,7 +145,7 @@
 					onclick={handleDismiss}
 					class="cursor-pointer text-xs font-medium text-[var(--color-slate)] underline underline-offset-4 transition hover:text-[var(--color-charcoal)] dark:text-[var(--color-pebble)] dark:hover:text-[var(--color-paper)]"
 				>
-					Nanti
+					{t('pwa.later')}
 				</button>
 				<button
 					type="button"
@@ -153,7 +153,7 @@
 					class="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-[var(--color-lime-voltage)] px-4 py-1.5 text-xs font-bold text-[var(--color-forest-ink)] transition hover:brightness-95 active:brightness-90"
 				>
 					<HugeiconsIcon icon={Download01Icon} size={14} />
-					<span>Pasang</span>
+					<span>{t('pwa.install')}</span>
 				</button>
 			</div>
 		{/if}

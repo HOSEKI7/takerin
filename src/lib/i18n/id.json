@@ -33,7 +33,10 @@
 		"enableLightMode": "Aktifkan mode terang",
 		"enableDarkMode": "Aktifkan mode gelap",
 		"switchToLightMode": "Ganti ke Mode Terang",
-		"switchToDarkMode": "Ganti ke Mode Gelap"
+		"switchToDarkMode": "Ganti ke Mode Gelap",
+		"period": "Periode",
+		"user": "Pengguna",
+		"admin": "Administrator"
 	},
 	"calculator": {
 		"add": "Tambah",
@@ -67,7 +70,28 @@
 		"newExpense": "Catat Pengeluaran",
 		"admin": "Admin",
 		"logout": "Keluar",
-		"loggingOut": "Sedang keluar..."
+		"loggingOut": "Sedang keluar...",
+		"finance": "Keuangan",
+		"subRoutes": {
+			"newExpense": "Catat Baru",
+			"expenseDetail": "Detail Pengeluaran",
+			"categoryDetail": "Detail Kategori",
+			"periodDetail": "Detail Periode",
+			"settingsDetail": "Detail Pengaturan",
+			"security": "Keamanan",
+			"editExpense": "Edit Pengeluaran",
+			"editCategory": "Edit Kategori",
+			"editSettings": "Edit Pengaturan"
+		},
+		"aria": {
+			"desktopSidebar": "Navigasi Desktop Sidebar",
+			"mainAndPreferences": "Menu Utama dan Preferensi",
+			"mobileMenuAndPreferences": "Menu Utama dan Preferensi Mobile",
+			"adminDesktopSidebar": "Navigasi Admin Desktop Sidebar",
+			"adminConsole": "Menu Konsol Administrator",
+			"adminMobileNav": "Navigasi Admin",
+			"adminMobileConsole": "Menu Konsol Administrator Mobile"
+		}
 	},
 	"auth": {
 		"login": {
@@ -166,7 +190,9 @@
 			"submitBackup": "Masuk dengan Kode Cadangan",
 			"submitting": "Memverifikasi...",
 			"notYourAccount": "Bukan akun Anda?",
-			"backToLogin": "Kembali ke halaman masuk"
+			"backToLogin": "Kembali ke halaman masuk",
+			"otpSent": "Kode OTP telah dikirimkan ke email Anda.",
+			"newOtpSent": "Kode OTP baru berhasil dikirim ke email Anda."
 		},
 		"adminInvite": {
 			"title": "Aktivasi Akun Administrator",
@@ -246,6 +272,12 @@
 		"progress3": "Langkah 3 dari 4: Pilih Template Kategori",
 		"progress4": "Langkah 4 dari 4: Atur & Sesuaikan Kategori",
 		"prevButton": "Kembali",
+		"minOneSource": "Minimal harus memiliki satu sumber pemasukan.",
+		"minOneCategory": "Minimal harus memiliki satu kategori.",
+		"defaultIncomeName": "Gaji Pokok",
+		"tpl503020Desc": "Pembagian klasik: 50% Kebutuhan, 30% Keinginan, 20% Tabungan & Investasi.",
+		"tpl6ToplesDesc": "Metode T. Harv Eker: Kebutuhan (55%), Tabungan Jangka Panjang (10%), Investasi Finansial (10%), Edukasi (10%), Hiburan (10%), Donasi (5%).",
+		"tplCustomDesc": "Tentukan nama kategori dan persentase sesuai gaya hidup finansial Anda.",
 		"tutorial": {
 			"badge": "Panduan Cepat",
 			"skip": "Lewati",
@@ -259,7 +291,31 @@
 			"slide3Title": "Tips AI & Riwayat Bulanan",
 			"slide3Desc": "Tiap akhir bulan, lihat ringkasan dan tips AI di History",
 			"slide4Title": "Selamat Datang!",
-			"slide4Desc": "Selamat! Mulai takerin gajimu sekarang 🎉"
+			"slide4Desc": "Selamat! Mulai takerin gajimu sekarang 🎉",
+			"carouselAria": "Tutorial Penggunaan Takerin",
+			"slideAria": "Slide {{current}} dari {{total}}",
+			"indicatorAria": "Indikator slide",
+			"goToSlide": "Ke slide {{slide}}",
+			"mockup": {
+				"budgetDashboard": "Dashboard Anggaran",
+				"remaining72": "Sisa 72%",
+				"needs50": "Kebutuhan Hidup (50%)",
+				"used2550": "Terpakai: Rp 2.550.000",
+				"alloc5000": "Alokasi: Rp 5.000.000",
+				"savings20": "Tabungan & Investasi (20%)",
+				"quickExpense": "Catat Pengeluaran Cepat",
+				"fiveSeconds": "5 Detik!",
+				"firstAmount": "Nominal Pertama",
+				"needsTag": "Kebutuhan",
+				"lunchTag": "Makan Siang 🍜",
+				"aiSummaryTitle": "Ringkasan & Tips AI",
+				"endOfMonth": "Tiap Akhir Bulan",
+				"autoAnalysis": "Analisis Otomatis Takerin",
+				"aiQuote": "\"Keren! Pengeluaran kebutuhan kamu terkontrol rapi di 49%. Alokasi tabungan tercapai penuh bulan ini! 🎉\"",
+				"payDaySet": "Gajian Diset",
+				"incomeAdded": "Pemasukan Masuk",
+				"categories100": "Kategori 100%"
+			}
 		}
 	},
 	"dashboard": {
@@ -313,7 +369,38 @@
 		"emptyPeriodDesc": "Anda belum memiliki konfigurasi budget bulanan yang aktif. Mulai atur Tanggal Gajian dan alokasi kategori Anda untuk memulai pemantauan.",
 		"startSetup": "Mulai Setup Periode",
 		"budgetSummary": "Ringkasan Anggaran",
-		"payDayPrefix": "Tanggal Gajian: setiap tgl {{day}}"
+		"payDayPrefix": "Tanggal Gajian: setiap tgl {{day}}",
+		"twoFactorActive": "Akun Anda dilindungi dengan verifikasi dua langkah saat masuk.",
+		"twoFactorInactive": "Tingkatkan keamanan akun dengan mewajibkan verifikasi OTP setiap masuk.",
+		"passwordRequiredFor2FA": "Password akun wajib diisi untuk mengaktifkan verifikasi dua langkah.",
+		"passwordRequiredToDisable2FA": "Password akun wajib diisi untuk menonaktifkan verifikasi dua langkah.",
+		"twoFactorEnabledSuccess": "Verifikasi Dua Langkah berhasil diaktifkan! Simpan kode cadangan Anda di bawah ini.",
+		"twoFactorDisabledSuccess": "Verifikasi Dua Langkah berhasil dinonaktifkan.",
+		"copyAll": "Salin Semua",
+		"copied": "Tersalin!",
+		"authenticatorSetup": "Pengaturan Aplikasi Autentikator (Opsional):",
+		"sectionPeriodSummary": "Ringkasan Keuangan Periode Aktif",
+		"sectionCategoryAllocation": "Rincian Alokasi Kategori",
+		"sectionRecentExpenses": "Pengeluaran Terbaru",
+		"accountInfo": "Informasi Akun",
+		"nameLabel": "Nama:",
+		"emailLabel": "Email:",
+		"roleLabel": "Peran:",
+		"verificationStatus": "Status Verifikasi:",
+		"emailVerified": "Email Terverifikasi",
+		"emailUnverified": "Belum Verifikasi",
+		"twoFactorTitle": "Verifikasi Dua Langkah (2FA)",
+		"twoFactorStatusActive": "2FA Aktif",
+		"twoFactorStatusInactive": "2FA Nonaktif",
+		"enable2FA": "Aktifkan 2FA",
+		"disable2FA": "Nonaktifkan 2FA",
+		"enterPasswordPrompt": "Masukkan Password Akun Anda:",
+		"confirmEnable2FA": "Konfirmasi Aktifkan 2FA",
+		"confirmDisable2FATitle": "Konfirmasi Nonaktifkan Verifikasi Dua Langkah",
+		"accountPasswordLabel": "Password Akun",
+		"enterPasswordPlaceholder": "Masukkan password akun Anda",
+		"yesDisable": "Ya, Nonaktifkan",
+		"backupCodesTitle": "Kode Cadangan"
 	},
 	"expenses": {
 		"title": "Daftar Pengeluaran",
@@ -352,7 +439,10 @@
 			"amountRequired": "Masukkan nominal terlebih dahulu",
 			"categoryRequired": "Pilih salah satu kategori",
 			"nameRequired": "Isi nama pengeluaran"
-		}
+		},
+		"warningOverBudgetTitle": "Peringatan: Melebihi Saldo Kategori",
+		"warningOverBudgetDesc": "Nominal {{amount}} melebihi sisa saldo kategori ({{balance}}). Pengeluaran tetap dapat disimpan, namun saldo kategori ini akan bernilai minus (over-budget).",
+		"deleteFailed": "Gagal menghapus pengeluaran."
 	},
 	"categories": {
 		"title": "Manajemen Kategori",
@@ -400,7 +490,19 @@
 		"freezeModalDesc": "Kategori \"{{name}}\" memiliki alokasi {{percentage}}%. Kategori ini akan dibekukan (Frozen) sehingga tidak bisa menerima pengeluaran baru. Pindahkan alokasi {{percentage}}% ini ke kategori aktif lainnya:",
 		"redistributeAuto": "Bagi Proporsional Otomatis",
 		"redistributeManual": "Pilih Manual",
-		"confirmFreeze": "Konfirmasi & Bekukan"
+		"confirmFreeze": "Konfirmasi & Bekukan",
+		"addErrorNameRequired": "Nama kategori tidak boleh kosong.",
+		"addErrorPercentRange": "Persentase kategori harus antara 1% sampai 99%.",
+		"addErrorPercentTooLarge": "Persentase terlalu besar untuk kategori baru.",
+		"addErrorReductionMismatch": "Total pengurangan ({{reduced}}%) harus pas sama dengan persentase kategori baru ({{newPercent}}%).",
+		"addErrorCategoryExceeded": "Pengurangan kategori \"{{name}}\" melebihi sisa alokasi. Persentase harus tetap di atas 0%.",
+		"freezeErrorRedistributionMismatch": "Total redistribusi ({{added}}%) harus pas sama dengan persentase kategori yang dibekukan ({{targetPercent}}%).",
+		"updateSuccess": "Kategori berhasil diperbarui.",
+		"minOneActiveCategory": "Minimal harus memiliki satu kategori aktif.",
+		"exactly100": "✓ Pas 100%",
+		"overPercent": "Lebih {{percent}}%",
+		"underPercent": "Kurang {{percent}}%",
+		"sliderAria": "Geser persentase untuk {{name}}"
 	},
 	"history": {
 		"title": "Riwayat Periode Anggaran",
@@ -425,7 +527,14 @@
 		"regenerateAiSummary": "Perbarui Analisis AI",
 		"generatingAiSummary": "AI sedang menganalisis data periode Anda...",
 		"exportPdf": "Unduh Ringkasan Bulanan (PDF)",
-		"exportCsv": "Ekspor Pengeluaran CSV"
+		"exportCsv": "Ekspor Pengeluaran CSV",
+		"aiServiceLabel": "Analisis AI Takerin (Groq + Gemini)",
+		"aiLoading": "Sedang menganalisis pola alokasi dan kebiasaan finansial Anda...",
+		"aiNotes": "Catatan AI Takerin",
+		"saved": "Tersimpan",
+		"retry": "Coba Lagi",
+		"aiFailed": "Gagal membuat frasa analisis AI.",
+		"aiNetworkError": "Terjadi kendala jaringan saat menghubungi layanan AI."
 	},
 	"settings": {
 		"title": "Pengaturan Akun & Profil",
@@ -498,7 +607,29 @@
 		"deleteModalWarning": "PERINGATAN: Seluruh data Anda di Cloudflare D1 akan dihapus secara permanen dan tidak dapat dipulihkan.",
 		"deleteModalTypeConfirm": "Ketik teks \"HAPUS AKUN SAYA\" di bawah ini untuk mengonfirmasi:",
 		"deleteModalConfirmButton": "Hapus Akun Secara Permanen",
-		"deletingAccount": "Sedang menghapus akun..."
+		"deletingAccount": "Sedang menghapus akun...",
+		"invalidData": "Data yang dimasukkan tidak valid.",
+		"serverError": "Gagal menghubungi server.",
+		"otpResendError": "Gagal mengirim ulang kode OTP.",
+		"otpInvalid": "Kode OTP tidak valid.",
+		"emailChangeVerifyFailed": "Gagal memverifikasi pergantian email.",
+		"currentPasswordRequired": "Kata sandi saat ini wajib diisi.",
+		"newPasswordMinLength": "Kata sandi baru minimal 8 karakter.",
+		"confirmPasswordMismatch": "Konfirmasi kata sandi tidak cocok.",
+		"passwordChangeSuccess": "Kata sandi berhasil diubah.",
+		"systemError": "Terjadi kesalahan sistem.",
+		"passwordPlaceholderMin": "Minimal 8 karakter",
+		"confirmPasswordPlaceholder": "Ketik ulang kata sandi baru",
+		"enterPasswordFor2FA": "Masukkan Kata Sandi Akun untuk Mengaktifkan 2FA:",
+		"accountPasswordPlaceholder": "Kata sandi akun Anda",
+		"newBackupCodesSuccess": "Kode cadangan baru berhasil dibuat!",
+		"payDayHint": "Menandai hari dimulainya Periode Bulan baru (1–31). Periode saat ini: {{start}} sampai {{end}} (Tanggal Gajian aktif: {{day}}).",
+		"deleteAccountConfirmPhrase": "HAPUS AKUN SAYA",
+		"deleteAccountConfirmPlaceholder": "Ketik \"{{phrase}}\" untuk konfirmasi",
+		"yourBackupCodes": "Kode Cadangan Anda:",
+		"payDayEditable": "Dapat Diubah",
+		"payDayLocked": "Batas Waktu",
+		"copyCodesFailed": "Gagal menyalin kode."
 	},
 	"admin": {
 		"title": "Panel Admin Takerin",
@@ -651,5 +782,44 @@
 			"openResendDashboard": "Buka Dashboard Resend",
 			"resendNote": "Catatan: Resend tidak menyediakan endpoint gratis untuk mengecek kuota terpakai secara programmatic. Gunakan tombol tautan di atas untuk memantau grafik pengiriman email harian dan bulanan secara langsung pada dashboard resmi Resend."
 		}
+	},
+	"categoryPicker": {
+		"selectCategory": "Pilih Kategori",
+		"activeCount": "{{count}} kategori aktif"
+	},
+	"pwa": {
+		"installTitle": "Pasang Takerin",
+		"closeAria": "Tutup saran pemasangan aplikasi",
+		"bannerAria": "Pemasangan Aplikasi Takerin",
+		"iosDesc": "Akses cepat dan buka catatan keuangan saat offline dari layar utama iPhone/iPad.",
+		"androidDesc": "Aplikasi lebih cepat dibuka dan dapat diakses saat offline dari layar utama.",
+		"iosStep1": "1. Ketuk ikon Bagikan di bilah Safari",
+		"iosStep2": "2. Pilih menu \"Tambah ke Layar Utama\"",
+		"understand": "Mengerti",
+		"later": "Nanti",
+		"install": "Pasang"
+	},
+	"support": {
+		"mascotAria": "Dukungan Pengembang Takerin",
+		"mascotAlt": "Maskot Dukungan Pengembang",
+		"tooltipIdle": "Traktir kopi developer ☕",
+		"tooltipThanks": "Terima kasih banyak! 💚",
+		"dismissAria": "Tutup maskot dukungan",
+		"openModalAria": "Buka popup donasi sukarela untuk pengembang",
+		"modalCloseAria": "Tutup jendela donasi",
+		"badge": "Dukungan Sukarela",
+		"modalTitle": "Traktir Kopi Developer ☕",
+		"modalDesc": "Takerin gratis tanpa iklan. Donasi seikhlasnya sangat berarti untuk biaya operasional & kopi developer!",
+		"qrisAlt": "QRIS GoPay Universal Takerin",
+		"qrisHint": "Bisa di-scan dari BCA, GoPay, OVO, Dana, ShopeePay, & m-Banking apa saja.",
+		"sociabuzzLabel": "Donasi via Sociabuzz"
+	},
+	"offline": {
+		"title": "Mode Offline | Takerin",
+		"metaDesc": "Koneksi internet terputus. Buka data tersimpan atau hubungkan kembali.",
+		"heading": "Anda Sedang Offline",
+		"desc": "Koneksi internet Anda terputus dan halaman ini belum tersimpan di memori cache perangkat. Anda tetap dapat membuka Dashboard yang sudah tersimpan sebelumnya.",
+		"openDashboard": "Buka Dashboard",
+		"retry": "Coba Lagi"
 	}
 }

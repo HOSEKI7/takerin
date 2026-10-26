@@ -4,7 +4,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
-	import { t } from '#lib/i18n/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { authClient } from '#lib/auth-client.js';
 	import {
 		validateForgotPasswordInput,
@@ -51,7 +51,7 @@
 		errorMessage = '';
 		successMessage = '';
 
-		const validationError = validateForgotPasswordInput({ email });
+		const validationError = validateForgotPasswordInput({ email }, getLocale());
 		if (validationError) {
 			errorMessage = validationError;
 			return;
@@ -65,7 +65,7 @@
 			});
 
 			if (error) {
-				errorMessage = formatAuthError(error);
+				errorMessage = formatAuthError(error, getLocale());
 				isLoading = false;
 				return;
 			}
@@ -74,7 +74,7 @@
 			startCooldown(60);
 			isLoading = false;
 		} catch (err: unknown) {
-			errorMessage = formatAuthError(err as { message?: string });
+			errorMessage = formatAuthError(err as { message?: string }, getLocale());
 			isLoading = false;
 		}
 	}
@@ -89,7 +89,7 @@
 			otp,
 			password: newPassword,
 			confirmPassword
-		});
+		}, getLocale());
 
 		if (validationError) {
 			errorMessage = validationError;
@@ -105,7 +105,7 @@
 			});
 
 			if (error) {
-				errorMessage = formatAuthError(error);
+				errorMessage = formatAuthError(error, getLocale());
 				isLoading = false;
 				return;
 			}
@@ -113,7 +113,7 @@
 			isLoading = false;
 			goto(resolve('/auth/login?reset=success'));
 		} catch (err: unknown) {
-			errorMessage = formatAuthError(err as { message?: string });
+			errorMessage = formatAuthError(err as { message?: string }, getLocale());
 			isLoading = false;
 		}
 	}
@@ -131,7 +131,7 @@
 			});
 
 			if (error) {
-				errorMessage = formatAuthError(error);
+				errorMessage = formatAuthError(error, getLocale());
 				isResending = false;
 				return;
 			}
@@ -140,7 +140,7 @@
 			startCooldown(60);
 			isResending = false;
 		} catch (err: unknown) {
-			errorMessage = formatAuthError(err as { message?: string });
+			errorMessage = formatAuthError(err as { message?: string }, getLocale());
 			isResending = false;
 		}
 	}

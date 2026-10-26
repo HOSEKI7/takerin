@@ -3,8 +3,8 @@
 	import Button from '#lib/components/Button.svelte';
 	import Card from '#lib/components/Card.svelte';
 	import { resolve } from '$app/paths';
-	import { formatRupiah, formatDateIndonesian } from '#lib/validation/onboarding.js';
-	import { t } from '#lib/i18n/index.js';
+	import { formatRupiah, formatDate } from '#lib/validation/onboarding.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Calendar01Icon, ArrowRight02Icon, Invoice01Icon } from '@hugeicons/core-free-icons';
 
@@ -56,8 +56,9 @@
 											icon={Calendar01Icon}
 											class="h-4 w-4 text-forest-ink dark:text-lime-voltage"
 										/>
-										{formatDateIndonesian(period.startDate)} – {formatDateIndonesian(
-											period.endDate
+										{formatDate(period.startDate, getLocale())} – {formatDate(
+											period.endDate,
+											getLocale()
 										)}
 									</span>
 									<span

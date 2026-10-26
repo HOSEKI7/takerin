@@ -140,7 +140,7 @@
 	{#if user?.image}
 		<img
 			src={user.image}
-			alt={user?.name ?? 'Admin'}
+			alt={user?.name ?? t('common.admin')}
 			class="h-9 w-9 rounded-full border border-fog object-cover dark:border-dark-border"
 		/>
 	{:else}
@@ -182,7 +182,7 @@
 	class="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-fog bg-fog/40 transition-all duration-300 ease-in-out lg:flex dark:border-dark-border dark:bg-dark-surface {isCollapsed
 		? 'w-[72px]'
 		: 'w-64'}"
-	aria-label="Navigasi Admin Desktop Sidebar"
+	aria-label={t('nav.aria.adminDesktopSidebar')}
 >
 	<!-- Header Branding, Admin Panel Badge & Collapse Toggle -->
 	<div
@@ -221,7 +221,7 @@
 	<!-- Navigation Menu -->
 	<nav
 		class="flex-1 space-y-4 px-3 py-4 {isCollapsed ? 'overflow-visible' : 'overflow-y-auto'}"
-		aria-label="Menu Konsol Administrator"
+		aria-label={t('nav.aria.adminConsole')}
 	>
 		<div>
 			{#if isCollapsed}
@@ -252,14 +252,14 @@
 		{#if isCollapsed}
 			<div
 				class="group relative flex items-center justify-center"
-				aria-label={user?.name ?? 'Admin'}
+				aria-label={user?.name ?? t('common.admin')}
 			>
 				{@render userAvatar()}
 				<div
 					role="tooltip"
 					class="pointer-events-none absolute left-full z-50 ml-3 rounded-md bg-charcoal px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-paper opacity-0 shadow-md transition-opacity group-hover:opacity-100 dark:bg-paper dark:text-charcoal"
 				>
-					<span class="block font-bold">{user?.name ?? 'Admin'}</span>
+					<span class="block font-bold">{user?.name ?? t('common.admin')}</span>
 					{#if user?.email}
 						<span class="block text-[10px] opacity-80">{user.email}</span>
 					{/if}
@@ -270,7 +270,7 @@
 				{@render userAvatar()}
 				<div class="min-w-0 flex-1">
 					<p class="truncate text-xs font-bold text-charcoal dark:text-linen-mist">
-						{user?.name ?? 'Admin'}
+						{user?.name ?? t('common.admin')}
 					</p>
 					{#if user?.email}
 						<p class="truncate text-[11px] text-slate dark:text-pebble">{user.email}</p>

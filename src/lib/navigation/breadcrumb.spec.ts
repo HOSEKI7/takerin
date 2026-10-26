@@ -81,4 +81,23 @@ describe('Breadcrumb Navigation Logic (Seam 1)', () => {
 			{ label: 'Monthly', href: '/analytics/monthly', current: true }
 		]);
 	});
+
+	it('generates breadcrumbs in English when locale is "en"', () => {
+		expect(getBreadcrumbs('/expenses', 'en')).toEqual<BreadcrumbItem[]>([
+			{ label: 'Finance', href: '/dashboard' },
+			{ label: 'Expenses', href: '/expenses', current: true }
+		]);
+
+		expect(getBreadcrumbs('/expenses/new', 'en')).toEqual<BreadcrumbItem[]>([
+			{ label: 'Finance', href: '/dashboard' },
+			{ label: 'Expenses', href: '/expenses' },
+			{ label: 'New Expense', href: '/expenses/new', current: true }
+		]);
+
+		expect(getBreadcrumbs('/settings/security', 'en')).toEqual<BreadcrumbItem[]>([
+			{ label: 'Finance', href: '/dashboard' },
+			{ label: 'Settings', href: '/settings' },
+			{ label: 'Security', href: '/settings/security', current: true }
+		]);
+	});
 });

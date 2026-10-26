@@ -14,6 +14,10 @@ Default label vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `read
 
 Single-context layout: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 
+### Internationalization & Bilingual (i18n)
+
+Takerin is a bilingual application (Bahasa Indonesia & English). Every user-facing UI text, form, validation error, and modal **MUST** support both languages consistently via `t(...)` from `#lib/i18n` with 100% key parity between `src/lib/i18n/id.json` and `src/lib/i18n/en.json`. See `docs/agents/i18n.md` and `GLOSSARY.md`.
+
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
 ### MCP Servers
@@ -28,7 +32,10 @@ My device os is Mac OS on **MacBook Air M1 Apple Silicon**, everything is runnin
 
 ## Working agreement
 
-- **Language split**: All shipped output — are written in Bahasa Indonesia.
+- **Communication language**: All shipped output explanations, chat responses, and task summaries are written in Bahasa Indonesia (even if prompted in English).
+- **Bilingual application code**: All application UI, components, forms, validation messages, and interactive modals must support both Bahasa Indonesia (`id`) and English (`en`) consistently without hardcoded strings. Always use `t(...)` from `#lib/i18n`. See `docs/agents/i18n.md`.
+- **100% i18n key parity**: Every translation key added, modified, or removed must exist identically in both `src/lib/i18n/id.json` and `src/lib/i18n/en.json`.
+- **GLOSSARY compliance**: Adhere strictly to `GLOSSARY.md` domain nomenclature in both Indonesian and English (e.g. use `Pengeluaran`/`Expense`, avoid `transaksi`/`spending`).
 - **Never push to the GitHub repo** — user pushes manually.
 - **Never implement outside current task scope**.
 - After finishing a task or do changes, **always provide a suggested commit message**.

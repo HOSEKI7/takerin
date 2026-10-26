@@ -6,7 +6,7 @@
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Alert02Icon } from '@hugeicons/core-free-icons';
-	import { t } from '#lib/i18n/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { validateAdminInviteActivationInput } from '#lib/validation/auth.js';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
@@ -98,7 +98,7 @@
 								name,
 								password,
 								confirmPassword
-							});
+							}, getLocale());
 
 							if (validationError) {
 								clientError = validationError;

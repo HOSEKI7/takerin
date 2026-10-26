@@ -130,7 +130,7 @@
 	{#if user?.image}
 		<img
 			src={user.image}
-			alt={user?.name ?? 'Pengguna'}
+			alt={user?.name ?? t('common.user')}
 			class="h-8 w-8 rounded-full border border-fog object-cover dark:border-dark-border"
 		/>
 	{:else}
@@ -227,7 +227,7 @@
 		<!-- Navigation Menu Groups (Scrollable) -->
 		<nav
 			class="flex-1 space-y-4 overflow-y-auto px-3 py-3"
-			aria-label="Menu Utama dan Preferensi Mobile"
+			aria-label={t('nav.aria.mobileMenuAndPreferences')}
 		>
 			<!-- Group 1: Menu Utama -->
 			<div>
@@ -296,7 +296,7 @@
 				{@render userAvatar()}
 				<div class="min-w-0 flex-1">
 					<p class="truncate text-xs font-bold text-charcoal dark:text-linen-mist">
-						{user?.name ?? 'Pengguna'}
+						{user?.name ?? t('common.user')}
 					</p>
 					{#if user?.email}
 						<p class="truncate text-[11px] text-slate dark:text-pebble">{user.email}</p>

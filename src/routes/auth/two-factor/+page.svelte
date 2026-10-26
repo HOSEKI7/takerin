@@ -5,7 +5,7 @@
 	import Card from '#lib/components/Card.svelte';
 	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 	import BrandLogo from '#lib/components/BrandLogo.svelte';
-	import { t } from '#lib/i18n/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { authClient } from '#lib/auth-client.js';
 	import {
 		validateOTPInput,
@@ -48,17 +48,16 @@
 				const errorLower = (error.message || '').toLowerCase();
 				if (errorLower.includes('cookie') || errorLower.includes('session')) {
 					hasSessionError = true;
-					errorMessage =
-						'Sesi verifikasi dua langkah tidak ditemukan atau telah kedaluwarsa. Silakan masuk kembali.';
+					errorMessage = formatAuthError('invalid cookie', getLocale());
 				} else {
-					errorMessage = formatAuthError(error);
+					errorMessage = formatAuthError(error, getLocale());
 				}
 			} else {
-				successInfo = 'Kode OTP telah dikirimkan ke email Anda.';
+				successInfo = t('auth.twoFactor.otpSent');
 				startCountdown(30);
 			}
 		} catch (err: unknown) {
-			errorMessage = formatAuthError(err instanceof Error ? err.message : null);
+			errorMessage = formatAuthError(err instanceof Error ? err.message : null, getLocale());
 		}
 	}
 
@@ -71,13 +70,13 @@
 		try {
 			const { error } = await authClient.twoFactor.sendOtp();
 			if (error) {
-				errorMessage = formatAuthError(error);
+				errorMessage = formatAuthError(error, getLocale());
 			} else {
-				successInfo = 'Kode OTP baru berhasil dikirim ke email Anda.';
+				successInfo = t('auth.twoFactor.newOtpSent');
 				startCountdown(30);
 			}
 		} catch (err: unknown) {
-			errorMessage = formatAuthError(err instanceof Error ? err.message : null);
+			errorMessage = formatAuthError(err instanceof Error ? err.message : null, getLocale());
 		} finally {
 			isResending = false;
 		}
@@ -90,7 +89,9 @@
 
 		const isOtp = mode === 'otp';
 		const input = isOtp ? otpCode.trim() : backupCode.trim();
-		const validationError = isOtp ? validateOTPInput(input) : validateBackupCodeInput(input);
+		const validationError = isOtp
+			? validateOTPInput(input, getLocale())
+			: validateBackupCodeInput(input, getLocale());
 
 		if (validationError) {
 			errorMessage = validationError;
@@ -104,7 +105,7 @@
 				: await authClient.twoFactor.verifyBackupCode({ code: input });
 
 			if (error) {
-				errorMessage = formatAuthError(error);
+				errorMessage = formatAuthError(error, getLocale());
 				isLoading = false;
 				return;
 			}
@@ -113,7 +114,7 @@
 				goto(resolve('/(app)/dashboard'));
 			}
 		} catch (err: unknown) {
-			errorMessage = formatAuthError(err instanceof Error ? err.message : null);
+			errorMessage = formatAuthError(err instanceof Error ? err.message : null, getLocale());
 			isLoading = false;
 		}
 	}

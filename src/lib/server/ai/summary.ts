@@ -25,13 +25,19 @@ export interface AiEnvConfig {
 }
 
 const SYSTEM_INSTRUCTION = `Kamu adalah asisten analisis keuangan pribadi yang santai, suportif, dan cerdas untuk aplikasi Takerin.
-Tugasmu adalah memberikan 1 hingga 2 kalimat frasa ringkas (maksimal 35 kata) dalam Bahasa Indonesia santai (bisa memakai 1-2 emoji yang relevan) yang mengomentari kebiasaan pengeluaran dan tabungan pengguna pada periode bulan yang baru saja selesai.
+Tugasmu adalah memberikan 1 hingga 2 kalimat frasa ringkas (maksimal 35 kata per bahasa) yang mengomentari kebiasaan pengeluaran dan tabungan pengguna pada periode bulan yang baru saja selesai dalam DUA bahasa sekaligus: Bahasa Indonesia dan English.
+Format keluaran HARUS berupa objek JSON valid dengan struktur persis seperti ini:
+{
+  "id": "1-2 kalimat ringkas dalam Bahasa Indonesia santai (bisa pakai 1-2 emoji)",
+  "en": "1-2 concise sentences in casual English (can include 1-2 emojis)"
+}
+
 Aturan penting:
-- Jangan sebutkan ID, JSON, atau teknis data.
-- Hanya berikan frasa komentarnya secara langsung tanpa tanda kutip pembuka/penutup dan tanpa basa-basi pengantar ("Tentu", "Berikut frasa", dll).
-- Jika pengguna sangat hemat atau tabungannya terisi penuh/bagus, beri apresiasi positif (contoh: "Bulan ini kamu hemat banget! Tabunganmu on fire! 🔥").
-- Jika ada kategori yang kebablasan/melebihi budget namun tabungan aman, sebutkan secara suportif (contoh: "Kategori Makanan kebablasan nih, tapi tabunganmu aman kok 💪").
-- Jika banyak kategori over-budget, beri dorongan semangat yang konstruktif (contoh: "Bulan ini pengeluaran cukup menantang, yuk atur strategi lebih rapi di periode baru! 🎯").`;
+- Output HANYA berupa JSON murni, tanpa markdown formatting (tanpa codeblock \`\`\`json), tanpa pengantar ("Tentu", "Here is"), dan tanpa penutup.
+- Jangan sebutkan ID atau teknis data internal.
+- Jika pengguna sangat hemat atau tabungannya terisi penuh/bagus, beri apresiasi positif (contoh id: "Bulan ini kamu hemat banget! Tabunganmu on fire! 🔥", en: "You were so frugal this month! Your savings are on fire! 🔥").
+- Jika ada kategori yang melebihi budget namun tabungan aman, sebutkan secara suportif (contoh id: "Kategori Makanan kebablasan nih, tapi tabunganmu aman kok 💪", en: "Dining out went a bit over budget, but your savings are well protected! 💪").
+- Jika banyak kategori over-budget, beri dorongan semangat yang konstruktif (contoh id: "Bulan ini pengeluaran cukup menantang, yuk atur strategi lebih rapi di periode baru! 🎯", en: "This month was quite challenging, let's reset and strategize for the new period! 🎯").`;
 
 /**
  * Formats aggregate financial metrics into a concise prompt for the AI model.
@@ -57,18 +63,51 @@ export function formatAggregatePrompt(data: AiAggregateData): string {
 
 	lines.push(
 		'',
-		'Berikan 1-2 kalimat frasa ringkas (maksimal 35 kata) mengomentari kebiasaan pengeluaran dan tabungan bulan ini.'
+		'Berikan 1-2 kalimat frasa ringkas (maksimal 35 kata per bahasa) mengomentari kebiasaan pengeluaran dan tabungan bulan ini dalam JSON {"id": "...", "en": "..."}.'
 	);
 
 	return lines.join('\n');
 }
 
 /**
- * Strips wrapping quotes and whitespace from AI model output.
+ * Cleans and parses AI response to ensure strict bilingual JSON structure: {"id": "...", "en": "..."}.
  */
-function cleanAiResponse(raw: string | undefined): string {
+export function cleanAndParseAiSummary(raw: string | undefined): string {
 	if (!raw) return '';
-	return raw.replace(/^["'“”]+|["'“”]+$/g, '').trim();
+	let cleaned = raw.trim();
+
+	// Strip markdown code block wrappers if any
+	if (cleaned.startsWith('```')) {
+		cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+	}
+
+	// Try extracting JSON substring if surrounded by prose
+	const firstBrace = cleaned.indexOf('{');
+	const lastBrace = cleaned.lastIndexOf('}');
+	if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+		const jsonCandidate = cleaned.slice(firstBrace, lastBrace + 1);
+		try {
+			const parsed = JSON.parse(jsonCandidate);
+			if (parsed && typeof parsed === 'object') {
+				const idText = typeof parsed.id === 'string' ? parsed.id.trim() : '';
+				const enText = typeof parsed.en === 'string' ? parsed.en.trim() : '';
+				if (idText || enText) {
+					return JSON.stringify({
+						id: idText || enText,
+						en: enText || idText
+					});
+				}
+			}
+		} catch {
+			// fallback to plain text below
+		}
+	}
+
+	const plainText = cleaned.replace(/^["'“”]+|["'“”]+$/g, '').trim();
+	return JSON.stringify({
+		id: plainText,
+		en: plainText
+	});
 }
 
 /**
@@ -115,15 +154,12 @@ export async function callGroq(
 	};
 
 	const message = result.choices?.[0]?.message;
-	const rawContent = cleanAiResponse(
-		message?.content || message?.reasoning_content || message?.reasoning
-	);
-
-	if (!rawContent) {
+	const text = message?.content || message?.reasoning_content || message?.reasoning;
+	if (!text) {
 		throw new Error('Groq returned empty response');
 	}
 
-	return rawContent;
+	return cleanAndParseAiSummary(text);
 }
 
 /**
@@ -174,12 +210,12 @@ export async function callGemini(
 		}>;
 	};
 
-	const rawContent = cleanAiResponse(result.candidates?.[0]?.content?.parts?.[0]?.text);
-	if (!rawContent) {
+	const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+	if (!text) {
 		throw new Error('Gemini returned empty response');
 	}
 
-	return rawContent;
+	return cleanAndParseAiSummary(text);
 }
 
 /**

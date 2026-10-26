@@ -6,8 +6,8 @@
 	import ProgressBar from '#lib/components/ProgressBar.svelte';
 	import { authClient } from '#lib/auth-client.js';
 	import { formatAuthError } from '#lib/validation/auth.js';
-	import { formatRupiah, formatDateIndonesian } from '#lib/validation/onboarding.js';
-	import { t } from '#lib/i18n/index.js';
+	import { formatRupiah, formatDate } from '#lib/validation/onboarding.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { resolve } from '$app/paths';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
@@ -51,7 +51,7 @@
 		feedbackError = '';
 
 		if (!actionPassword) {
-			feedbackError = 'Password wajib diisi untuk mengaktifkan verifikasi dua langkah.';
+			feedbackError = t('dashboard.passwordRequiredFor2FA');
 			return;
 		}
 
@@ -68,8 +68,7 @@
 				backupCodes = res.data.backupCodes || [];
 				totpURI = res.data.totpURI || '';
 				resetActionState();
-				feedbackMessage =
-					'Verifikasi Dua Langkah berhasil diaktifkan! Simpan kode cadangan Anda di bawah ini.';
+				feedbackMessage = t('dashboard.twoFactorEnabledSuccess');
 			}
 		} catch (err: unknown) {
 			feedbackError = formatAuthError(err instanceof Error ? err.message : null);
@@ -85,7 +84,7 @@
 		feedbackError = '';
 
 		if (!actionPassword) {
-			feedbackError = 'Password wajib diisi untuk menonaktifkan verifikasi dua langkah.';
+			feedbackError = t('dashboard.passwordRequiredToDisable2FA');
 			return;
 		}
 
@@ -102,7 +101,7 @@
 				backupCodes = [];
 				totpURI = '';
 				resetActionState();
-				feedbackMessage = 'Verifikasi Dua Langkah berhasil dinonaktifkan.';
+				feedbackMessage = t('dashboard.twoFactorDisabledSuccess');
 			}
 		} catch (err: unknown) {
 			feedbackError = formatAuthError(err instanceof Error ? err.message : null);
@@ -130,7 +129,7 @@
 	<div class="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
 		<div>
 			<h1 class="text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-				{t('dashboard.welcome', { name: data.user?.name ?? 'Pengguna' })}
+				{t('dashboard.welcome', { name: data.user?.name ?? t('common.user') })}
 			</h1>
 			<p class="mt-1 text-sm text-slate dark:text-pebble">
 				{t('dashboard.overviewSubtitle')}
@@ -147,8 +146,9 @@
 						class="h-4 w-4 text-forest-ink dark:text-lime-voltage"
 					/>
 					<span>
-						{formatDateIndonesian(data.period.startDate)} – {formatDateIndonesian(
-							data.period.endDate
+						{formatDate(data.period.startDate, getLocale())} – {formatDate(
+							data.period.endDate,
+							getLocale()
 						)}
 					</span>
 				</div>
@@ -223,7 +223,7 @@
 		</Card>
 	{:else}
 		<!-- SUMMARY CARD -->
-		<section aria-label="Ringkasan Keuangan Periode Aktif" class="mb-8">
+		<section aria-label={t('dashboard.sectionPeriodSummary')} class="mb-8">
 			<Card variant="default" padding="lg" class="shadow-sm">
 				<div
 					class="flex flex-col justify-between gap-3 border-b border-fog pb-4 sm:flex-row sm:items-center dark:border-dark-border"
@@ -334,7 +334,7 @@
 		<!-- RESPONSIVE SIDE-BY-SIDE ON DESKTOP, SCROLLABLE ON MOBILE -->
 		<div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
 			<!-- LEFT / MAIN COLUMN: CATEGORY BREAKDOWN -->
-			<section aria-label="Rincian Alokasi Kategori" class="lg:col-span-7">
+			<section aria-label={t('dashboard.sectionCategoryAllocation')} class="lg:col-span-7">
 				<div class="mb-4 flex items-center justify-between">
 					<div>
 						<h2 class="text-lg font-extrabold text-obsidian sm:text-xl dark:text-paper">
@@ -489,7 +489,7 @@
 			</section>
 
 			<!-- RIGHT / SIDE COLUMN: RECENT EXPENSES & QUICK ACTIONS -->
-			<section aria-label="Pengeluaran Terbaru" class="space-y-6 lg:col-span-5">
+			<section aria-label={t('dashboard.sectionRecentExpenses')} class="space-y-6 lg:col-span-5">
 				<Card variant="default" padding="lg" class="shadow-sm">
 					<div class="mb-4 flex items-center justify-between">
 						<div>
@@ -545,7 +545,7 @@
 										<div class="flex items-center gap-2 text-xs text-slate dark:text-pebble">
 											<span>{expense.categoryName}</span>
 											<span>•</span>
-											<span>{formatDateIndonesian(expense.date)}</span>
+											<span>{formatDate(expense.date, getLocale())}</span>
 										</div>
 									</div>
 									<p class="text-sm font-bold text-forest-ink dark:text-lime-voltage">
@@ -572,8 +572,8 @@
 					</h3>
 					<p class="mt-1.5 text-xs leading-relaxed text-charcoal dark:text-linen-mist/80">
 						{t('dashboard.aboutPeriodDesc', {
-							startDate: formatDateIndonesian(data.period.startDate),
-							endDate: formatDateIndonesian(data.period.endDate)
+							startDate: formatDate(data.period.startDate, getLocale()),
+							endDate: formatDate(data.period.endDate, getLocale())
 						})}
 					</p>
 				</Card>
@@ -610,30 +610,30 @@
 		{#if showAccountSecurity}
 			<div id="account-security-section" class="mt-6 grid gap-6 md:grid-cols-2">
 				<Card variant="default" padding="lg">
-					<h4 class="text-sm font-bold text-obsidian dark:text-paper">Informasi Akun</h4>
+					<h4 class="text-sm font-bold text-obsidian dark:text-paper">{t('dashboard.accountInfo')}</h4>
 					<div class="mt-4 space-y-3 text-sm">
 						<div>
-							<span class="text-xs text-slate dark:text-pebble">Nama:</span>
+							<span class="text-xs text-slate dark:text-pebble">{t('dashboard.nameLabel')}</span>
 							<p class="font-semibold text-forest-ink dark:text-linen-mist">{data.user?.name}</p>
 						</div>
 						<div>
-							<span class="text-xs text-slate dark:text-pebble">Email:</span>
+							<span class="text-xs text-slate dark:text-pebble">{t('dashboard.emailLabel')}</span>
 							<p class="font-semibold text-forest-ink dark:text-linen-mist">{data.user?.email}</p>
 						</div>
 						<div>
-							<span class="text-xs text-slate dark:text-pebble">Peran:</span>
+							<span class="text-xs text-slate dark:text-pebble">{t('dashboard.roleLabel')}</span>
 							<p class="font-semibold text-forest-ink dark:text-lime-voltage">
-								{data.user?.role === 'admin' ? 'Admin' : 'Pengguna'}
+								{data.user?.role === 'admin' ? t('common.admin') : t('common.user')}
 							</p>
 						</div>
 						<div>
-							<span class="text-xs text-slate dark:text-pebble">Status Verifikasi:</span>
+							<span class="text-xs text-slate dark:text-pebble">{t('dashboard.verificationStatus')}</span>
 							<p
 								class="font-semibold {data.user?.emailVerified
 									? 'text-forest-ink dark:text-lime-voltage'
 									: 'text-alarm-red'}"
 							>
-								{data.user?.emailVerified ? 'Email Terverifikasi' : 'Belum Verifikasi'}
+								{data.user?.emailVerified ? t('dashboard.emailVerified') : t('dashboard.emailUnverified')}
 							</p>
 						</div>
 					</div>
@@ -642,21 +642,21 @@
 				<Card variant="default" padding="lg">
 					<div class="flex items-center justify-between">
 						<h4 class="text-sm font-bold text-obsidian dark:text-paper">
-							Verifikasi Dua Langkah (2FA)
+							{t('dashboard.twoFactorTitle')}
 						</h4>
 						<span
 							class="rounded-full px-2.5 py-0.5 text-xs font-semibold {twoFactorEnabled
 								? 'bg-linen-mist text-forest-ink dark:bg-spruce dark:text-lime-voltage'
 								: 'bg-fog text-slate dark:bg-dark-border dark:text-linen-mist/80'}"
 						>
-							{twoFactorEnabled ? '2FA Aktif' : '2FA Nonaktif'}
+							{twoFactorEnabled ? t('dashboard.twoFactorStatusActive') : t('dashboard.twoFactorStatusInactive')}
 						</span>
 					</div>
 
 					<p class="mt-3 text-xs text-slate dark:text-linen-mist/80">
 						{twoFactorEnabled
-							? 'Akun Anda dilindungi dengan verifikasi dua langkah saat masuk.'
-							: 'Tingkatkan keamanan akun dengan mewajibkan verifikasi OTP setiap masuk.'}
+							? t('dashboard.twoFactorActive')
+							: t('dashboard.twoFactorInactive')}
 					</p>
 
 					<!-- 2FA Actions -->
@@ -672,7 +672,7 @@
 										feedbackError = '';
 									}}
 								>
-									Aktifkan 2FA
+									{t('dashboard.enable2FA')}
 								</Button>
 							{:else}
 								<form
@@ -680,20 +680,20 @@
 									class="space-y-3 rounded-lg border border-fog bg-paper p-4 dark:border-dark-border dark:bg-dark-surface"
 								>
 									<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
-										Masukkan Password Akun Anda:
+										{t('dashboard.enterPasswordPrompt')}
 									</p>
 									<Input
 										id="enable-2fa-password"
-										label="Password"
+										label={t('auth.login.passwordLabel')}
 										type="password"
-										placeholder="Password akun Anda"
+										placeholder={t('dashboard.enterPasswordPlaceholder')}
 										required
 										bind:value={actionPassword}
 										disabled={isActionLoading}
 									/>
 									<div class="flex items-center gap-2 pt-1">
 										<Button type="submit" variant="primary" size="sm" disabled={isActionLoading}>
-											{isActionLoading ? 'Memproses...' : 'Konfirmasi Aktifkan 2FA'}
+											{isActionLoading ? t('common.processing') : t('dashboard.confirmEnable2FA')}
 										</Button>
 										<Button
 											type="button"
@@ -702,7 +702,7 @@
 											onclick={resetActionState}
 											disabled={isActionLoading}
 										>
-											Batal
+											{t('common.cancel')}
 										</Button>
 									</div>
 								</form>
@@ -719,7 +719,7 @@
 											feedbackError = '';
 										}}
 									>
-										Nonaktifkan 2FA
+										{t('dashboard.disable2FA')}
 									</Button>
 								{/if}
 							</div>
@@ -730,20 +730,20 @@
 									class="space-y-3 rounded-lg border border-alarm-red/30 bg-paper p-4 dark:border-alarm-red/40 dark:bg-dark-surface"
 								>
 									<p class="text-xs font-semibold text-alarm-red">
-										Konfirmasi Nonaktifkan Verifikasi Dua Langkah
+										{t('dashboard.confirmDisable2FATitle')}
 									</p>
 									<Input
 										id="disable-2fa-password"
-										label="Password Akun"
+										label={t('dashboard.accountPasswordLabel')}
 										type="password"
-										placeholder="Masukkan password akun Anda"
+										placeholder={t('dashboard.enterPasswordPlaceholder')}
 										required
 										bind:value={actionPassword}
 										disabled={isActionLoading}
 									/>
 									<div class="flex items-center gap-2 pt-1">
 										<Button type="submit" variant="dark" size="sm" disabled={isActionLoading}>
-											{isActionLoading ? 'Memproses...' : 'Ya, Nonaktifkan'}
+											{isActionLoading ? t('common.processing') : t('dashboard.yesDisable')}
 										</Button>
 										<Button
 											type="button"
@@ -752,7 +752,7 @@
 											onclick={resetActionState}
 											disabled={isActionLoading}
 										>
-											Batal
+											{t('common.cancel')}
 										</Button>
 									</div>
 								</form>
@@ -767,14 +767,14 @@
 						>
 							<div class="flex items-center justify-between">
 								<h5 class="text-xs font-bold text-forest-ink dark:text-lime-voltage">
-									Kode Cadangan
+									{t('dashboard.backupCodesTitle')}
 								</h5>
 								<button
 									type="button"
 									onclick={handleCopyCodes}
 									class="cursor-pointer text-xs font-bold text-forest-ink hover:underline dark:text-lime-voltage"
 								>
-									{copied ? 'Tersalin!' : 'Salin Semua'}
+									{copied ? t('dashboard.copied') : t('dashboard.copyAll')}
 								</button>
 							</div>
 							<div class="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -790,7 +790,7 @@
 							{#if totpURI}
 								<div class="mt-4 border-t border-forest-ink/10 pt-3 dark:border-white/10">
 									<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
-										Pengaturan Aplikasi Autentikator (Opsional):
+										{t('dashboard.authenticatorSetup')}
 									</p>
 									<p
 										class="mt-1 font-mono text-[11px] break-all text-slate dark:text-linen-mist/80"

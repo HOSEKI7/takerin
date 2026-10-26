@@ -4,8 +4,8 @@
 	import Card from '#lib/components/Card.svelte';
 	import ProgressBar from '#lib/components/ProgressBar.svelte';
 	import { resolve } from '$app/paths';
-	import { formatRupiah, formatDateIndonesian } from '#lib/validation/onboarding.js';
-	import { t } from '#lib/i18n/index.js';
+	import { formatRupiah, formatDate } from '#lib/validation/onboarding.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { onMount } from 'svelte';
 	import { untrack } from 'svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
@@ -24,6 +24,21 @@
 	let isLoadingAi = $state<boolean>(untrack(() => !data.period.aiSummary));
 	let aiError = $state<string>('');
 
+	// Reactive bilingual display for AI summary
+	const displayAiSummary = $derived.by(() => {
+		if (!aiSummary) return null;
+		try {
+			const parsed = JSON.parse(aiSummary);
+			if (parsed && typeof parsed === 'object') {
+				const currentLocale = getLocale();
+				return parsed[currentLocale] || parsed.id || parsed.en || aiSummary;
+			}
+		} catch {
+			// Plain text summary fallback
+		}
+		return aiSummary;
+	});
+
 	async function fetchAiSummary() {
 		isLoadingAi = true;
 		aiError = '';
@@ -37,7 +52,7 @@
 
 			if (!res.ok) {
 				const errData = (await res.json().catch(() => null)) as { error?: string } | null;
-				aiError = errData?.error ?? 'Gagal membuat frasa analisis AI.';
+				aiError = errData?.error ?? t('history.aiFailed');
 				return;
 			}
 
@@ -45,7 +60,7 @@
 			aiSummary = result.aiSummary;
 		} catch (err) {
 			console.error('Error fetching AI summary:', err);
-			aiError = 'Terjadi kendala jaringan saat menghubungi layanan AI.';
+			aiError = t('history.aiNetworkError');
 		} finally {
 			isLoadingAi = false;
 		}
@@ -73,7 +88,7 @@
 				</span>
 			</div>
 			<h1 class="mt-1 text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-				{formatDateIndonesian(data.period.startDate)} – {formatDateIndonesian(data.period.endDate)}
+				{formatDate(data.period.startDate, getLocale())} – {formatDate(data.period.endDate, getLocale())}
 			</h1>
 		</div>
 	</div>
@@ -92,15 +107,15 @@
 					</div>
 					<div class="flex-1">
 						<p class="text-xs font-bold text-forest-ink dark:text-lime-voltage">
-							Analisis AI Takerin (Groq + Gemini)
+							{t('history.aiServiceLabel')}
 						</p>
 						<p class="mt-0.5 text-sm text-slate dark:text-linen-mist/80">
-							Sedang menganalisis pola alokasi dan kebiasaan finansial Anda...
+							{t('history.aiLoading')}
 						</p>
 					</div>
 				</div>
 			</Card>
-		{:else if aiSummary}
+		{:else if displayAiSummary}
 			<Card
 				class="border-lime-voltage/50 bg-linen-mist/50 p-5 shadow-sm dark:border-lime-voltage/40 dark:bg-spruce/30"
 			>
@@ -115,12 +130,12 @@
 							<span
 								class="rounded-full bg-forest-ink/10 px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-forest-ink uppercase dark:bg-lime-voltage/20 dark:text-lime-voltage"
 							>
-								Catatan AI Takerin
+								{t('history.aiNotes')}
 							</span>
-							<span class="text-[11px] text-slate dark:text-linen-mist/70"> Tersimpan </span>
+							<span class="text-[11px] text-slate dark:text-linen-mist/70"> {t('history.saved')} </span>
 						</div>
 						<p class="mt-2 text-base font-bold text-obsidian sm:text-lg dark:text-paper">
-							"{aiSummary}"
+							"{displayAiSummary}"
 						</p>
 					</div>
 				</div>
@@ -134,7 +149,7 @@
 						<HugeiconsIcon icon={Alert02Icon} class="h-4 w-4" />
 						<span>{aiError}</span>
 					</div>
-					<Button variant="secondary" size="sm" onclick={fetchAiSummary}>Coba Lagi</Button>
+					<Button variant="secondary" size="sm" onclick={fetchAiSummary}>{t('history.retry')}</Button>
 				</div>
 			</Card>
 		{/if}

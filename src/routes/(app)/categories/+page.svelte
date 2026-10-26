@@ -7,9 +7,9 @@
 	import type { CategoryManagementItem } from '#lib/server/db/category.js';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import { formatRupiah, formatDateIndonesian } from '#lib/validation/onboarding.js';
+	import { formatRupiah, formatDate } from '#lib/validation/onboarding.js';
 	import { redistributePercentage } from '#lib/validation/category.js';
-	import { t } from '#lib/i18n/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		PlusSignIcon,
@@ -111,11 +111,11 @@
 		addErrorMessage = '';
 		const trimmedName = newCatName.trim();
 		if (!trimmedName) {
-			addErrorMessage = 'Nama kategori tidak boleh kosong.';
+			addErrorMessage = t('categories.addErrorNameRequired');
 			return;
 		}
 		if (newCatPercentage <= 0 || newCatPercentage >= 100) {
-			addErrorMessage = 'Persentase kategori harus antara 1% sampai 99%.';
+			addErrorMessage = t('categories.addErrorPercentRange');
 			return;
 		}
 
@@ -126,7 +126,7 @@
 				const targetRemainingSum = 100 - newCatPercentage;
 
 				if (targetRemainingSum <= 0) {
-					addErrorMessage = 'Persentase terlalu besar untuk kategori baru.';
+					addErrorMessage = t('categories.addErrorPercentTooLarge');
 					return;
 				}
 
@@ -148,7 +148,10 @@
 					0
 				);
 				if (Math.abs(totalReduced - newCatPercentage) > 0.001) {
-					addErrorMessage = `Total pengurangan (${totalReduced}%) harus pas sama dengan persentase kategori baru (${newCatPercentage}%).`;
+					addErrorMessage = t('categories.addErrorReductionMismatch', {
+						reduced: totalReduced,
+						newPercent: newCatPercentage
+					});
 					return;
 				}
 
@@ -156,7 +159,7 @@
 					const key = c.id || c.name;
 					const deduction = Number(manualReductions[key] || 0);
 					if (c.percentage - deduction <= 0) {
-						addErrorMessage = `Pengurangan kategori "${c.name}" melebihi sisa alokasi. Persentase harus tetap di atas 0%.`;
+						addErrorMessage = t('categories.addErrorCategoryExceeded', { name: c.name });
 						return;
 					}
 				}
@@ -193,7 +196,7 @@
 
 	function openFreezeModal(cat: CategoryFormState) {
 		if (categories.length <= 1) {
-			alert('Minimal harus memiliki satu kategori aktif.');
+			alert(t('categories.minOneActiveCategory'));
 			return;
 		}
 		candidateToFreeze = cat;
@@ -231,7 +234,10 @@
 				0
 			);
 			if (Math.abs(totalAdded - target.percentage) > 0.001) {
-				freezeErrorMessage = `Total redistribusi (${totalAdded}%) harus pas sama dengan persentase kategori yang dibekukan (${target.percentage}%).`;
+				freezeErrorMessage = t('categories.freezeErrorRedistributionMismatch', {
+					added: totalAdded,
+					targetPercent: target.percentage
+				});
 				return;
 			}
 
@@ -286,10 +292,11 @@
 				<div
 					class="rounded-xl border border-fog bg-fog/40 px-3.5 py-1.5 dark:border-dark-border dark:bg-dark-card"
 				>
-					<span>Periode: </span>
+					<span>{t('common.period')}: </span>
 					<span class="font-bold text-obsidian dark:text-paper">
-						{formatDateIndonesian(data.period.startDate)} – {formatDateIndonesian(
-							data.period.endDate
+						{formatDate(data.period.startDate, getLocale())} – {formatDate(
+							data.period.endDate,
+							getLocale()
 						)}
 					</span>
 				</div>
@@ -307,7 +314,7 @@
 				icon={CheckmarkCircle02Icon}
 				class="h-5 w-5 text-forest-ink dark:text-lime-voltage"
 			/>
-			<span>{form.message || 'Kategori berhasil diperbarui.'}</span>
+			<span>{form.message || t('categories.updateSuccess')}</span>
 		</div>
 	{/if}
 
@@ -336,15 +343,15 @@
 							<span
 								class="rounded-full bg-linen-mist px-2.5 py-0.5 text-xs font-bold text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage"
 							>
-								✓ Pas 100%
+								{t('categories.exactly100')}
 							</span>
 						{:else}
 							<span
 								class="rounded-full bg-alarm-red/10 px-2.5 py-0.5 text-xs font-bold text-alarm-red dark:bg-alarm-red/20"
 							>
 								{totalPercentage > 100
-									? `Lebih ${Math.abs(differenceFrom100)}%`
-									: `Kurang ${differenceFrom100}%`}
+									? t('categories.overPercent', { percent: Math.abs(differenceFrom100) })
+									: t('categories.underPercent', { percent: differenceFrom100 })}
 							</span>
 						{/if}
 					</div>
@@ -509,7 +516,7 @@
 											max="100"
 											step="0.5"
 											bind:value={cat.percentage}
-											aria-label={`Geser persentase untuk ${cat.name}`}
+											aria-label={t('categories.sliderAria', { name: cat.name })}
 											class="h-1.5 w-full cursor-pointer accent-forest-ink dark:accent-lime-voltage"
 										/>
 									</div>

@@ -6,8 +6,8 @@
 	import Button from '#lib/components/Button.svelte';
 	import Badge from '#lib/components/Badge.svelte';
 	import Input from '#lib/components/Input.svelte';
-	import { t } from '#lib/i18n/index.js';
-	import { formatDateIndonesian, formatDateISO } from '#lib/validation/onboarding.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
+	import { formatDate, formatDateISO } from '#lib/validation/onboarding.js';
 	import type { AdminInvitationRecord } from '#lib/server/db/admin.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
@@ -60,13 +60,15 @@
 		const d = new Date(dateInput);
 		if (isNaN(d.getTime())) return '-';
 
-		const dayStr = formatDateIndonesian(formatDateISO(d));
-		const timeStr = d.toLocaleTimeString('id-ID', {
+		const dayStr = formatDate(formatDateISO(d), getLocale());
+		const localeCode = getLocale() === 'en' ? 'en-US' : 'id-ID';
+		const tzSuffix = getLocale() === 'en' ? 'UTC+7' : 'WIB';
+		const timeStr = d.toLocaleTimeString(localeCode, {
 			hour: '2-digit',
 			minute: '2-digit',
 			timeZone: 'Asia/Jakarta'
 		});
-		return `${dayStr}, ${timeStr} WIB`;
+		return `${dayStr}, ${timeStr} ${tzSuffix}`;
 	}
 
 	function isExpired(invitation: AdminInvitationRecord): boolean {

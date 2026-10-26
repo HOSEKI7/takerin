@@ -92,4 +92,24 @@ describe('PDF Generation Service (Seam 3)', () => {
 		expect(pdfBytes).toBeInstanceOf(Uint8Array);
 		expect(pdfBytes.length).toBeGreaterThan(500);
 	});
+
+	it('generates valid PDF with English locale and parses bilingual AI summary', async () => {
+		const bilingualDetail: CompletedPeriodDetail = {
+			...samplePeriodDetail,
+			period: {
+				...samplePeriodDetail.period,
+				aiSummary: JSON.stringify({
+					id: 'Pengeluaran sangat sehat!',
+					en: 'Spending is very healthy!'
+				})
+			}
+		};
+
+		const pdfBytes = await generatePeriodSummaryPdf(bilingualDetail, 'Jane Doe', 'en');
+		expect(pdfBytes).toBeInstanceOf(Uint8Array);
+		expect(pdfBytes.length).toBeGreaterThan(500);
+
+		const header = new TextDecoder().decode(pdfBytes.slice(0, 5));
+		expect(header).toBe('%PDF-');
+	});
 });

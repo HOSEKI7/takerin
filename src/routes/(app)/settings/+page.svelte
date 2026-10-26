@@ -6,7 +6,7 @@
 	import { authClient } from '#lib/auth-client.js';
 	import { formatAuthError } from '#lib/validation/auth.js';
 	import {
-		formatDateIndonesian,
+		formatDate,
 		formatDateISO
 	} from '#lib/validation/onboarding.js';
 	import {
@@ -14,7 +14,7 @@
 		validateChangeEmailOtp
 	} from '#lib/validation/settings.js';
 	import { setTheme } from '#lib/theme.js';
-	import { t, setLocale, type Locale } from '#lib/i18n/index.js';
+	import { t, getLocale, setLocale, type Locale } from '#lib/i18n/index.js';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { onMount, onDestroy } from 'svelte';
@@ -97,7 +97,7 @@
 			currentEmail: userEmail
 		});
 		if (!validation.valid) {
-			changeEmailError = validation.error || 'Data yang dimasukkan tidak valid.';
+			changeEmailError = validation.error || t('settings.invalidData');
 			return;
 		}
 
@@ -124,7 +124,7 @@
 			changeEmailStep = 'verify';
 			startCooldown(60);
 		} catch (err) {
-			changeEmailError = err instanceof Error ? err.message : 'Gagal menghubungi server.';
+			changeEmailError = err instanceof Error ? err.message : t('settings.serverError');
 		} finally {
 			isRequestingOtp = false;
 		}
@@ -144,7 +144,7 @@
 				startCooldown(60);
 			}
 		} catch (err) {
-			changeEmailError = err instanceof Error ? err.message : 'Gagal mengirim ulang kode OTP.';
+			changeEmailError = err instanceof Error ? err.message : t('settings.otpResendError');
 		} finally {
 			isRequestingOtp = false;
 		}
@@ -157,7 +157,7 @@
 
 		const otpValidation = validateChangeEmailOtp(changeEmailOtp);
 		if (!otpValidation.valid) {
-			changeEmailError = otpValidation.error || 'Kode OTP tidak valid.';
+			changeEmailError = otpValidation.error || t('settings.otpInvalid');
 			return;
 		}
 
@@ -180,7 +180,7 @@
 			resetChangeEmailForm();
 		} catch (err) {
 			changeEmailError =
-				err instanceof Error ? err.message : 'Gagal memverifikasi pergantian email.';
+				err instanceof Error ? err.message : t('settings.emailChangeVerifyFailed');
 		} finally {
 			isSubmittingOtp = false;
 		}
@@ -200,15 +200,15 @@
 		passwordSuccess = '';
 
 		if (!currentPassword) {
-			passwordError = 'Kata sandi saat ini wajib diisi.';
+			passwordError = t('settings.currentPasswordRequired');
 			return;
 		}
 		if (newPassword.length < 8) {
-			passwordError = 'Kata sandi baru minimal 8 karakter.';
+			passwordError = t('settings.newPasswordMinLength');
 			return;
 		}
 		if (newPassword !== confirmPassword) {
-			passwordError = 'Konfirmasi kata sandi tidak cocok.';
+			passwordError = t('settings.confirmPasswordMismatch');
 			return;
 		}
 
@@ -229,15 +229,15 @@
 			});
 
 			if (res.error) {
-				passwordError = formatAuthError(res.error.message || 'Gagal mengubah kata sandi.');
+				passwordError = formatAuthError(res.error.message || t('settings.changePassword'));
 			} else {
-				passwordSuccess = 'Kata sandi berhasil diubah.';
+				passwordSuccess = t('settings.passwordChangeSuccess');
 				currentPassword = '';
 				newPassword = '';
 				confirmPassword = '';
 			}
 		} catch (err) {
-			passwordError = err instanceof Error ? err.message : 'Terjadi kesalahan sistem.';
+			passwordError = err instanceof Error ? err.message : t('settings.systemError');
 		} finally {
 			isChangingPassword = false;
 		}
@@ -265,7 +265,7 @@
 	async function handleEnable2FA(e: SubmitEvent) {
 		e.preventDefault();
 		if (!twoFactorPassword) {
-			twoFactorError = 'Password akun wajib diisi untuk mengaktifkan 2FA.';
+			twoFactorError = t('dashboard.passwordRequiredFor2FA');
 			return;
 		}
 		twoFactorLoading = true;
@@ -273,16 +273,16 @@
 		try {
 			const res = await authClient.twoFactor.enable({ password: twoFactorPassword });
 			if (res.error) {
-				twoFactorError = formatAuthError(res.error.message || 'Gagal mengaktifkan 2FA.');
+				twoFactorError = formatAuthError(res.error.message || t('dashboard.passwordRequiredFor2FA'));
 			} else {
 				customTwoFactor = true;
-				twoFactorSuccess = 'Verifikasi Dua Langkah berhasil diaktifkan!';
+				twoFactorSuccess = t('dashboard.twoFactorEnabledSuccess');
 				backupCodes = res.data?.backupCodes || [];
 				twoFactorAction = 'none';
 				twoFactorPassword = '';
 			}
 		} catch (err) {
-			twoFactorError = err instanceof Error ? err.message : 'Gagal menghubungi server.';
+			twoFactorError = err instanceof Error ? err.message : t('settings.serverError');
 		} finally {
 			twoFactorLoading = false;
 		}
@@ -291,7 +291,7 @@
 	async function handleDisable2FA(e: SubmitEvent) {
 		e.preventDefault();
 		if (!twoFactorPassword) {
-			twoFactorError = 'Password akun wajib diisi untuk menonaktifkan 2FA.';
+			twoFactorError = t('dashboard.passwordRequiredToDisable2FA');
 			return;
 		}
 		twoFactorLoading = true;
@@ -299,16 +299,16 @@
 		try {
 			const res = await authClient.twoFactor.disable({ password: twoFactorPassword });
 			if (res.error) {
-				twoFactorError = formatAuthError(res.error.message || 'Gagal menonaktifkan 2FA.');
+				twoFactorError = formatAuthError(res.error.message || t('dashboard.passwordRequiredToDisable2FA'));
 			} else {
 				customTwoFactor = false;
-				twoFactorSuccess = 'Verifikasi Dua Langkah berhasil dinonaktifkan.';
+				twoFactorSuccess = t('dashboard.twoFactorDisabledSuccess');
 				backupCodes = [];
 				twoFactorAction = 'none';
 				twoFactorPassword = '';
 			}
 		} catch (err) {
-			twoFactorError = err instanceof Error ? err.message : 'Gagal menghubungi server.';
+			twoFactorError = err instanceof Error ? err.message : t('settings.serverError');
 		} finally {
 			twoFactorLoading = false;
 		}
@@ -317,7 +317,7 @@
 	async function handleGenerateBackupCodes(e: SubmitEvent) {
 		e.preventDefault();
 		if (!twoFactorPassword) {
-			twoFactorError = 'Password akun wajib diisi.';
+			twoFactorError = t('dashboard.passwordRequiredFor2FA');
 			return;
 		}
 		twoFactorLoading = true;
@@ -325,15 +325,15 @@
 		try {
 			const res = await authClient.twoFactor.generateBackupCodes({ password: twoFactorPassword });
 			if (res.error) {
-				twoFactorError = formatAuthError(res.error.message || 'Gagal membuat kode cadangan baru.');
+				twoFactorError = formatAuthError(res.error.message || t('settings.serverError'));
 			} else {
 				backupCodes = res.data?.backupCodes || [];
-				twoFactorSuccess = 'Kode cadangan baru berhasil dibuat!';
+				twoFactorSuccess = t('settings.newBackupCodesSuccess');
 				twoFactorAction = 'none';
 				twoFactorPassword = '';
 			}
 		} catch (err) {
-			twoFactorError = err instanceof Error ? err.message : 'Gagal menghubungi server.';
+			twoFactorError = err instanceof Error ? err.message : t('settings.serverError');
 		} finally {
 			twoFactorLoading = false;
 		}
@@ -347,7 +347,7 @@
 				codesCopied = false;
 			}, 2500);
 		} catch (err) {
-			console.error('Gagal menyalin:', err);
+			console.error(t('settings.copyCodesFailed'), err);
 		}
 	}
 
@@ -527,7 +527,7 @@
 									? 'bg-linen-mist text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage'
 									: 'bg-alarm-red/10 text-alarm-red'}"
 							>
-								{isEmailVerified ? 'Email Terverifikasi' : 'Belum Verifikasi'}
+								{isEmailVerified ? t('dashboard.emailVerified') : t('dashboard.emailUnverified')}
 							</span>
 						</div>
 					</div>
@@ -726,7 +726,7 @@
 							id="new-password"
 							label={t('settings.newPasswordLabel')}
 							type="password"
-							placeholder="Minimal 8 karakter"
+							placeholder={t('settings.passwordPlaceholderMin')}
 							required
 							bind:value={newPassword}
 							disabled={isChangingPassword}
@@ -735,7 +735,7 @@
 							id="confirm-password"
 							label={t('settings.confirmPasswordLabel')}
 							type="password"
-							placeholder="Ketik ulang kata sandi baru"
+							placeholder={t('settings.confirmPasswordPlaceholder')}
 							required
 							bind:value={confirmPassword}
 							disabled={isChangingPassword}
@@ -806,13 +806,13 @@
 									class="space-y-3 rounded-lg border border-fog bg-fog/60 p-4 dark:border-dark-border dark:bg-dark-card"
 								>
 									<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
-										Masukkan Kata Sandi Akun untuk Mengaktifkan 2FA:
+										{t('settings.enterPasswordFor2FA')}
 									</p>
 									<Input
 										id="enable-2fa-pwd"
 										label={t('auth.login.passwordLabel')}
 										type="password"
-										placeholder="Kata sandi akun Anda"
+										placeholder={t('settings.accountPasswordPlaceholder')}
 										required
 										bind:value={twoFactorPassword}
 										disabled={twoFactorLoading}
@@ -873,7 +873,7 @@
 										id="disable-2fa-pwd"
 										label={t('auth.login.passwordLabel')}
 										type="password"
-										placeholder="Masukkan kata sandi akun Anda"
+										placeholder={t('settings.accountPasswordPlaceholder')}
 										required
 										bind:value={twoFactorPassword}
 										disabled={twoFactorLoading}
@@ -907,7 +907,7 @@
 										id="gen-codes-pwd"
 										label={t('auth.login.passwordLabel')}
 										type="password"
-										placeholder="Masukkan kata sandi akun Anda"
+										placeholder={t('settings.accountPasswordPlaceholder')}
 										required
 										bind:value={twoFactorPassword}
 										disabled={twoFactorLoading}
@@ -939,7 +939,7 @@
 							>
 								<div class="flex items-center justify-between">
 									<h5 class="text-xs font-bold text-forest-ink dark:text-lime-voltage">
-										Kode Cadangan Anda:
+										{t('settings.yourBackupCodes')}
 									</h5>
 									<button
 										type="button"
@@ -995,13 +995,11 @@
 								</h3>
 							</div>
 							<p class="mt-1 text-xs text-slate dark:text-pebble">
-								Menandai hari dimulainya Periode Bulan baru (1–31). Periode saat ini:
-								<strong class="text-forest-ink dark:text-linen-mist">
-									{data.activePeriod
-										? `${formatDateIndonesian(data.activePeriod.startDate)} ${t('common.to')} ${formatDateIndonesian(data.activePeriod.endDate)}`
-										: '-'}
-								</strong>
-								(Tanggal Gajian aktif: {data.settings.payDay}).
+								{t('settings.payDayHint', {
+									start: data.activePeriod ? formatDate(data.activePeriod.startDate, getLocale()) : '-',
+									end: data.activePeriod ? formatDate(data.activePeriod.endDate, getLocale()) : '-',
+									day: data.settings.payDay
+								})}
 							</p>
 						</div>
 
@@ -1010,7 +1008,7 @@
 								? 'bg-linen-mist text-forest-ink dark:bg-spruce dark:text-lime-voltage'
 								: 'bg-alarm-red/10 text-alarm-red'}"
 						>
-							{canChangePayDay ? 'Dapat Diubah' : 'Batas Waktu'}
+							{canChangePayDay ? t('settings.payDayEditable') : t('settings.payDayLocked')}
 						</span>
 					</div>
 
@@ -1127,7 +1125,7 @@
 					</div>
 
 					<div class="pt-4">
-						<a href={resolve('/api/export/csv')} download class="inline-block">
+						<a href="{resolve('/api/export/csv')}?lang={getLocale()}" download class="inline-block">
 							<Button variant="secondary" size="sm">{t('settings.exportCsvButton')}</Button>
 						</a>
 					</div>
@@ -1166,9 +1164,9 @@
 							>
 								{#each data.periods as p (p.id)}
 									<option value={p.id}>
-										{formatDateIndonesian(p.startDate)}
+										{formatDate(p.startDate, getLocale())}
 										{t('common.to')}
-										{formatDateIndonesian(p.endDate)} ({p.status === 'active'
+										{formatDate(p.endDate, getLocale())} ({p.status === 'active'
 											? t('history.periodActive')
 											: t('history.periodCompleted')})
 									</option>
@@ -1180,7 +1178,7 @@
 					<div class="pt-4">
 						{#if selectedPdfPeriodId}
 							<a
-								href="{resolve('/api/export/pdf')}?periodId={selectedPdfPeriodId}"
+								href="{resolve('/api/export/pdf')}?periodId={selectedPdfPeriodId}&lang={getLocale()}"
 								download
 								class="inline-block"
 							>
@@ -1269,7 +1267,7 @@
 						name="confirmText"
 						type="text"
 						required
-						placeholder="HAPUS AKUN SAYA"
+						placeholder={t('settings.deleteAccountConfirmPhrase')}
 						bind:value={deleteConfirmText}
 						disabled={isDeletingAccount}
 						class="mt-1.5 w-full rounded-lg border border-pebble px-3 py-2 text-xs text-obsidian transition focus:border-alarm-red focus:ring-1 focus:ring-alarm-red focus:outline-none dark:border-dark-border dark:bg-dark-card dark:text-paper"
@@ -1292,7 +1290,7 @@
 
 					<button
 						type="submit"
-						disabled={deleteConfirmText !== 'HAPUS AKUN SAYA' || isDeletingAccount}
+						disabled={(deleteConfirmText !== 'HAPUS AKUN SAYA' && deleteConfirmText !== 'DELETE MY ACCOUNT') || isDeletingAccount}
 						class="cursor-pointer rounded-full bg-alarm-red px-5 py-1.5 text-xs font-bold text-paper transition hover:bg-alarm-red/90 disabled:cursor-not-allowed disabled:opacity-40"
 					>
 						{isDeletingAccount ? t('common.deleting') : t('settings.deleteModalConfirmButton')}

@@ -6,9 +6,9 @@
 	import NumpadCalculator from '#lib/components/NumpadCalculator.svelte';
 	import CategoryPicker from '#lib/components/CategoryPicker.svelte';
 	import { resolve } from '$app/paths';
-	import { formatDateIndonesian, formatRupiah } from '#lib/validation/onboarding.js';
+	import { formatDate, formatRupiah } from '#lib/validation/onboarding.js';
 	import { isOverBudget } from '#lib/validation/expense.js';
-	import { t } from '#lib/i18n/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Alert02Icon } from '@hugeicons/core-free-icons';
 
@@ -65,9 +65,10 @@
 		</div>
 		{#if data.period}
 			<div class="text-xs text-slate dark:text-pebble">
-				Periode: <span class="font-medium"
-					>{formatDateIndonesian(data.period.startDate)} – {formatDateIndonesian(
-						data.period.endDate
+				{t('common.period')}: <span class="font-medium"
+					>{formatDate(data.period.startDate, getLocale())} – {formatDate(
+						data.period.endDate,
+						getLocale()
 					)}</span
 				>
 			</div>
@@ -116,12 +117,12 @@
 					>
 						<HugeiconsIcon icon={Alert02Icon} class="mt-0.5 h-4 w-4 shrink-0 text-alarm-red" />
 						<div>
-							<p class="font-bold">Peringatan: Melebihi Saldo Kategori</p>
+							<p class="font-bold">{t('expenses.warningOverBudgetTitle')}</p>
 							<p class="mt-0.5 text-alarm-red/90">
-								Nominal {formatRupiah(amount)} melebihi sisa saldo kategori ({formatRupiah(
-									selectedCategoryBalance
-								)}). Pengeluaran tetap dapat disimpan, namun saldo kategori ini akan bernilai minus
-								(over-budget).
+								{t('expenses.warningOverBudgetDesc', {
+									amount: formatRupiah(amount),
+									balance: formatRupiah(selectedCategoryBalance)
+								})}
 							</p>
 						</div>
 					</div>

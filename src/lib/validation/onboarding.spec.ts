@@ -4,6 +4,7 @@ import {
 	validateIncomeSources,
 	calculateTotalIncome,
 	formatRupiah,
+	formatDate,
 	formatDateIndonesian,
 	validateCategories,
 	calculatePeriodDates,
@@ -100,6 +101,16 @@ describe('Onboarding Calculations & Formatting', () => {
 		expect(formatDateIndonesian('2026-10-21')).toBe('21 Okt 2026');
 		expect(formatDateIndonesian('2026-05-05')).toBe('5 Mei 2026');
 		expect(formatDateIndonesian('2026-11-20')).toBe('20 Nov 2026');
+	});
+
+	it('formats date according to locale with formatDate helper', () => {
+		expect(formatDate('2026-10-21', 'id')).toBe('21 Okt 2026');
+		expect(formatDate('2026-10-21', 'en')).toBe('21 Oct 2026');
+		expect(formatDate('2026-08-17', 'id')).toBe('17 Agu 2026');
+		expect(formatDate('2026-08-17', 'en')).toBe('17 Aug 2026');
+		expect(formatDate('2026-05-01', 'id')).toBe('1 Mei 2026');
+		expect(formatDate('2026-05-01', 'en')).toBe('1 May 2026');
+		expect(formatDate(new Date(2026, 9, 21), 'en')).toBe('21 Oct 2026');
 	});
 });
 
@@ -204,5 +215,18 @@ describe('Onboarding Calculations: calculatePeriodDates (Periode Bulan Pertama)'
 		const dates = calculatePeriodDates(today, 20);
 		expect(dates.startDate).toBe('2026-12-25');
 		expect(dates.endDate).toBe('2027-01-19');
+	});
+
+	it('returns localized English error messages when locale is en', () => {
+		expect(validatePayDay('', 'en')).toBe('Pay day is required.');
+		expect(validatePayDay(35, 'en')).toBe('Pay day must be between day 1 and 31.');
+		expect(validateIncomeSources([], 'en')).toBe('Must add at least one income source.');
+		expect(validateIncomeSources([{ name: '', amount: 100 }], 'en')).toBe(
+			'Income source name cannot be empty.'
+		);
+		expect(validateCategories([], 'en')).toBe('Must have at least one category.');
+		expect(validateCategories([{ name: 'Test', percentage: 80 }], 'en')).toContain(
+			'Total percentage must equal 100%'
+		);
 	});
 });

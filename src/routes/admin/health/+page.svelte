@@ -2,7 +2,7 @@
 	import type { PageProps } from './$types.js';
 	import Card from '#lib/components/Card.svelte';
 	import Badge from '#lib/components/Badge.svelte';
-	import { t } from '#lib/i18n/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		CheckmarkCircle02Icon,
@@ -16,18 +16,27 @@
 	let { data }: PageProps = $props();
 
 	const health = $derived(data.health);
+	const locale = $derived(getLocale());
+	const numLocale = $derived(locale === 'en' ? 'en-US' : 'id-ID');
 
-	const tableNameLabels: Record<string, string> = {
-		user: 'user (Pengguna)',
-		session: 'session (Sesi Login)',
-		monthlyPeriod: 'monthly_period (Periode Bulan)',
-		category: 'category (Kategori Budget)',
-		expense: 'expense (Pengeluaran)',
-		incomeSource: 'income_source (Sumber Pemasukan)',
-		categoryTemplate: 'category_template (Template Kategori)',
-		userSettings: 'user_settings (Pengaturan Pengguna)',
-		healthCheck: 'health_check (Pemeriksaan Sistem)'
-	};
+	const tableNameLabels = $derived<Record<string, string>>({
+		user: locale === 'en' ? 'user (Users)' : 'user (Pengguna)',
+		session: locale === 'en' ? 'session (Login Sessions)' : 'session (Sesi Login)',
+		monthlyPeriod:
+			locale === 'en' ? 'monthly_period (Monthly Periods)' : 'monthly_period (Periode Bulan)',
+		category: locale === 'en' ? 'category (Budget Categories)' : 'category (Kategori Budget)',
+		expense: locale === 'en' ? 'expense (Expenses)' : 'expense (Pengeluaran)',
+		incomeSource:
+			locale === 'en' ? 'income_source (Income Sources)' : 'income_source (Sumber Pemasukan)',
+		categoryTemplate:
+			locale === 'en'
+				? 'category_template (Category Templates)'
+				: 'category_template (Template Kategori)',
+		userSettings:
+			locale === 'en' ? 'user_settings (User Settings)' : 'user_settings (Pengaturan Pengguna)',
+		healthCheck:
+			locale === 'en' ? 'health_check (Health Checks)' : 'health_check (Pemeriksaan Sistem)'
+	});
 </script>
 
 <div class="space-y-8">
@@ -72,7 +81,7 @@
 			</div>
 			<div class="mt-3">
 				<span class="text-3xl font-black text-obsidian dark:text-paper">
-					{health.totalD1RowsEstimate.toLocaleString('id-ID')}
+					{health.totalD1RowsEstimate.toLocaleString(numLocale)}
 				</span>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
 					{t('admin.health.queryLatency', { latency: health.databaseLatencyMs })}
@@ -94,7 +103,7 @@
 			</div>
 			<div class="mt-3">
 				<span class="text-3xl font-black text-forest-ink dark:text-lime-voltage">
-					{health.aiCallsCount.toLocaleString('id-ID')}
+					{health.aiCallsCount.toLocaleString(numLocale)}
 				</span>
 				<p class="mt-1 text-xs text-slate dark:text-pebble">
 					{t('admin.health.aiCallsDesc')}
@@ -157,7 +166,7 @@
 						</p>
 					</div>
 					<span class="font-mono text-sm font-bold text-forest-ink dark:text-lime-voltage">
-						{count.toLocaleString('id-ID')}
+						{count.toLocaleString(numLocale)}
 					</span>
 				</div>
 			{/each}

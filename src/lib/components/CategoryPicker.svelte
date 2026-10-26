@@ -42,7 +42,11 @@
 			lower.includes('minum') ||
 			lower.includes('kuliner') ||
 			lower.includes('pangan') ||
-			lower.includes('kebutuhan')
+			lower.includes('kebutuhan') ||
+			lower.includes('needs') ||
+			lower.includes('food') ||
+			lower.includes('dining') ||
+			lower.includes('groceries')
 		) {
 			return Restaurant01Icon;
 		}
@@ -51,7 +55,10 @@
 			lower.includes('bensin') ||
 			lower.includes('kendaraan') ||
 			lower.includes('mobil') ||
-			lower.includes('motor')
+			lower.includes('motor') ||
+			lower.includes('commute') ||
+			lower.includes('fuel') ||
+			lower.includes('transit')
 		) {
 			return Car01Icon;
 		}
@@ -59,7 +66,9 @@
 			lower.includes('belanja') ||
 			lower.includes('keinginan') ||
 			lower.includes('hiburan') ||
-			lower.includes('shopping')
+			lower.includes('shopping') ||
+			lower.includes('wants') ||
+			lower.includes('entertainment')
 		) {
 			return ShoppingBag01Icon;
 		}
@@ -81,10 +90,10 @@
 <div class="w-full space-y-2 {className}">
 	<div class="flex items-center justify-between">
 		<span class="text-sm font-semibold text-charcoal dark:text-linen-mist">
-			Pilih Kategori <span class="text-alarm-red">*</span>
+			{t('categoryPicker.selectCategory')} <span class="text-alarm-red">*</span>
 		</span>
 		<span class="text-xs text-slate dark:text-pebble">
-			{activeCount} kategori aktif
+			{t('categoryPicker.activeCount', { count: activeCount })}
 		</span>
 	</div>
 

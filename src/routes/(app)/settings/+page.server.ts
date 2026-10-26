@@ -149,10 +149,10 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const confirmText = formData.get('confirmText');
 
-		if (confirmText !== 'HAPUS AKUN SAYA') {
+		if (confirmText !== 'HAPUS AKUN SAYA' && confirmText !== 'DELETE MY ACCOUNT') {
 			return fail(400, {
 				deleteError:
-					'Teks konfirmasi tidak sesuai. Harap ketik "HAPUS AKUN SAYA" dengan huruf kapital.'
+					'Teks konfirmasi tidak sesuai. Harap ketik "HAPUS AKUN SAYA" atau "DELETE MY ACCOUNT" dengan huruf kapital.'
 			});
 		}
 

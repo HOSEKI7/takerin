@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { t } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { WifiOff01Icon, ArrowLeft02Icon, RefreshIcon } from '@hugeicons/core-free-icons';
 
@@ -11,10 +12,10 @@
 </script>
 
 <svelte:head>
-	<title>Mode Offline | Takerin</title>
+	<title>{t('offline.title')}</title>
 	<meta
 		name="description"
-		content="Koneksi internet terputus. Buka data tersimpan atau hubungkan kembali."
+		content={t('offline.metaDesc')}
 	/>
 </svelte:head>
 
@@ -31,23 +32,22 @@
 		<h1
 			class="mb-3 text-2xl font-extrabold tracking-tight text-[var(--color-obsidian)] sm:text-3xl dark:text-white"
 		>
-			Anda Sedang Offline
+			{t('offline.heading') || 'Anda Sedang Offline'}
 		</h1>
 
 		<!-- Description -->
 		<p class="mb-8 text-base text-[var(--color-slate)] dark:text-[var(--color-pebble)]">
-			Koneksi internet Anda terputus dan halaman ini belum tersimpan di memori cache perangkat. Anda
-			tetap dapat membuka Dashboard yang sudah tersimpan sebelumnya.
+			{t('offline.desc')}
 		</p>
 
 		<!-- Actions: Primary CTA paired with secondary text link per DESIGN.md -->
 		<div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
 			<a
-				href={resolve('/(app)/dashboard')}
+				href={resolve('/(app)/dashboard') || '/dashboard'}
 				class="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-lime-voltage)] px-6 py-2.5 text-sm font-semibold text-[var(--color-forest-ink)] transition hover:brightness-95 active:brightness-90"
 			>
 				<HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
-				Buka Dashboard
+				<span>{t('offline.openDashboard') || 'Buka Dashboard'}</span>
 			</a>
 
 			<button
@@ -56,7 +56,7 @@
 				class="inline-flex cursor-pointer items-center justify-center gap-1.5 text-sm font-semibold text-[var(--color-forest-ink)] underline underline-offset-4 transition hover:opacity-80 dark:text-[var(--color-lime-voltage)]"
 			>
 				<HugeiconsIcon icon={RefreshIcon} size={16} />
-				Coba Lagi
+				<span>{t('offline.retry') || 'Coba Lagi'}</span>
 			</button>
 		</div>
 	</div>

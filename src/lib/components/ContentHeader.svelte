@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { getBreadcrumbs } from '#lib/navigation/breadcrumb.js';
-	import { t } from '#lib/i18n/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { ArrowRight01Icon } from '@hugeicons/core-free-icons';
 
@@ -16,7 +16,7 @@
 		currentPath ?? (typeof page !== 'undefined' && page?.url ? page.url.pathname : '')
 	);
 
-	const breadcrumbs = $derived(getBreadcrumbs(effectivePath));
+	const breadcrumbs = $derived(getBreadcrumbs(effectivePath, getLocale()));
 </script>
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -->

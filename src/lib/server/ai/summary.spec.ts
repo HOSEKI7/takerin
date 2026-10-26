@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateAiSummary, formatAggregatePrompt, type AiAggregateData } from './summary.js';
+import {
+	generateAiSummary,
+	formatAggregatePrompt,
+	cleanAndParseAiSummary,
+	type AiAggregateData
+} from './summary.js';
 
 describe('AI Summary Generator (Seam 1)', () => {
 	const sampleData: AiAggregateData = {
@@ -59,14 +64,17 @@ describe('AI Summary Generator (Seam 1)', () => {
 		expect(prompt).not.toContain('Gojek');
 	});
 
-	it('successfully calls Groq API when Groq key is present', async () => {
+	it('successfully calls Groq API when Groq key is present and returns bilingual json', async () => {
 		const mockFetch = vi.fn().mockResolvedValue({
 			ok: true,
 			json: async () => ({
 				choices: [
 					{
 						message: {
-							content: 'Bulan ini kamu hemat banget! Tabunganmu on fire! 🔥'
+							content: JSON.stringify({
+								id: 'Bulan ini kamu hemat banget! Tabunganmu on fire! 🔥',
+								en: 'You were so frugal this month! Your savings are on fire! 🔥'
+							})
 						}
 					}
 				]
@@ -79,7 +87,9 @@ describe('AI Summary Generator (Seam 1)', () => {
 			fetchFn: mockFetch as unknown as typeof fetch
 		});
 
-		expect(result).toBe('Bulan ini kamu hemat banget! Tabunganmu on fire! 🔥');
+		const parsed = JSON.parse(result);
+		expect(parsed.id).toBe('Bulan ini kamu hemat banget! Tabunganmu on fire! 🔥');
+		expect(parsed.en).toBe('You were so frugal this month! Your savings are on fire! 🔥');
 		expect(mockFetch).toHaveBeenCalledTimes(1);
 
 		const [url, options] = mockFetch.mock.calls[0];
@@ -107,7 +117,10 @@ describe('AI Summary Generator (Seam 1)', () => {
 							content: {
 								parts: [
 									{
-										text: 'Kategori Kebutuhan aman dan tabunganmu on fire! 💪'
+										text: JSON.stringify({
+											id: 'Kategori Kebutuhan aman dan tabunganmu on fire! 💪',
+											en: 'Needs are safe and your savings are on fire! 💪'
+										})
 									}
 								]
 							}
@@ -122,13 +135,27 @@ describe('AI Summary Generator (Seam 1)', () => {
 			fetchFn: mockFetch as unknown as typeof fetch
 		});
 
-		expect(result).toBe('Kategori Kebutuhan aman dan tabunganmu on fire! 💪');
+		const parsed = JSON.parse(result);
+		expect(parsed.id).toBe('Kategori Kebutuhan aman dan tabunganmu on fire! 💪');
+		expect(parsed.en).toBe('Needs are safe and your savings are on fire! 💪');
 		expect(mockFetch).toHaveBeenCalledTimes(2);
 
 		const [geminiUrl, geminiOptions] = mockFetch.mock.calls[1];
 		expect(geminiUrl).toContain('generativelanguage.googleapis.com');
 		expect(geminiUrl).toContain('gemini-1.5-flash');
 		expect(geminiOptions.headers['x-goog-api-key']).toBe('gemini_mock_test');
+	});
+
+	it('safely handles markdown codeblocks and plain text fallbacks', () => {
+		const codeBlock = '```json\n{"id": "Bagus!", "en": "Great!"}\n```';
+		const parsedCodeBlock = JSON.parse(cleanAndParseAiSummary(codeBlock));
+		expect(parsedCodeBlock.id).toBe('Bagus!');
+		expect(parsedCodeBlock.en).toBe('Great!');
+
+		const plainText = 'Pengeluaran bulan ini cukup rapi!';
+		const parsedPlain = JSON.parse(cleanAndParseAiSummary(plainText));
+		expect(parsedPlain.id).toBe('Pengeluaran bulan ini cukup rapi!');
+		expect(parsedPlain.en).toBe('Pengeluaran bulan ini cukup rapi!');
 	});
 
 	it('throws error when both Groq and Gemini fail', async () => {

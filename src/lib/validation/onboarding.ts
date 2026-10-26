@@ -7,22 +7,26 @@ export interface IncomeSourceInput {
  * Validates Tanggal Gajian (pay day).
  * Must be an integer between 1 and 31.
  */
-export function validatePayDay(payDay: unknown): string | null {
+export function validatePayDay(payDay: unknown, locale: 'id' | 'en' = 'id'): string | null {
 	if (payDay === '' || payDay === null || payDay === undefined) {
-		return 'Tanggal gajian wajib diisi.';
+		return locale === 'en' ? 'Pay day is required.' : 'Tanggal gajian wajib diisi.';
 	}
 
 	const num = Number(payDay);
 	if (Number.isNaN(num) || typeof payDay === 'boolean') {
-		return 'Tanggal gajian harus berupa angka.';
+		return locale === 'en' ? 'Pay day must be a number.' : 'Tanggal gajian harus berupa angka.';
 	}
 
 	if (!Number.isInteger(num)) {
-		return 'Tanggal gajian harus berupa bilangan bulat.';
+		return locale === 'en'
+			? 'Pay day must be an integer.'
+			: 'Tanggal gajian harus berupa bilangan bulat.';
 	}
 
 	if (num < 1 || num > 31) {
-		return 'Tanggal gajian harus berada di antara tanggal 1 sampai 31.';
+		return locale === 'en'
+			? 'Pay day must be between day 1 and 31.'
+			: 'Tanggal gajian harus berada di antara tanggal 1 sampai 31.';
 	}
 
 	return null;
@@ -33,24 +37,33 @@ export function validatePayDay(payDay: unknown): string | null {
  * Must contain at least one item, all names non-empty, all amounts > 0.
  */
 export function validateIncomeSources(
-	sources: IncomeSourceInput[] | null | undefined
+	sources: IncomeSourceInput[] | null | undefined,
+	locale: 'id' | 'en' = 'id'
 ): string | null {
 	if (!sources || !Array.isArray(sources) || sources.length === 0) {
-		return 'Minimal harus menambahkan satu sumber pemasukan.';
+		return locale === 'en'
+			? 'Must add at least one income source.'
+			: 'Minimal harus menambahkan satu sumber pemasukan.';
 	}
 
 	for (const source of sources) {
 		if (!source.name || source.name.trim().length === 0) {
-			return 'Nama sumber pemasukan tidak boleh kosong.';
+			return locale === 'en'
+				? 'Income source name cannot be empty.'
+				: 'Nama sumber pemasukan tidak boleh kosong.';
 		}
 
 		const amountNum = Number(source.amount);
 		if (Number.isNaN(amountNum) || source.amount === '') {
-			return 'Nominal pemasukan harus berupa angka yang valid.';
+			return locale === 'en'
+				? 'Income amount must be a valid number.'
+				: 'Nominal pemasukan harus berupa angka yang valid.';
 		}
 
 		if (amountNum <= 0) {
-			return 'Nominal pemasukan harus lebih besar dari 0.';
+			return locale === 'en'
+				? 'Income amount must be greater than 0.'
+				: 'Nominal pemasukan harus lebih besar dari 0.';
 		}
 	}
 
@@ -98,20 +111,59 @@ const MONTH_NAMES_ID = [
 	'Des'
 ];
 
+const MONTH_NAMES_EN = [
+	'Jan',
+	'Feb',
+	'Mar',
+	'Apr',
+	'May',
+	'Jun',
+	'Jul',
+	'Aug',
+	'Sep',
+	'Oct',
+	'Nov',
+	'Dec'
+];
+
+/**
+ * Formats a Date or ISO date string (YYYY-MM-DD) to a locale-aware formatted date string:
+ * e.g. 21 Okt 2026 (id) or 21 Oct 2026 (en)
+ */
+export function formatDate(dateInput: string | Date, locale: 'id' | 'en' = 'id'): string {
+	if (!dateInput) return '';
+	let year: string | number;
+	let monthIdx: number;
+	let day: number;
+
+	if (dateInput instanceof Date) {
+		if (isNaN(dateInput.getTime())) return '';
+		year = dateInput.getFullYear();
+		monthIdx = dateInput.getMonth();
+		day = dateInput.getDate();
+	} else {
+		if (!dateInput.includes('-')) return dateInput;
+		const parts = dateInput.split('-');
+		if (parts.length !== 3) return dateInput;
+		year = parts[0];
+		monthIdx = parseInt(parts[1], 10) - 1;
+		day = parseInt(parts[2], 10);
+	}
+
+	if (isNaN(monthIdx) || isNaN(day) || monthIdx < 0 || monthIdx > 11) {
+		return typeof dateInput === 'string' ? dateInput : '';
+	}
+
+	const monthNames = locale === 'en' ? MONTH_NAMES_EN : MONTH_NAMES_ID;
+	return `${day} ${monthNames[monthIdx]} ${year}`;
+}
+
 /**
  * Formats an ISO date string (YYYY-MM-DD) to Indonesian formatted date: e.g. 21 Okt 2026
+ * Preserved for backward compatibility.
  */
 export function formatDateIndonesian(dateStr: string): string {
-	if (!dateStr || !dateStr.includes('-')) return dateStr;
-	const parts = dateStr.split('-');
-	if (parts.length !== 3) return dateStr;
-	const year = parts[0];
-	const monthIdx = parseInt(parts[1], 10) - 1;
-	const day = parseInt(parts[2], 10);
-	if (isNaN(monthIdx) || isNaN(day) || monthIdx < 0 || monthIdx > 11) {
-		return dateStr;
-	}
-	return `${day} ${MONTH_NAMES_ID[monthIdx]} ${year}`;
+	return formatDate(dateStr, 'id');
 }
 
 export interface CategoryInput {
@@ -125,21 +177,30 @@ export interface CategoryInput {
  * Validates a list of categories.
  * Must have at least 1 category, all names non-empty, percentage > 0, and total sum === 100%.
  */
-export function validateCategories(categories: CategoryInput[] | null | undefined): string | null {
+export function validateCategories(
+	categories: CategoryInput[] | null | undefined,
+	locale: 'id' | 'en' = 'id'
+): string | null {
 	if (!categories || !Array.isArray(categories) || categories.length === 0) {
-		return 'Minimal harus memiliki satu kategori.';
+		return locale === 'en'
+			? 'Must have at least one category.'
+			: 'Minimal harus memiliki satu kategori.';
 	}
 
 	let totalPercentage = 0;
 
 	for (const cat of categories) {
 		if (!cat.name || cat.name.trim().length === 0) {
-			return 'Nama kategori tidak boleh kosong.';
+			return locale === 'en'
+				? 'Category name cannot be empty.'
+				: 'Nama kategori tidak boleh kosong.';
 		}
 
 		const pct = Number(cat.percentage);
 		if (Number.isNaN(pct) || cat.percentage === '' || pct <= 0) {
-			return 'Persentase kategori harus lebih besar dari 0%.';
+			return locale === 'en'
+				? 'Category percentage must be greater than 0%.'
+				: 'Persentase kategori harus lebih besar dari 0%.';
 		}
 
 		totalPercentage += pct;
@@ -147,7 +208,9 @@ export function validateCategories(categories: CategoryInput[] | null | undefine
 
 	// Total percentage must sum to 100% (allowing tolerance for minor float precision)
 	if (Math.abs(totalPercentage - 100) > 0.001) {
-		return `Total persentase harus tepat 100% (saat ini: ${Math.round(totalPercentage * 100) / 100}%).`;
+		return locale === 'en'
+			? `Total percentage must equal 100% (currently: ${Math.round(totalPercentage * 100) / 100}%).`
+			: `Total persentase harus tepat 100% (saat ini: ${Math.round(totalPercentage * 100) / 100}%).`;
 	}
 
 	return null;

@@ -4,7 +4,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { t } from '#lib/i18n/index.js';
+	import { t, getLocale } from '#lib/i18n/index.js';
 	import Button from '#lib/components/Button.svelte';
 	import Input from '#lib/components/Input.svelte';
 	import Card from '#lib/components/Card.svelte';
@@ -57,7 +57,7 @@
 						name: s.name,
 						amount: s.amount
 					}))
-				: [{ id: 'src-1', name: 'Gaji Pokok', amount: '' }]
+				: [{ id: 'src-1', name: t('onboarding.defaultIncomeName'), amount: '' }]
 		)
 	);
 	let step2Error = $state<string>('');
@@ -152,7 +152,7 @@
 
 	function handleNextToStep2() {
 		step1Error = '';
-		const error = validatePayDay(payDay);
+		const error = validatePayDay(payDay, getLocale());
 		if (error) {
 			step1Error = error;
 			return;
@@ -179,7 +179,7 @@
 
 	function handleRemoveSource(index: number) {
 		if (incomeSources.length <= 1) {
-			step2Error = 'Minimal harus memiliki satu sumber pemasukan.';
+			step2Error = t('onboarding.minOneSource');
 			return;
 		}
 		step2Error = '';
@@ -188,7 +188,7 @@
 
 	function handleNextToStep3() {
 		step2Error = '';
-		const error = validateIncomeSources(incomeSources);
+		const error = validateIncomeSources(incomeSources, getLocale());
 		if (error) {
 			step2Error = error;
 			return;
@@ -249,7 +249,7 @@
 
 	function handleRemoveCategory(index: number) {
 		if (categories.length <= 1) {
-			step4Error = 'Minimal harus memiliki satu kategori.';
+			step4Error = t('onboarding.minOneCategory');
 			return;
 		}
 		step4Error = '';
@@ -265,7 +265,7 @@
 	function validateAndPrepareSubmit(event: { cancel: () => void }) {
 		step4Error = '';
 
-		const payError = validatePayDay(payDay);
+		const payError = validatePayDay(payDay, getLocale());
 		if (payError) {
 			currentStep = 1;
 			step1Error = payError;
@@ -273,7 +273,7 @@
 			return;
 		}
 
-		const sourcesError = validateIncomeSources(incomeSources);
+		const sourcesError = validateIncomeSources(incomeSources, getLocale());
 		if (sourcesError) {
 			currentStep = 2;
 			step2Error = sourcesError;
@@ -287,7 +287,7 @@
 			isSavings: c.isSavings
 		}));
 
-		const catError = validateCategories(categoriesFormatted);
+		const catError = validateCategories(categoriesFormatted, getLocale());
 		if (catError) {
 			step4Error = catError;
 			event.cancel();
@@ -319,15 +319,13 @@
 						{
 							id: 'tpl_50_30_20',
 							name: '50/30/20',
-							description:
-								'Pembagian klasik: 50% Kebutuhan, 30% Keinginan, 20% Tabungan & Investasi.',
+							description: t('onboarding.tpl503020Desc'),
 							categories: fallbackPresets['50/30/20']
 						},
 						{
 							id: 'tpl_6_toples',
 							name: '6 Toples',
-							description:
-								'Metode T. Harv Eker: Kebutuhan (55%), Tabungan Jangka Panjang (10%), Investasi Finansial (10%), Edukasi (10%), Hiburan (10%), Donasi (5%).',
+							description: t('onboarding.tpl6ToplesDesc'),
 							categories: fallbackPresets['6 Toples']
 						}
 					];
@@ -337,7 +335,7 @@
 			{
 				id: 'tpl_custom',
 				name: 'Custom',
-				description: 'Tentukan nama kategori dan persentase sesuai gaya hidup finansial Anda.',
+				description: t('onboarding.tplCustomDesc'),
 				categories: fallbackPresets['Custom']
 			}
 		];

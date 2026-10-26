@@ -213,5 +213,22 @@ describe('Settings Validation & Formatting (Seam 1)', () => {
 				'\uFEFFTanggal,Waktu,Nama Pengeluaran,Kategori,Nominal,Catatan,Periode Bulan'
 			);
 		});
+
+		it('formats English headers when locale is en', () => {
+			const items: CsvExpenseItem[] = [
+				{
+					date: '2026-10-20',
+					time: '14:30',
+					name: 'Lunch',
+					categoryName: 'Food',
+					amount: 45000,
+					notes: 'Padang rice',
+					periodRange: '2026-09-25 to 2026-10-24'
+				}
+			];
+			const csv = formatExpensesCsv(items, 'en');
+			expect(csv).toContain('Date,Time,Expense Name,Category,Amount,Notes,Monthly Period');
+			expect(csv).toContain('2026-10-20,14:30,Lunch,Food,45000,Padang rice,2026-09-25 to 2026-10-24');
+		});
 	});
 });
