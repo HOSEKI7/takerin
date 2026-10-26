@@ -57,6 +57,10 @@ describe('Landing Page & SEO (+page.svelte & routes)', () => {
 		expect(pageContent).toMatch(/property="og:description"/);
 		expect(pageContent).toMatch(/property="og:url"/);
 		expect(pageContent).toMatch(/property="og:image"/);
+		expect(pageContent).toContain('https://takerin.my.id/brand/og-image.png');
+		expect(pageContent).toContain('property="og:image:width"');
+		expect(pageContent).toContain('property="og:image:height"');
+		expect(pageContent).toContain('property="og:image:type"');
 		expect(pageContent).toMatch(/property="og:type"/);
 
 		// Twitter Cards

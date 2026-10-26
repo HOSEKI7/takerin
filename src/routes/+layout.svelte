@@ -47,6 +47,8 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<meta property="og:site_name" content="Takerin" />
+	<meta property="og:locale" content="id_ID" />
 </svelte:head>
 
 {@render children()}

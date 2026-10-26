@@ -84,12 +84,15 @@
 		errorMessage = '';
 		successMessage = '';
 
-		const validationError = validateResetPasswordWithOTPInput({
-			email,
-			otp,
-			password: newPassword,
-			confirmPassword
-		}, getLocale());
+		const validationError = validateResetPasswordWithOTPInput(
+			{
+				email,
+				otp,
+				password: newPassword,
+				confirmPassword
+			},
+			getLocale()
+		);
 
 		if (validationError) {
 			errorMessage = validationError;
@@ -158,6 +161,31 @@
 		}
 	}
 </script>
+
+<svelte:head>
+	<title>{t('auth.forgotPassword.title')} — Takerin</title>
+	<meta name="description" content={t('auth.forgotPassword.subtitle')} />
+	<link rel="canonical" href="https://takerin.my.id/auth/forgot-password" />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://takerin.my.id/auth/forgot-password" />
+	<meta property="og:title" content={`${t('auth.forgotPassword.title')} — Takerin`} />
+	<meta property="og:description" content={t('auth.forgotPassword.subtitle')} />
+	<meta property="og:image" content="https://takerin.my.id/brand/og-image.png" />
+	<meta property="og:image:secure_url" content="https://takerin.my.id/brand/og-image.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:type" content="image/png" />
+	<meta property="og:site_name" content="Takerin" />
+
+	<!-- Twitter Cards -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:url" content="https://takerin.my.id/auth/forgot-password" />
+	<meta name="twitter:title" content={`${t('auth.forgotPassword.title')} — Takerin`} />
+	<meta name="twitter:description" content={t('auth.forgotPassword.subtitle')} />
+	<meta name="twitter:image" content="https://takerin.my.id/brand/og-image.png" />
+</svelte:head>
 
 <div
 	class="flex min-h-screen flex-col bg-paper font-sans text-charcoal transition-colors dark:bg-dark-surface dark:text-linen-mist"

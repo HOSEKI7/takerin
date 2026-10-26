@@ -52,12 +52,15 @@
 		errorMessage = '';
 		successMessage = '';
 
-		const validationError = validateRegisterInput({
-			name,
-			email,
-			password,
-			confirmPassword
-		}, getLocale());
+		const validationError = validateRegisterInput(
+			{
+				name,
+				email,
+				password,
+				confirmPassword
+			},
+			getLocale()
+		);
 
 		if (validationError) {
 			errorMessage = validationError;
@@ -163,6 +166,31 @@
 		}
 	}
 </script>
+
+<svelte:head>
+	<title>{t('auth.register.title')} — Takerin</title>
+	<meta name="description" content={t('auth.register.subtitle')} />
+	<link rel="canonical" href="https://takerin.my.id/auth/register" />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://takerin.my.id/auth/register" />
+	<meta property="og:title" content={`${t('auth.register.title')} — Takerin`} />
+	<meta property="og:description" content={t('auth.register.subtitle')} />
+	<meta property="og:image" content="https://takerin.my.id/brand/og-image.png" />
+	<meta property="og:image:secure_url" content="https://takerin.my.id/brand/og-image.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:type" content="image/png" />
+	<meta property="og:site_name" content="Takerin" />
+
+	<!-- Twitter Cards -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:url" content="https://takerin.my.id/auth/register" />
+	<meta name="twitter:title" content={`${t('auth.register.title')} — Takerin`} />
+	<meta name="twitter:description" content={t('auth.register.subtitle')} />
+	<meta name="twitter:image" content="https://takerin.my.id/brand/og-image.png" />
+</svelte:head>
 
 <div
 	class="flex min-h-screen flex-col bg-paper font-sans text-charcoal transition-colors dark:bg-dark-surface dark:text-linen-mist"

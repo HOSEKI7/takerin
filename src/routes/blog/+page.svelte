@@ -35,7 +35,12 @@
 	<meta property="og:url" content="https://takerin.my.id/blog" />
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="Takerin" />
-	<meta property="og:image" content="https://takerin.my.id/brand/takerin-wordmark.webp" />
+	<meta property="og:image" content="https://takerin.my.id/brand/og-image.png" />
+	<meta property="og:image:secure_url" content="https://takerin.my.id/brand/og-image.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:type" content="image/png" />
+	<meta property="og:image:alt" content="Blog & Edukasi Finansial — Takerin" />
 
 	<!-- Twitter Cards -->
 	<meta name="twitter:card" content="summary_large_image" />
@@ -44,7 +49,8 @@
 		name="twitter:description"
 		content="Panduan praktis atur gaji bulanan, tips hemat anak kos, dan strategi keuangan tanpa rasa bersalah."
 	/>
-	<meta name="twitter:image" content="https://takerin.my.id/brand/takerin-wordmark.webp" />
+	<meta name="twitter:image" content="https://takerin.my.id/brand/og-image.png" />
+	<meta name="twitter:image:alt" content="Blog & Edukasi Finansial — Takerin" />
 </svelte:head>
 
 <div

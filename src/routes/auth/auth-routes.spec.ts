@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import {
 	authClient,
 	signIn,
@@ -618,6 +620,50 @@ describe('Admin Invite Activation Route (/auth/admin-invite/[token])', () => {
 					sameSite: 'lax'
 				})
 			);
+		});
+	});
+
+	describe('Auth Pages SEO & Open Graph Metadata', () => {
+		it('contains required SEO meta tags and og:image in /auth/login/+page.svelte', () => {
+			const loginPath = path.resolve('src/routes/auth/login/+page.svelte');
+			const content = fs.readFileSync(loginPath, 'utf-8');
+
+			expect(content).toContain('<svelte:head>');
+			expect(content).toContain('canonical');
+			expect(content).toContain('property="og:title"');
+			expect(content).toContain('property="og:image"');
+			expect(content).toContain('https://takerin.my.id/brand/og-image.png');
+			expect(content).toContain('property="og:image:width"');
+			expect(content).toContain('property="og:image:height"');
+			expect(content).toContain('name="twitter:card"');
+		});
+
+		it('contains required SEO meta tags and og:image in /auth/register/+page.svelte', () => {
+			const registerPath = path.resolve('src/routes/auth/register/+page.svelte');
+			const content = fs.readFileSync(registerPath, 'utf-8');
+
+			expect(content).toContain('<svelte:head>');
+			expect(content).toContain('canonical');
+			expect(content).toContain('property="og:title"');
+			expect(content).toContain('property="og:image"');
+			expect(content).toContain('https://takerin.my.id/brand/og-image.png');
+			expect(content).toContain('property="og:image:width"');
+			expect(content).toContain('property="og:image:height"');
+			expect(content).toContain('name="twitter:card"');
+		});
+
+		it('contains required SEO meta tags and og:image in /auth/forgot-password/+page.svelte', () => {
+			const forgotPath = path.resolve('src/routes/auth/forgot-password/+page.svelte');
+			const content = fs.readFileSync(forgotPath, 'utf-8');
+
+			expect(content).toContain('<svelte:head>');
+			expect(content).toContain('canonical');
+			expect(content).toContain('property="og:title"');
+			expect(content).toContain('property="og:image"');
+			expect(content).toContain('https://takerin.my.id/brand/og-image.png');
+			expect(content).toContain('property="og:image:width"');
+			expect(content).toContain('property="og:image:height"');
+			expect(content).toContain('name="twitter:card"');
 		});
 	});
 });

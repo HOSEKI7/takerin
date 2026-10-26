@@ -137,7 +137,11 @@
 		property="og:description"
 		content="Aplikasi web gratis untuk membagi gaji bulanan ke dalam jatah per kategori dan mencatat pengeluaran harian. Atur pengeluaran, catat keuangan, atur gaji."
 	/>
-	<meta property="og:image" content="https://takerin.my.id/brand/takerin-wordmark.webp" />
+	<meta property="og:image" content="https://takerin.my.id/brand/og-image.png" />
+	<meta property="og:image:secure_url" content="https://takerin.my.id/brand/og-image.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:type" content="image/png" />
 	<meta property="og:image:alt" content="Takerin - Aplikasi Pengatur Keuangan dan Pengeluaran" />
 	<meta property="og:locale" content="id_ID" />
 	<meta property="og:site_name" content="Takerin" />
@@ -150,7 +154,8 @@
 		name="twitter:description"
 		content="Aplikasi web gratis untuk membagi gaji bulanan ke dalam jatah per kategori dan mencatat pengeluaran harian."
 	/>
-	<meta name="twitter:image" content="https://takerin.my.id/brand/takerin-wordmark.webp" />
+	<meta name="twitter:image" content="https://takerin.my.id/brand/og-image.png" />
+	<meta name="twitter:image:alt" content="Takerin - Takerin Gajimu, Tenangin Bulanmu" />
 
 	<!-- JSON-LD Structured Data -->
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->

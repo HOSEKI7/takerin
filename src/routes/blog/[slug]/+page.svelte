@@ -19,7 +19,7 @@
 		headline: data.post.title,
 		description: data.post.excerpt,
 		datePublished: data.post.date,
-		image: data.post.image ?? 'https://takerin.my.id/brand/takerin-wordmark.webp',
+		image: data.post.image ?? 'https://takerin.my.id/brand/og-image.png',
 		author: {
 			'@type': 'Organization',
 			name: data.post.author,
@@ -91,8 +91,16 @@
 	<meta property="og:site_name" content="Takerin" />
 	<meta
 		property="og:image"
-		content={data.post.image ?? 'https://takerin.my.id/brand/takerin-wordmark.webp'}
+		content={data.post.image ?? 'https://takerin.my.id/brand/og-image.png'}
 	/>
+	<meta
+		property="og:image:secure_url"
+		content={data.post.image ?? 'https://takerin.my.id/brand/og-image.png'}
+	/>
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:type" content="image/png" />
+	<meta property="og:image:alt" content={data.post.title} />
 	<meta property="article:published_time" content={data.post.date} />
 	<meta property="article:author" content={data.post.author} />
 
@@ -102,8 +110,9 @@
 	<meta name="twitter:description" content={data.post.excerpt} />
 	<meta
 		name="twitter:image"
-		content={data.post.image ?? 'https://takerin.my.id/brand/takerin-wordmark.webp'}
+		content={data.post.image ?? 'https://takerin.my.id/brand/og-image.png'}
 	/>
+	<meta name="twitter:image:alt" content={data.post.title} />
 
 	<!-- Structured Data -->
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
