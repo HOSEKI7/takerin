@@ -110,7 +110,7 @@
 			>
 				<span>{hasClicked ? t('support.tooltipThanks') : t('support.tooltipIdle')}</span>
 				<div
-					class="absolute right-5 -bottom-1 h-2 w-2 rotate-45 bg-forest-ink dark:bg-forest-ink"
+					class="absolute right-8 -bottom-1 h-2 w-2 rotate-45 bg-forest-ink sm:right-10 dark:bg-forest-ink"
 					aria-hidden="true"
 				></div>
 			</div>
@@ -120,9 +120,9 @@
 				type="button"
 				onclick={dismissWidget}
 				aria-label={t('support.dismissAria')}
-				class="absolute -top-1 -right-1 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-fog/80 bg-paper/95 text-slate shadow-sm backdrop-blur-xs transition-transform duration-150 hover:scale-110 hover:bg-fog hover:text-charcoal focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-95 dark:border-dark-border dark:bg-dark-card/95 dark:text-pebble dark:hover:bg-dark-surface dark:hover:text-white dark:focus-visible:ring-lime-voltage"
+				class="absolute -top-1.5 -right-1.5 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border border-fog/80 bg-paper/95 text-slate shadow-sm backdrop-blur-xs transition-transform duration-150 hover:scale-110 hover:bg-fog hover:text-charcoal focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-95 sm:h-7 sm:w-7 dark:border-dark-border dark:bg-dark-card/95 dark:text-pebble dark:hover:bg-dark-surface dark:hover:text-white dark:focus-visible:ring-lime-voltage"
 			>
-				<HugeiconsIcon icon={Cancel01Icon} size={13} />
+				<HugeiconsIcon icon={Cancel01Icon} size={14} />
 			</button>
 
 			<!-- Mascot Interactive Button -->
@@ -139,9 +139,9 @@
 				<img
 					src={currentMascotSrc}
 					alt={t('support.mascotAlt')}
-					width="64"
-					height="64"
-					class="pointer-events-none h-14 w-14 object-contain drop-shadow-md select-none sm:h-16 sm:w-16"
+					width="112"
+					height="112"
+					class="pointer-events-none h-20 w-20 object-contain drop-shadow-md select-none sm:h-24 sm:w-24 md:h-28 md:w-28"
 				/>
 			</button>
 		</div>
@@ -229,7 +229,11 @@
 							class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-forest-ink px-4 py-2.5 text-xs font-bold text-paper shadow-xs transition hover:bg-spruce focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-[0.99] sm:text-sm dark:bg-lime-voltage dark:text-forest-ink dark:hover:brightness-95 dark:focus-visible:ring-lime-voltage"
 						>
 							<HugeiconsIcon icon={LinkSquare02Icon} size={16} />
-							<span>{platform.id === 'sociabuzz' && platform.label === 'Donasi via Sociabuzz' ? t('support.sociabuzzLabel') : platform.label}</span>
+							<span
+								>{platform.id === 'sociabuzz' && platform.label === 'Donasi via Sociabuzz'
+									? t('support.sociabuzzLabel')
+									: platform.label}</span
+							>
 						</a>
 					{/each}
 				</div>
