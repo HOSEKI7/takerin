@@ -11,8 +11,8 @@ describe('DesktopSidebar Component & Navigation Seam (Issue #27)', () => {
 	});
 
 	it('defines required navigation translation keys in id.json and en.json', () => {
-		const idNav = idDict.nav as Record<string, string>;
-		const enNav = enDict.nav as Record<string, string>;
+		const idNav = idDict.nav as unknown as Record<string, string>;
+		const enNav = enDict.nav as unknown as Record<string, string>;
 
 		expect(idNav.mainMenu).toBe('Menu Utama');
 		expect(enNav.mainMenu).toBe('Main Menu');
@@ -73,6 +73,10 @@ describe('DesktopSidebar Component & Navigation Seam (Issue #27)', () => {
 		// Check user profile in sticky footer
 		expect(html).toContain('Budi Santoso');
 		expect(html).toContain('budi@example.com');
+
+		// Check developer support mini card with coffee mascot
+		expect(html).toContain('mascot/mascot-coffee.webp');
+		expect(html).toContain('Traktir Kopi ☕');
 	});
 
 	it('renders collapsed desktop sidebar (~72px / w-[72px]) with icon-only CTA, tooltips, and avatar', () => {
@@ -103,6 +107,9 @@ describe('DesktopSidebar Component & Navigation Seam (Issue #27)', () => {
 
 		// Check initials avatar in sticky footer
 		expect(html).toContain('B');
+
+		// Check collapsed developer support button with tooltip
+		expect(html).toContain('aria-label="Traktir Kopi ☕"');
 	});
 
 	it('correctly matches active route for exact and prefix routes via exported isRouteActive', () => {

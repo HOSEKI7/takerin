@@ -9,8 +9,8 @@ describe('Onboarding Tutorial Component & Content (Seam 1 & 2)', () => {
 	});
 
 	it('defines all required onboarding tutorial translation keys in id.json and en.json', () => {
-		const idTutorial = idDict.onboarding?.tutorial as Record<string, string> | undefined;
-		const enTutorial = enDict.onboarding?.tutorial as Record<string, string> | undefined;
+		const idTutorial = idDict.onboarding?.tutorial as unknown as Record<string, string> | undefined;
+		const enTutorial = enDict.onboarding?.tutorial as unknown as Record<string, string> | undefined;
 
 		expect(idTutorial).toBeDefined();
 		expect(enTutorial).toBeDefined();
@@ -38,7 +38,7 @@ describe('Onboarding Tutorial Component & Content (Seam 1 & 2)', () => {
 	});
 
 	it('includes the exact requested copy from Issue #19 in Indonesian translations', () => {
-		const idTutorial = idDict.onboarding?.tutorial as Record<string, string>;
+		const idTutorial = idDict.onboarding?.tutorial as unknown as Record<string, string>;
 
 		expect(idTutorial.slide1Desc).toContain(
 			'Ini dashboard kamu — lihat sisa jatah per kategori di sini'
@@ -53,7 +53,7 @@ describe('Onboarding Tutorial Component & Content (Seam 1 & 2)', () => {
 	});
 
 	it('defines the 4 required slides and their corresponding translation keys', () => {
-		const idTutorial = idDict.onboarding?.tutorial as Record<string, string>;
+		const idTutorial = idDict.onboarding?.tutorial as unknown as Record<string, string>;
 		const expectedSlides = [
 			{ title: idTutorial.slide1Title, desc: idTutorial.slide1Desc },
 			{ title: idTutorial.slide2Title, desc: idTutorial.slide2Desc },

@@ -5,21 +5,21 @@
 	import Input from '#lib/components/Input.svelte';
 	import { authClient } from '#lib/auth-client.js';
 	import { formatAuthError } from '#lib/validation/auth.js';
-	import {
-		formatDate,
-		formatDateISO
-	} from '#lib/validation/onboarding.js';
-	import {
-		validateChangeEmailRequest,
-		validateChangeEmailOtp
-	} from '#lib/validation/settings.js';
+	import { formatDate, formatDateISO } from '#lib/validation/onboarding.js';
+	import { validateChangeEmailRequest, validateChangeEmailOtp } from '#lib/validation/settings.js';
 	import { setTheme } from '#lib/theme.js';
 	import { t, getLocale, setLocale, type Locale } from '#lib/i18n/index.js';
-	import { resolve } from '$app/paths';
+	import { resolve, asset } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { onMount, onDestroy } from 'svelte';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
-	import { Calendar01Icon, Download01Icon, Alert02Icon } from '@hugeicons/core-free-icons';
+	import {
+		Calendar01Icon,
+		Download01Icon,
+		Alert02Icon,
+		Coffee01Icon
+	} from '@hugeicons/core-free-icons';
+	import DonationModal from '#lib/components/DonationModal.svelte';
 
 	let { data, form }: PageProps = $props();
 
@@ -44,6 +44,7 @@
 	let changeEmailSuccess = $state('');
 	let resendCooldown = $state(0);
 	let cooldownTimer: ReturnType<typeof setInterval> | null = null;
+	let isDonationModalOpen = $state(false);
 
 	function openChangeEmailForm() {
 		changeEmailOpen = true;
@@ -179,8 +180,7 @@
 			changeEmailSuccess = t('settings.emailChangedSuccess', { email: updatedEmail });
 			resetChangeEmailForm();
 		} catch (err) {
-			changeEmailError =
-				err instanceof Error ? err.message : t('settings.emailChangeVerifyFailed');
+			changeEmailError = err instanceof Error ? err.message : t('settings.emailChangeVerifyFailed');
 		} finally {
 			isSubmittingOtp = false;
 		}
@@ -273,7 +273,9 @@
 		try {
 			const res = await authClient.twoFactor.enable({ password: twoFactorPassword });
 			if (res.error) {
-				twoFactorError = formatAuthError(res.error.message || t('dashboard.passwordRequiredFor2FA'));
+				twoFactorError = formatAuthError(
+					res.error.message || t('dashboard.passwordRequiredFor2FA')
+				);
 			} else {
 				customTwoFactor = true;
 				twoFactorSuccess = t('dashboard.twoFactorEnabledSuccess');
@@ -299,7 +301,9 @@
 		try {
 			const res = await authClient.twoFactor.disable({ password: twoFactorPassword });
 			if (res.error) {
-				twoFactorError = formatAuthError(res.error.message || t('dashboard.passwordRequiredToDisable2FA'));
+				twoFactorError = formatAuthError(
+					res.error.message || t('dashboard.passwordRequiredToDisable2FA')
+				);
 			} else {
 				customTwoFactor = false;
 				twoFactorSuccess = t('dashboard.twoFactorDisabledSuccess');
@@ -996,7 +1000,9 @@
 							</div>
 							<p class="mt-1 text-xs text-slate dark:text-pebble">
 								{t('settings.payDayHint', {
-									start: data.activePeriod ? formatDate(data.activePeriod.startDate, getLocale()) : '-',
+									start: data.activePeriod
+										? formatDate(data.activePeriod.startDate, getLocale())
+										: '-',
 									end: data.activePeriod ? formatDate(data.activePeriod.endDate, getLocale()) : '-',
 									day: data.settings.payDay
 								})}
@@ -1178,7 +1184,9 @@
 					<div class="pt-4">
 						{#if selectedPdfPeriodId}
 							<a
-								href="{resolve('/api/export/pdf')}?periodId={selectedPdfPeriodId}&lang={getLocale()}"
+								href="{resolve(
+									'/api/export/pdf'
+								)}?periodId={selectedPdfPeriodId}&lang={getLocale()}"
 								download
 								class="inline-block"
 							>
@@ -1192,7 +1200,40 @@
 			</div>
 		</Card>
 
-		<!-- SECTION 5: ZONA BAHAYA (HAPUS AKUN) -->
+		<!-- SECTION 5: TENTANG & DUKUNGAN PENGEMBANG -->
+		<Card variant="default" padding="lg">
+			<div class="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+				<img
+					src={asset('mascot/mascot-coffee.webp')}
+					alt={t('support.mascotAlt')}
+					width="72"
+					height="66"
+					class="h-16 w-18 shrink-0 object-contain drop-shadow-sm"
+				/>
+				<div class="min-w-0 flex-1">
+					<h2 class="text-base font-bold text-obsidian dark:text-paper">
+						{t('support.settingsCardTitle')}
+					</h2>
+					<p class="mt-1 text-xs leading-relaxed text-slate dark:text-linen-mist/80">
+						{t('support.settingsCardDesc')}
+					</p>
+					<div class="mt-4">
+						<button
+							type="button"
+							onclick={() => (isDonationModalOpen = true)}
+							class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-forest-ink px-5 py-2 text-xs font-bold text-paper shadow-xs transition hover:bg-spruce focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-95 dark:bg-lime-voltage dark:text-forest-ink dark:hover:brightness-95 dark:focus-visible:ring-lime-voltage"
+						>
+							<HugeiconsIcon icon={Coffee01Icon} size={16} />
+							<span>{t('support.settingsBtn')}</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</Card>
+
+		<DonationModal bind:isOpen={isDonationModalOpen} />
+
+		<!-- SECTION 6: ZONA BAHAYA (HAPUS AKUN) -->
 		<div
 			class="rounded-lg border border-alarm-red/40 bg-alarm-red/5 p-6 dark:border-alarm-red/30 dark:bg-alarm-red/10"
 		>
@@ -1290,7 +1331,9 @@
 
 					<button
 						type="submit"
-						disabled={(deleteConfirmText !== 'HAPUS AKUN SAYA' && deleteConfirmText !== 'DELETE MY ACCOUNT') || isDeletingAccount}
+						disabled={(deleteConfirmText !== 'HAPUS AKUN SAYA' &&
+							deleteConfirmText !== 'DELETE MY ACCOUNT') ||
+							isDeletingAccount}
 						class="cursor-pointer rounded-full bg-alarm-red px-5 py-1.5 text-xs font-bold text-paper transition hover:bg-alarm-red/90 disabled:cursor-not-allowed disabled:opacity-40"
 					>
 						{isDeletingAccount ? t('common.deleting') : t('settings.deleteModalConfirmButton')}

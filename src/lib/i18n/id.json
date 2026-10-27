@@ -812,7 +812,13 @@
 		"modalDesc": "Takerin gratis tanpa iklan. Donasi seikhlasnya sangat berarti untuk biaya operasional & kopi developer!",
 		"qrisAlt": "QRIS GoPay Universal Takerin",
 		"qrisHint": "Bisa di-scan dari BCA, GoPay, OVO, Dana, ShopeePay, & m-Banking apa saja.",
-		"sociabuzzLabel": "Donasi via Sociabuzz"
+		"sociabuzzLabel": "Donasi via Sociabuzz",
+		"sidebarCardTitle": "Suka Takerin?",
+		"sidebarCardDesc": "Bantu developer agar Takerin tetap gratis & bebas iklan.",
+		"sidebarBtn": "Traktir Kopi ☕",
+		"settingsCardTitle": "Tentang & Dukungan Pengembang",
+		"settingsCardDesc": "Takerin dibuat dengan cinta untuk membantu mengelola keuangan pribadi secara mandiri tanpa iklan dan tanpa biaya berlangganan. Dukungan sukarela Anda sangat berarti untuk membiayai server, domain, dan kopi pengembang.",
+		"settingsBtn": "Dukung Pengembang via QRIS / Donasi"
 	},
 	"offline": {
 		"title": "Mode Offline | Takerin",

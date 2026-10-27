@@ -812,7 +812,13 @@
 		"modalDesc": "Takerin is free without ads. Voluntary donations mean a lot for operational costs & developer coffee!",
 		"qrisAlt": "Takerin Universal QRIS GoPay",
 		"qrisHint": "Can be scanned with BCA, GoPay, OVO, Dana, ShopeePay, & any mobile banking app.",
-		"sociabuzzLabel": "Donate via Sociabuzz"
+		"sociabuzzLabel": "Donate via Sociabuzz",
+		"sidebarCardTitle": "Enjoying Takerin?",
+		"sidebarCardDesc": "Support the developer to keep Takerin free & ad-free.",
+		"sidebarBtn": "Buy a Coffee ☕",
+		"settingsCardTitle": "About & Developer Support",
+		"settingsCardDesc": "Takerin is built with care to help manage personal finances independently without ads or subscriptions. Your voluntary support goes a long way to cover server, domain, and developer coffee costs.",
+		"settingsBtn": "Support Developer via QRIS / Donation"
 	},
 	"offline": {
 		"title": "Offline Mode | Takerin",

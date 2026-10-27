@@ -10,8 +10,8 @@ describe('MobileNav Component & Navigation Seam (Issue #28)', () => {
 	});
 
 	it('defines required mobile navigation translation keys in id.json and en.json', () => {
-		const idNav = idDict.nav as Record<string, string>;
-		const enNav = enDict.nav as Record<string, string>;
+		const idNav = idDict.nav as unknown as Record<string, string>;
+		const enNav = enDict.nav as unknown as Record<string, string>;
 
 		expect(idNav.openMenu).toBe('Buka menu navigasi');
 		expect(enNav.openMenu).toBe('Open navigation menu');
@@ -105,6 +105,10 @@ describe('MobileNav Component & Navigation Seam (Issue #28)', () => {
 		expect(html).toContain('Budi Santoso');
 		expect(html).toContain('budi@example.com');
 		expect(html).toContain('Keluar');
+
+		// Developer support mini card with coffee mascot
+		expect(html).toContain('mascot/mascot-coffee.webp');
+		expect(html).toContain('Traktir Kopi ☕');
 	});
 
 	it('does not render drawer or backdrop overlay when isOpen is false', () => {

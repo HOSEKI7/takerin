@@ -7,10 +7,11 @@
 	import type { ComponentProps } from 'svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { resolve } from '$app/paths';
+	import { resolve, asset } from '$app/paths';
 	import BrandLogo from './BrandLogo.svelte';
 	import ThemeToggle from './ThemeToggle.svelte';
 	import Button from './Button.svelte';
+	import DonationModal from './DonationModal.svelte';
 	import { t } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 
@@ -24,7 +25,8 @@
 		PlusSignIcon,
 		Logout01Icon,
 		ArrowLeft02Icon,
-		ArrowRight02Icon
+		ArrowRight02Icon,
+		Coffee01Icon
 	} from '@hugeicons/core-free-icons';
 
 	const STORAGE_KEY = 'takerin_sidebar_collapsed';
@@ -50,6 +52,7 @@
 	}: Props = $props();
 
 	let activeTooltipDismissed = $state(false);
+	let isDonationModalOpen = $state(false);
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
@@ -287,6 +290,51 @@
 				{/each}
 			</ul>
 		</div>
+
+		<!-- Developer Support Mini Card (Desktop Sidebar) -->
+		{#if !isCollapsed}
+			<div
+				class="mt-auto rounded-2xl border border-fog/80 bg-fog/40 p-3 transition-colors dark:border-dark-border dark:bg-dark-card/40"
+			>
+				<div class="flex items-center gap-2.5">
+					<img
+						src={asset('mascot/mascot-coffee.webp')}
+						alt={t('support.mascotAlt')}
+						width="44"
+						height="40"
+						class="h-10 w-11 shrink-0 object-contain drop-shadow-xs"
+					/>
+					<div class="min-w-0 flex-1">
+						<p class="text-xs font-bold text-charcoal dark:text-linen-mist">
+							{t('support.sidebarCardTitle')}
+						</p>
+						<p class="line-clamp-2 text-[10px] leading-tight text-slate dark:text-pebble">
+							{t('support.sidebarCardDesc')}
+						</p>
+					</div>
+				</div>
+				<button
+					type="button"
+					onclick={() => (isDonationModalOpen = true)}
+					class="mt-2.5 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full bg-forest-ink px-3 py-1.5 text-xs font-bold text-paper shadow-xs transition hover:bg-spruce focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-[0.99] dark:bg-lime-voltage dark:text-forest-ink dark:hover:brightness-95 dark:focus-visible:ring-lime-voltage"
+				>
+					<HugeiconsIcon icon={Coffee01Icon} size={14} />
+					<span>{t('support.sidebarBtn')}</span>
+				</button>
+			</div>
+		{:else}
+			<div class="pt-1">
+				<button
+					type="button"
+					onclick={() => (isDonationModalOpen = true)}
+					class="group relative mx-auto flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl text-forest-ink transition-colors hover:bg-fog focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:text-lime-voltage dark:hover:bg-dark-card dark:focus-visible:ring-lime-voltage"
+					aria-label={t('support.sidebarBtn')}
+				>
+					<HugeiconsIcon icon={Coffee01Icon} size={20} />
+					{@render tooltip(t('support.sidebarBtn'))}
+				</button>
+			</div>
+		{/if}
 	</nav>
 
 	<!-- Sticky Footer: Profile Card & Utilities -->
@@ -362,3 +410,5 @@
 		{/if}
 	</div>
 </aside>
+
+<DonationModal bind:isOpen={isDonationModalOpen} />
