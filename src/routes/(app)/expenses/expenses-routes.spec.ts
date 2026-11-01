@@ -203,6 +203,27 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 			);
 		});
 
+		it('reuses locals.activePeriod and skips recent expenses on /expenses loader', async () => {
+			const mockPeriod = { id: 'p-cached', totalIncome: 5000000 };
+			mockGetDashboardData.mockResolvedValue({
+				period: mockPeriod,
+				categories: []
+			});
+			mockGetExpenses.mockResolvedValue([]);
+
+			const mockEvent = {
+				locals: { user: { id: 'u-1' }, activePeriod: mockPeriod },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				url: new URL('http://localhost/expenses')
+			} as unknown as Parameters<typeof loadList>[0];
+
+			await loadList(mockEvent);
+
+			expect(mockGetDashboardData).toHaveBeenCalledWith(expect.anything(), 'u-1', mockPeriod, {
+				skipRecentExpenses: true
+			});
+		});
+
 		it('deletes expense when requested by owner', async () => {
 			mockDeleteExpense.mockResolvedValue({ success: true });
 

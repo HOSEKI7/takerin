@@ -29,6 +29,22 @@ describe('Root Layout Server Load (Seam 2)', () => {
 		});
 	});
 
+	it('bypasses database query when authenticated user already has valid takerin_lang cookie', async () => {
+		const getDbSpy = vi.spyOn(dbModule, 'getDb');
+
+		const result = await load({
+			locals: { user: { id: 'u1', name: 'User' } },
+			platform: { env: { DB: {} as D1Database } },
+			cookies: { get: vi.fn((key: string) => (key === 'takerin_lang' ? 'id' : undefined)) }
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(result).toEqual({
+			user: { id: 'u1', name: 'User' },
+			language: 'id'
+		});
+		expect(getDbSpy).not.toHaveBeenCalled();
+	});
+
 	it('returns language from user_settings table when authenticated', async () => {
 		const mockDb = {
 			select: vi.fn().mockReturnValue({

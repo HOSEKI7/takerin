@@ -33,6 +33,7 @@ declare global {
 				ipAddress?: string | null;
 				userAgent?: string | null;
 			} | null;
+			activePeriod?: import('#lib/server/db/schema.js').MonthlyPeriod | null;
 		}
 		// interface PageData {}
 		// interface PageState {}

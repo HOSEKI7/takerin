@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 
 	if (platform?.env?.DB) {
 		try {
-			dashboardData = await getDashboardData(platform.env.DB, locals.user.id);
+			dashboardData = await getDashboardData(platform.env.DB, locals.user.id, locals.activePeriod);
 		} catch (err) {
 			console.error('Failed to load dashboard data from D1:', err);
 		}

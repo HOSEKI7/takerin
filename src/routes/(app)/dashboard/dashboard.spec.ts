@@ -74,7 +74,7 @@ describe('Dashboard Route Server (+page.server.ts)', () => {
 
 		const result = (await load(mockEvent)) as typeof mockDashboardData & { user: unknown };
 
-		expect(mockGetDashboardData).toHaveBeenCalledWith(expect.anything(), 'u-1');
+		expect(mockGetDashboardData).toHaveBeenCalledWith(expect.anything(), 'u-1', undefined);
 		expect(result).toHaveProperty('user');
 		expect(result).toHaveProperty('period');
 		expect(result).toHaveProperty('summary');
@@ -170,5 +170,44 @@ describe('Dashboard Route Server (+page.server.ts)', () => {
 		expect(result.summary.totalIncome).toBe(0);
 		expect(result.categories).toEqual([]);
 		expect(result.recentExpenses).toEqual([]);
+	});
+
+	it('reuses locals.activePeriod when present instead of re-executing ensureActivePeriod', async () => {
+		const mockActivePeriod = {
+			id: 'cached-p-1',
+			userId: 'u-1',
+			startDate: '2026-10-21',
+			endDate: '2026-11-20',
+			payDay: 21,
+			totalIncome: 10000000,
+			status: 'active',
+			aiSummary: null,
+			createdAt: new Date()
+		};
+
+		mockGetDashboardData.mockResolvedValue({
+			period: mockActivePeriod,
+			summary: {
+				totalIncome: 10000000,
+				totalSpent: 0,
+				remaining: 10000000,
+				spentPercentage: 0,
+				isWarning80: false
+			},
+			categories: [],
+			recentExpenses: []
+		});
+
+		const mockEvent = {
+			locals: {
+				user: { id: 'u-1', name: 'User 1' },
+				activePeriod: mockActivePeriod
+			},
+			platform: { env: { DB: {} as unknown as D1Database } }
+		} as unknown as Parameters<typeof load>[0];
+
+		await load(mockEvent);
+
+		expect(mockGetDashboardData).toHaveBeenCalledWith(expect.anything(), 'u-1', mockActivePeriod);
 	});
 });

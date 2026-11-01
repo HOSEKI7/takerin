@@ -34,8 +34,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (building) {
 		event.locals.user = null;
 		event.locals.session = null;
+		event.locals.activePeriod = null;
 		return resolve(event);
 	}
+
+	event.locals.activePeriod = null;
 
 	let ambientDb: D1Database | undefined;
 	try {
@@ -143,9 +146,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 				hasCompletedOnboarding
 			) {
 				try {
-					await ensureActivePeriod(d1, event.locals.user.id);
+					const result = await ensureActivePeriod(d1, event.locals.user.id);
+					event.locals.activePeriod = result?.period ?? null;
 				} catch (err) {
 					console.error('Error ensuring active period in hook:', err);
+					event.locals.activePeriod = null;
 				}
 			}
 		}

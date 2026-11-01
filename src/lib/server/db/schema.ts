@@ -124,6 +124,8 @@ export const monthlyPeriod = sqliteTable(
 	(table) => [index('monthly_period_user_id_status_idx').on(table.userId, table.status)]
 );
 
+export type MonthlyPeriod = typeof monthlyPeriod.$inferSelect;
+
 export const category = sqliteTable(
 	'category',
 	{

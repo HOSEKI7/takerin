@@ -280,6 +280,56 @@ describe('Server Hooks & Route Protection', () => {
 		expect(mockEnsureActivePeriod).toHaveBeenCalledWith(mockDb, 'user_active');
 	});
 
+	it('assigns active period to event.locals.activePeriod during hooks execution', async () => {
+		const mockUser = {
+			id: 'user_with_period',
+			name: 'Period User',
+			email: 'period@example.com',
+			role: 'user',
+			emailVerified: true,
+			onboardingCompleted: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+
+		mockGetSession.mockResolvedValue({
+			user: mockUser,
+			session: { id: 'sess_p', userId: 'user_with_period' }
+		});
+
+		const mockPeriod = {
+			id: 'period-active-1',
+			userId: 'user_with_period',
+			startDate: '2026-10-21',
+			endDate: '2026-11-20',
+			payDay: 21,
+			totalIncome: 7000000,
+			status: 'active',
+			aiSummary: null,
+			createdAt: new Date()
+		};
+
+		mockEnsureActivePeriod.mockResolvedValue({
+			period: mockPeriod,
+			transitioned: false
+		});
+
+		const mockDb = { prepare: vi.fn() } as unknown as D1Database;
+
+		const mockEvent = {
+			url: new URL('http://localhost:5173/dashboard'),
+			request: new Request('http://localhost:5173/dashboard'),
+			platform: { env: { DB: mockDb } },
+			locals: {} as App.Locals
+		} as unknown as RequestEvent;
+
+		const mockResolve = vi.fn().mockResolvedValue(new Response('OK'));
+
+		await handle({ event: mockEvent, resolve: mockResolve });
+
+		expect(mockEvent.locals.activePeriod).toEqual(mockPeriod);
+	});
+
 	it('redirects unauthenticated requests targeting /admin to /auth/login', async () => {
 		mockGetSession.mockResolvedValue(null);
 

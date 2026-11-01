@@ -461,4 +461,47 @@ describe('Dashboard D1 Operations & Calculations (Miniflare)', () => {
 		expect(data.recentExpenses[3].name).toBe('Listrik & Air');
 		expect(data.recentExpenses[4].name).toBe('Nonton Bioskop');
 	});
+
+	it('reuses activePeriod and supports skipRecentExpenses option', async () => {
+		const testUserId = 'test-dashboard-cached-' + Date.now();
+		const periodId = 'period-cached-' + Date.now();
+		const now = new Date();
+
+		await db.insert(user).values({
+			id: testUserId,
+			name: 'Cached User',
+			email: `cached-${Date.now()}@example.com`,
+			emailVerified: true,
+			onboardingCompleted: true,
+			role: 'user',
+			createdAt: now,
+			updatedAt: now
+		});
+
+		const periodRecord = {
+			id: periodId,
+			userId: testUserId,
+			startDate: '2026-10-21',
+			endDate: '2026-11-20',
+			payDay: 21,
+			totalIncome: 8000000,
+			status: 'active',
+			aiSummary: null,
+			createdAt: now
+		};
+
+		await db.insert(monthlyPeriod).values(periodRecord);
+
+		const dataWithSkip = await getDashboardData(proxy.env.DB, testUserId, periodRecord, {
+			skipRecentExpenses: true
+		});
+
+		expect(dataWithSkip.period?.id).toBe(periodId);
+		expect(dataWithSkip.recentExpenses).toEqual([]);
+
+		const dataNullPeriod = await getDashboardData(proxy.env.DB, testUserId, null);
+		expect(dataNullPeriod.period).toBeNull();
+		expect(dataNullPeriod.categories).toEqual([]);
+		expect(dataNullPeriod.recentExpenses).toEqual([]);
+	});
 });

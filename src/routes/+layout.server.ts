@@ -6,8 +6,14 @@ import { LANGUAGE_COOKIE_KEY, type Locale } from '#lib/i18n/index.js';
 
 export const load: LayoutServerLoad = async ({ locals, platform, cookies }) => {
 	const rawCookie = cookies?.get?.(LANGUAGE_COOKIE_KEY);
-	let language: Locale = rawCookie === 'en' ? 'en' : 'id';
+	if (rawCookie === 'id' || rawCookie === 'en') {
+		return {
+			user: locals?.user ?? null,
+			language: rawCookie as Locale
+		};
+	}
 
+	let language: Locale = 'id';
 	const d1 = platform?.env?.DB;
 	if (locals?.user && d1) {
 		try {
@@ -18,16 +24,8 @@ export const load: LayoutServerLoad = async ({ locals, platform, cookies }) => {
 				.where(eq(schema.userSettings.userId, locals.user.id))
 				.limit(1);
 
-			if (rawCookie === 'id' || rawCookie === 'en') {
-				language = rawCookie;
-				if (settings[0] && settings[0].language !== rawCookie) {
-					await db
-						.update(schema.userSettings)
-						.set({ language: rawCookie, updatedAt: new Date() })
-						.where(eq(schema.userSettings.userId, locals.user.id));
-				}
-			} else if (settings[0]?.language === 'id' || settings[0]?.language === 'en') {
-				language = settings[0].language;
+			if (settings[0]?.language === 'id' || settings[0]?.language === 'en') {
+				language = settings[0].language as Locale;
 				cookies?.set?.(LANGUAGE_COOKIE_KEY, language, {
 					path: '/',
 					maxAge: 60 * 60 * 24 * 365,
@@ -41,7 +39,7 @@ export const load: LayoutServerLoad = async ({ locals, platform, cookies }) => {
 	}
 
 	return {
-		user: locals.user ?? null,
+		user: locals?.user ?? null,
 		language
 	};
 };

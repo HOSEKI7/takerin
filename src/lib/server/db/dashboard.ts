@@ -75,13 +75,19 @@ export function calculateDashboardSummary(
  * Loads the active monthly period, category breakdowns, and dashboard summary
  * directly from D1 for the authenticated user.
  */
-export async function getDashboardData(d1: D1Database, userId: string): Promise<DashboardData> {
+export async function getDashboardData(
+	d1: D1Database,
+	userId: string,
+	activePeriod?: schema.MonthlyPeriod | null,
+	options?: { skipRecentExpenses?: boolean }
+): Promise<DashboardData> {
 	const db = getDb(d1);
 
 	// 1. Ensure up-to-date active monthly period (auto-transitions if expired)
-	const { period: activePeriod } = await ensureActivePeriod(d1, userId);
+	const currentPeriod =
+		activePeriod !== undefined ? activePeriod : (await ensureActivePeriod(d1, userId)).period;
 
-	if (!activePeriod) {
+	if (!currentPeriod) {
 		return {
 			period: null,
 			summary: calculateDashboardSummary(0, 0),
@@ -94,7 +100,7 @@ export async function getDashboardData(d1: D1Database, userId: string): Promise<
 	const categories = await db
 		.select()
 		.from(schema.category)
-		.where(and(eq(schema.category.userId, userId), eq(schema.category.periodId, activePeriod.id)));
+		.where(and(eq(schema.category.userId, userId), eq(schema.category.periodId, currentPeriod.id)));
 
 	// 3. Fetch aggregated category expenses directly via native SQL GROUP BY
 	const categoryExpenses = await db
@@ -103,7 +109,7 @@ export async function getDashboardData(d1: D1Database, userId: string): Promise<
 			totalSpent: sql<number>`cast(coalesce(sum(${schema.expense.amount}), 0) as int)`
 		})
 		.from(schema.expense)
-		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, activePeriod.id)))
+		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, currentPeriod.id)))
 		.groupBy(schema.expense.categoryId);
 
 	const spentByCat = new Map<string, number>();
@@ -116,7 +122,7 @@ export async function getDashboardData(d1: D1Database, userId: string): Promise<
 
 	// 4. Calculate category allocations and remaining balances
 	const dashboardCategories: DashboardCategory[] = categories.map((cat) => {
-		const allocation = Math.round(activePeriod.totalIncome * (cat.percentage / 100));
+		const allocation = Math.round(currentPeriod.totalIncome * (cat.percentage / 100));
 		const spent = spentByCat.get(cat.id) ?? 0;
 		const balance = allocation - spent;
 		const spentPercentage = allocation > 0 ? Math.round((spent / allocation) * 100) : 0;
@@ -137,41 +143,45 @@ export async function getDashboardData(d1: D1Database, userId: string): Promise<
 		};
 	});
 
-	const summary = calculateDashboardSummary(activePeriod.totalIncome, totalSpent);
+	const summary = calculateDashboardSummary(currentPeriod.totalIncome, totalSpent);
 
-	// 5. Fetch top 5 recent expenses using SQL limit
-	const recentExpensesRows = await db
-		.select({
-			id: schema.expense.id,
-			name: schema.expense.name,
-			amount: schema.expense.amount,
-			categoryName: schema.category.name,
-			isSavings: schema.category.isSavings,
-			date: schema.expense.date
-		})
-		.from(schema.expense)
-		.innerJoin(schema.category, eq(schema.expense.categoryId, schema.category.id))
-		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, activePeriod.id)))
-		.orderBy(desc(schema.expense.date), desc(schema.expense.createdAt))
-		.limit(5);
-
-	const recentExpenses: DashboardExpenseItem[] = recentExpensesRows.map((exp) => ({
-		id: exp.id,
-		name: exp.name,
-		amount: exp.amount,
-		categoryName: exp.categoryName,
-		isSavings: Boolean(exp.isSavings),
-		date: exp.date
-	}));
+	// 5. Fetch top 5 recent expenses using SQL limit (unless skipRecentExpenses requested)
+	const recentExpenses: DashboardExpenseItem[] = options?.skipRecentExpenses
+		? []
+		: (
+				await db
+					.select({
+						id: schema.expense.id,
+						name: schema.expense.name,
+						amount: schema.expense.amount,
+						categoryName: schema.category.name,
+						isSavings: schema.category.isSavings,
+						date: schema.expense.date
+					})
+					.from(schema.expense)
+					.innerJoin(schema.category, eq(schema.expense.categoryId, schema.category.id))
+					.where(
+						and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, currentPeriod.id))
+					)
+					.orderBy(desc(schema.expense.date), desc(schema.expense.createdAt))
+					.limit(5)
+			).map((exp) => ({
+				id: exp.id,
+				name: exp.name,
+				amount: exp.amount,
+				categoryName: exp.categoryName,
+				isSavings: Boolean(exp.isSavings),
+				date: exp.date
+			}));
 
 	return {
 		period: {
-			id: activePeriod.id,
-			startDate: activePeriod.startDate,
-			endDate: activePeriod.endDate,
-			payDay: activePeriod.payDay,
-			totalIncome: activePeriod.totalIncome,
-			status: activePeriod.status
+			id: currentPeriod.id,
+			startDate: currentPeriod.startDate,
+			endDate: currentPeriod.endDate,
+			payDay: currentPeriod.payDay,
+			totalIncome: currentPeriod.totalIncome,
+			status: currentPeriod.status
 		},
 		summary,
 		categories: dashboardCategories,

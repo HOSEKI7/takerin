@@ -18,7 +18,12 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 		};
 	}
 
-	const dashboardData = await getDashboardData(platform.env.DB, locals.user.id);
+	const dashboardData = await getDashboardData(
+		platform.env.DB,
+		locals.user.id,
+		locals.activePeriod,
+		{ skipRecentExpenses: true }
+	);
 	if (!dashboardData.period) {
 		throw redirect(303, '/dashboard');
 	}
