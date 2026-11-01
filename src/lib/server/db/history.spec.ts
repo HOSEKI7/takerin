@@ -351,4 +351,160 @@ describe('History D1 Database Operations (Seam 2)', () => {
 			'Bulan ini kamu hemat banget! Tabunganmu on fire! 🔥'
 		);
 	});
+
+	it('aggregates multiple expenses accurately across multiple completed periods and categories using native SQL GROUP BY (Issue #37)', async () => {
+		const now = new Date();
+		const period1Id = 'multi-period-1';
+		const period2Id = 'multi-period-2';
+
+		await db.insert(monthlyPeriod).values([
+			{
+				id: period1Id,
+				userId: testUserId,
+				startDate: '2026-01-25',
+				endDate: '2026-02-24',
+				payDay: 25,
+				totalIncome: 10000000,
+				status: 'completed',
+				aiSummary: null,
+				createdAt: new Date('2026-01-25T00:00:00Z')
+			},
+			{
+				id: period2Id,
+				userId: testUserId,
+				startDate: '2026-02-25',
+				endDate: '2026-03-24',
+				payDay: 25,
+				totalIncome: 15000000,
+				status: 'completed',
+				aiSummary: null,
+				createdAt: new Date('2026-02-25T00:00:00Z')
+			}
+		]);
+
+		const catP1A = 'cat-p1-a';
+		const catP1B = 'cat-p1-b';
+		const catP2A = 'cat-p2-a';
+
+		await db.insert(category).values([
+			{
+				id: catP1A,
+				userId: testUserId,
+				periodId: period1Id,
+				name: 'Pokok P1',
+				percentage: 60,
+				isSavings: false,
+				status: 'active',
+				createdAt: now,
+				updatedAt: now
+			},
+			{
+				id: catP1B,
+				userId: testUserId,
+				periodId: period1Id,
+				name: 'Hiburan P1',
+				percentage: 40,
+				isSavings: false,
+				status: 'active',
+				createdAt: now,
+				updatedAt: now
+			},
+			{
+				id: catP2A,
+				userId: testUserId,
+				periodId: period2Id,
+				name: 'All P2',
+				percentage: 100,
+				isSavings: false,
+				status: 'active',
+				createdAt: now,
+				updatedAt: now
+			}
+		]);
+
+		// Expenses in Period 1:
+		// catP1A: 1.000.000 + 2.000.000 = 3.000.000
+		// catP1B: 500.000
+		// Total P1 = 3.500.000
+		// Expenses in Period 2:
+		// catP2A: 4.000.000 + 3.000.000 = 7.000.000
+		// Total P2 = 7.000.000
+		await db.insert(expense).values([
+			{
+				id: 'exp-multi-1',
+				userId: testUserId,
+				periodId: period1Id,
+				categoryId: catP1A,
+				name: 'Exp 1',
+				amount: 1000000,
+				date: '2026-02-01',
+				createdAt: now,
+				updatedAt: now
+			},
+			{
+				id: 'exp-multi-2',
+				userId: testUserId,
+				periodId: period1Id,
+				categoryId: catP1A,
+				name: 'Exp 2',
+				amount: 2000000,
+				date: '2026-02-05',
+				createdAt: now,
+				updatedAt: now
+			},
+			{
+				id: 'exp-multi-3',
+				userId: testUserId,
+				periodId: period1Id,
+				categoryId: catP1B,
+				name: 'Exp 3',
+				amount: 500000,
+				date: '2026-02-10',
+				createdAt: now,
+				updatedAt: now
+			},
+			{
+				id: 'exp-multi-4',
+				userId: testUserId,
+				periodId: period2Id,
+				categoryId: catP2A,
+				name: 'Exp 4',
+				amount: 4000000,
+				date: '2026-03-01',
+				createdAt: now,
+				updatedAt: now
+			},
+			{
+				id: 'exp-multi-5',
+				userId: testUserId,
+				periodId: period2Id,
+				categoryId: catP2A,
+				name: 'Exp 5',
+				amount: 3000000,
+				date: '2026-03-05',
+				createdAt: now,
+				updatedAt: now
+			}
+		]);
+
+		const periods = await getCompletedPeriods(proxy.env.DB, testUserId);
+		const p2 = periods.find((p) => p.id === period2Id);
+		const p1 = periods.find((p) => p.id === period1Id);
+
+		expect(p2?.totalSpent).toBe(7000000);
+		expect(p2?.remaining).toBe(8000000);
+
+		expect(p1?.totalSpent).toBe(3500000);
+		expect(p1?.remaining).toBe(6500000);
+
+		// Now test detail category aggregation for period 1
+		const p1Detail = await getCompletedPeriodDetail(proxy.env.DB, testUserId, period1Id);
+		expect(p1Detail?.summary.totalSpent).toBe(3500000);
+		const catA = p1Detail?.categories.find((c) => c.id === catP1A);
+		expect(catA?.spent).toBe(3000000);
+		expect(catA?.balance).toBe(3000000); // 60% of 10.000.000 is 6.000.000 - 3.000.000 = 3.000.000
+		const catB = p1Detail?.categories.find((c) => c.id === catP1B);
+		expect(catB?.spent).toBe(500000);
+		expect(catB?.balance).toBe(3500000); // 40% of 10.000.000 is 4.000.000 - 500.000 = 3.500.000
+	});
 });

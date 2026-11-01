@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index';
-import { user, userSettings, incomeSource, monthlyPeriod, category } from './schema';
+import { user, userSettings, incomeSource, monthlyPeriod, category, expense } from './schema';
 import { getDashboardData, calculateDashboardSummary } from './dashboard';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -291,5 +291,174 @@ describe('Dashboard D1 Operations & Calculations (Miniflare)', () => {
 		expect(data.categories[0].name).toBe('Kebutuhan');
 		expect(data.categories[0].spent).toBe(0);
 		expect(data.categories[0].balance).toBe(10000000);
+	});
+
+	it('loads active monthly period with expenses, aggregating category expenses via native SQL GROUP BY and limiting recent expenses to 5 (Issue #37)', async () => {
+		const testUserId = 'test-dashboard-expenses-' + Date.now();
+		const periodId = 'period-exp-' + Date.now();
+		const now = new Date();
+
+		await db.insert(user).values({
+			id: testUserId,
+			name: 'Tester With Expenses',
+			email: `expenses-${Date.now()}@example.com`,
+			emailVerified: true,
+			onboardingCompleted: true,
+			role: 'user',
+			createdAt: now,
+			updatedAt: now
+		});
+
+		await db.insert(monthlyPeriod).values({
+			id: periodId,
+			userId: testUserId,
+			startDate: '2026-10-21',
+			endDate: '2026-11-20',
+			payDay: 21,
+			totalIncome: 10000000,
+			status: 'active',
+			createdAt: now
+		});
+
+		const cat1Id = 'cat-1-exp-' + Date.now();
+		const cat2Id = 'cat-2-exp-' + Date.now();
+
+		await db.insert(category).values([
+			{
+				id: cat1Id,
+				userId: testUserId,
+				periodId,
+				name: 'Kebutuhan',
+				percentage: 60,
+				isSavings: false,
+				status: 'active',
+				createdAt: now,
+				updatedAt: now
+			},
+			{
+				id: cat2Id,
+				userId: testUserId,
+				periodId,
+				name: 'Keinginan',
+				percentage: 40,
+				isSavings: false,
+				status: 'active',
+				createdAt: now,
+				updatedAt: now
+			}
+		]);
+
+		// Insert 7 expenses (4 in cat1, 3 in cat2)
+		const expensesData = [
+			{
+				id: 'exp-1-' + Date.now(),
+				userId: testUserId,
+				periodId,
+				categoryId: cat1Id,
+				name: 'Belanja Mingguan 1',
+				amount: 500000,
+				date: '2026-10-22',
+				createdAt: new Date('2026-10-22T08:00:00Z'),
+				updatedAt: new Date('2026-10-22T08:00:00Z')
+			},
+			{
+				id: 'exp-2-' + Date.now(),
+				userId: testUserId,
+				periodId,
+				categoryId: cat1Id,
+				name: 'Belanja Mingguan 2',
+				amount: 600000,
+				date: '2026-10-25',
+				createdAt: new Date('2026-10-25T08:00:00Z'),
+				updatedAt: new Date('2026-10-25T08:00:00Z')
+			},
+			{
+				id: 'exp-3-' + Date.now(),
+				userId: testUserId,
+				periodId,
+				categoryId: cat2Id,
+				name: 'Nonton Bioskop',
+				amount: 150000,
+				date: '2026-10-26',
+				createdAt: new Date('2026-10-26T14:00:00Z'),
+				updatedAt: new Date('2026-10-26T14:00:00Z')
+			},
+			{
+				id: 'exp-4-' + Date.now(),
+				userId: testUserId,
+				periodId,
+				categoryId: cat1Id,
+				name: 'Listrik & Air',
+				amount: 400000,
+				date: '2026-10-27',
+				createdAt: new Date('2026-10-27T09:00:00Z'),
+				updatedAt: new Date('2026-10-27T09:00:00Z')
+			},
+			{
+				id: 'exp-5-' + Date.now(),
+				userId: testUserId,
+				periodId,
+				categoryId: cat2Id,
+				name: 'Makan Kafe',
+				amount: 250000,
+				date: '2026-10-28',
+				createdAt: new Date('2026-10-28T19:00:00Z'),
+				updatedAt: new Date('2026-10-28T19:00:00Z')
+			},
+			{
+				id: 'exp-6-' + Date.now(),
+				userId: testUserId,
+				periodId,
+				categoryId: cat2Id,
+				name: 'Beli Buku',
+				amount: 200000,
+				date: '2026-10-29',
+				createdAt: new Date('2026-10-29T11:00:00Z'),
+				updatedAt: new Date('2026-10-29T11:00:00Z')
+			},
+			{
+				id: 'exp-7-' + Date.now(),
+				userId: testUserId,
+				periodId,
+				categoryId: cat1Id,
+				name: 'Wifi Bulanan',
+				amount: 350000,
+				date: '2026-10-30',
+				createdAt: new Date('2026-10-30T10:00:00Z'),
+				updatedAt: new Date('2026-10-30T10:00:00Z')
+			}
+		];
+
+		await db.insert(expense).values(expensesData);
+
+		const data = await getDashboardData(proxy.env.DB, testUserId);
+
+		// Category 1: 500k + 600k + 400k + 350k = 1.850.000, Allocation = 6.000.000, Balance = 4.150.000
+		const cat1 = data.categories.find((c) => c.id === cat1Id);
+		expect(cat1).toBeDefined();
+		expect(cat1?.allocation).toBe(6000000);
+		expect(cat1?.spent).toBe(1850000);
+		expect(cat1?.balance).toBe(4150000);
+
+		// Category 2: 150k + 250k + 200k = 600.000, Allocation = 4.000.000, Balance = 3.400.000
+		const cat2 = data.categories.find((c) => c.id === cat2Id);
+		expect(cat2).toBeDefined();
+		expect(cat2?.allocation).toBe(4000000);
+		expect(cat2?.spent).toBe(600000);
+		expect(cat2?.balance).toBe(3400000);
+
+		// Summary: totalIncome 10.000.000, totalSpent 2.450.000, remaining 7.550.000
+		expect(data.summary.totalSpent).toBe(2450000);
+		expect(data.summary.remaining).toBe(7550000);
+		expect(data.summary.spentPercentage).toBe(25);
+
+		// Recent expenses should be limited to 5
+		expect(data.recentExpenses).toHaveLength(5);
+		// Top recent should be exp-7 (2026-10-30), then exp-6, exp-5, exp-4, exp-3
+		expect(data.recentExpenses[0].name).toBe('Wifi Bulanan');
+		expect(data.recentExpenses[1].name).toBe('Beli Buku');
+		expect(data.recentExpenses[2].name).toBe('Makan Kafe');
+		expect(data.recentExpenses[3].name).toBe('Listrik & Air');
+		expect(data.recentExpenses[4].name).toBe('Nonton Bioskop');
 	});
 });

@@ -141,4 +141,48 @@ describe('D1 Database & Drizzle ORM (Miniflare)', () => {
 			parsed6Toples.reduce((acc: number, c: { percentage: number }) => acc + c.percentage, 0)
 		).toBe(100);
 	});
+
+	it('creates composite and column indexes on expense, category, and monthly_period (Issue #37)', async () => {
+		const rawExpenseIndexes = await db.run(sql`PRAGMA index_list('expense');`);
+		const expenseIndexNames = (rawExpenseIndexes.results as Array<{ name: string }>).map(
+			(r) => r.name
+		);
+		expect(expenseIndexNames).toContain('expense_user_id_period_id_idx');
+		expect(expenseIndexNames).toContain('expense_category_id_idx');
+		expect(expenseIndexNames).toContain('expense_date_idx');
+
+		const rawCategoryIndexes = await db.run(sql`PRAGMA index_list('category');`);
+		const categoryIndexNames = (rawCategoryIndexes.results as Array<{ name: string }>).map(
+			(r) => r.name
+		);
+		expect(categoryIndexNames).toContain('category_user_id_period_id_idx');
+
+		const rawPeriodIndexes = await db.run(sql`PRAGMA index_list('monthly_period');`);
+		const periodIndexNames = (rawPeriodIndexes.results as Array<{ name: string }>).map(
+			(r) => r.name
+		);
+		expect(periodIndexNames).toContain('monthly_period_user_id_status_idx');
+	});
+
+	it('eliminates table scans using composite indexes for active period and expense lookups (Issue #37)', async () => {
+		// Active period lookup by user_id and status
+		const periodPlan = await db.run(
+			sql`EXPLAIN QUERY PLAN SELECT * FROM monthly_period WHERE user_id = 'test-u1' AND status = 'active'`
+		);
+		const periodDetails = (periodPlan.results as Array<{ detail: string }>)
+			.map((r) => r.detail)
+			.join(' ');
+		expect(periodDetails).toContain('USING INDEX monthly_period_user_id_status_idx');
+		expect(periodDetails).not.toContain('SCAN TABLE monthly_period');
+
+		// Expense lookup by user_id and period_id
+		const expensePlan = await db.run(
+			sql`EXPLAIN QUERY PLAN SELECT * FROM expense WHERE user_id = 'test-u1' AND period_id = 'test-p1'`
+		);
+		const expenseDetails = (expensePlan.results as Array<{ detail: string }>)
+			.map((r) => r.detail)
+			.join(' ');
+		expect(expenseDetails).toContain('USING INDEX expense_user_id_period_id_idx');
+		expect(expenseDetails).not.toContain('SCAN TABLE expense');
+	});
 });

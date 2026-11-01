@@ -1,4 +1,4 @@
-import { eq, and, desc, inArray } from 'drizzle-orm';
+import { eq, and, desc, inArray, sql } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
 import type { AiAggregateData } from '#lib/server/ai/summary.js';
@@ -71,20 +71,20 @@ export async function getCompletedPeriods(
 
 	const periodIds = periods.map((p) => p.id);
 
-	// Fetch all expenses belonging to these periods
-	const expenses = await db
+	// Aggregate expenses per period via native SQL GROUP BY
+	const periodExpenses = await db
 		.select({
 			periodId: schema.expense.periodId,
-			amount: schema.expense.amount
+			totalSpent: sql<number>`cast(coalesce(sum(${schema.expense.amount}), 0) as int)`
 		})
 		.from(schema.expense)
-		.where(and(eq(schema.expense.userId, userId), inArray(schema.expense.periodId, periodIds)));
+		.where(and(eq(schema.expense.userId, userId), inArray(schema.expense.periodId, periodIds)))
+		.groupBy(schema.expense.periodId);
 
-	// Sum expenses per period
+	// Map aggregated spent per period
 	const spentByPeriod = new Map<string, number>();
-	for (const exp of expenses) {
-		const current = spentByPeriod.get(exp.periodId) ?? 0;
-		spentByPeriod.set(exp.periodId, current + exp.amount);
+	for (const row of periodExpenses) {
+		spentByPeriod.set(row.periodId, row.totalSpent);
 	}
 
 	return periods.map((p) => {
@@ -144,23 +144,23 @@ export async function getCompletedPeriodDetail(
 		.from(schema.category)
 		.where(and(eq(schema.category.userId, userId), eq(schema.category.periodId, periodId)));
 
-	// 3. Fetch expenses amount grouped by category
-	const expenses = await db
+	// 3. Fetch expenses amount grouped by category via native SQL GROUP BY
+	const categoryExpenses = await db
 		.select({
 			categoryId: schema.expense.categoryId,
-			amount: schema.expense.amount
+			totalSpent: sql<number>`cast(coalesce(sum(${schema.expense.amount}), 0) as int)`
 		})
 		.from(schema.expense)
-		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, periodId)));
+		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, periodId)))
+		.groupBy(schema.expense.categoryId);
 
 	// Group spent by category
 	const spentByCat = new Map<string, number>();
 	let totalSpent = 0;
 
-	for (const exp of expenses) {
-		const prev = spentByCat.get(exp.categoryId) ?? 0;
-		spentByCat.set(exp.categoryId, prev + exp.amount);
-		totalSpent += exp.amount;
+	for (const row of categoryExpenses) {
+		spentByCat.set(row.categoryId, row.totalSpent);
+		totalSpent += row.totalSpent;
 	}
 
 	const detailedCategories: CompletedCategoryDetail[] = categories.map((cat) => {

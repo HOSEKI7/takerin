@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
 
 export const healthCheck = sqliteTable('health_check', {
 	id: text('id').primaryKey(),
@@ -106,55 +106,71 @@ export const categoryTemplate = sqliteTable('category_template', {
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
 });
 
-export const monthlyPeriod = sqliteTable('monthly_period', {
-	id: text('id').primaryKey(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' }),
-	startDate: text('start_date').notNull(),
-	endDate: text('end_date').notNull(),
-	payDay: integer('pay_day').notNull(),
-	totalIncome: integer('total_income').notNull(),
-	status: text('status').notNull().default('active'),
-	aiSummary: text('ai_summary'),
-	createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
-});
+export const monthlyPeriod = sqliteTable(
+	'monthly_period',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		startDate: text('start_date').notNull(),
+		endDate: text('end_date').notNull(),
+		payDay: integer('pay_day').notNull(),
+		totalIncome: integer('total_income').notNull(),
+		status: text('status').notNull().default('active'),
+		aiSummary: text('ai_summary'),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
+	},
+	(table) => [index('monthly_period_user_id_status_idx').on(table.userId, table.status)]
+);
 
-export const category = sqliteTable('category', {
-	id: text('id').primaryKey(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' }),
-	periodId: text('period_id')
-		.notNull()
-		.references(() => monthlyPeriod.id, { onDelete: 'cascade' }),
-	name: text('name').notNull(),
-	percentage: real('percentage').notNull(),
-	isSavings: integer('is_savings', { mode: 'boolean' }).notNull().default(false),
-	status: text('status').notNull().default('active'),
-	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
-});
+export const category = sqliteTable(
+	'category',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		periodId: text('period_id')
+			.notNull()
+			.references(() => monthlyPeriod.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		percentage: real('percentage').notNull(),
+		isSavings: integer('is_savings', { mode: 'boolean' }).notNull().default(false),
+		status: text('status').notNull().default('active'),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+	},
+	(table) => [index('category_user_id_period_id_idx').on(table.userId, table.periodId)]
+);
 
-export const expense = sqliteTable('expense', {
-	id: text('id').primaryKey(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' }),
-	periodId: text('period_id')
-		.notNull()
-		.references(() => monthlyPeriod.id, { onDelete: 'cascade' }),
-	categoryId: text('category_id')
-		.notNull()
-		.references(() => category.id, { onDelete: 'cascade' }),
-	name: text('name').notNull(),
-	amount: integer('amount').notNull(),
-	date: text('date').notNull(),
-	time: text('time'),
-	notes: text('notes'),
-	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
-});
+export const expense = sqliteTable(
+	'expense',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		periodId: text('period_id')
+			.notNull()
+			.references(() => monthlyPeriod.id, { onDelete: 'cascade' }),
+		categoryId: text('category_id')
+			.notNull()
+			.references(() => category.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		amount: integer('amount').notNull(),
+		date: text('date').notNull(),
+		time: text('time'),
+		notes: text('notes'),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+	},
+	(table) => [
+		index('expense_user_id_period_id_idx').on(table.userId, table.periodId),
+		index('expense_category_id_idx').on(table.categoryId),
+		index('expense_date_idx').on(table.date)
+	]
+);
 
 export const adminInvitations = sqliteTable('admin_invitations', {
 	id: text('id').primaryKey(),

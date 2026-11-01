@@ -1,4 +1,4 @@
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
 import { ensureActivePeriod } from './period.js';
@@ -96,34 +96,25 @@ export async function getDashboardData(d1: D1Database, userId: string): Promise<
 		.from(schema.category)
 		.where(and(eq(schema.category.userId, userId), eq(schema.category.periodId, activePeriod.id)));
 
-	// 3. Fetch all expenses for this active period
-	const expenses = await db
+	// 3. Fetch aggregated category expenses directly via native SQL GROUP BY
+	const categoryExpenses = await db
 		.select({
-			id: schema.expense.id,
 			categoryId: schema.expense.categoryId,
-			categoryName: schema.category.name,
-			isSavings: schema.category.isSavings,
-			name: schema.expense.name,
-			amount: schema.expense.amount,
-			date: schema.expense.date,
-			createdAt: schema.expense.createdAt
+			totalSpent: sql<number>`cast(coalesce(sum(${schema.expense.amount}), 0) as int)`
 		})
 		.from(schema.expense)
-		.innerJoin(schema.category, eq(schema.expense.categoryId, schema.category.id))
 		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, activePeriod.id)))
-		.orderBy(desc(schema.expense.date), desc(schema.expense.createdAt));
+		.groupBy(schema.expense.categoryId);
 
-	// Group spent by category
 	const spentByCat = new Map<string, number>();
 	let totalSpent = 0;
 
-	for (const exp of expenses) {
-		const prev = spentByCat.get(exp.categoryId) ?? 0;
-		spentByCat.set(exp.categoryId, prev + exp.amount);
-		totalSpent += exp.amount;
+	for (const row of categoryExpenses) {
+		spentByCat.set(row.categoryId, row.totalSpent);
+		totalSpent += row.totalSpent;
 	}
 
-	// Calculate category allocations and remaining balances
+	// 4. Calculate category allocations and remaining balances
 	const dashboardCategories: DashboardCategory[] = categories.map((cat) => {
 		const allocation = Math.round(activePeriod.totalIncome * (cat.percentage / 100));
 		const spent = spentByCat.get(cat.id) ?? 0;
@@ -148,8 +139,23 @@ export async function getDashboardData(d1: D1Database, userId: string): Promise<
 
 	const summary = calculateDashboardSummary(activePeriod.totalIncome, totalSpent);
 
-	// Top 5 recent expenses
-	const recentExpenses: DashboardExpenseItem[] = expenses.slice(0, 5).map((exp) => ({
+	// 5. Fetch top 5 recent expenses using SQL limit
+	const recentExpensesRows = await db
+		.select({
+			id: schema.expense.id,
+			name: schema.expense.name,
+			amount: schema.expense.amount,
+			categoryName: schema.category.name,
+			isSavings: schema.category.isSavings,
+			date: schema.expense.date
+		})
+		.from(schema.expense)
+		.innerJoin(schema.category, eq(schema.expense.categoryId, schema.category.id))
+		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, activePeriod.id)))
+		.orderBy(desc(schema.expense.date), desc(schema.expense.createdAt))
+		.limit(5);
+
+	const recentExpenses: DashboardExpenseItem[] = recentExpensesRows.map((exp) => ({
 		id: exp.id,
 		name: exp.name,
 		amount: exp.amount,
