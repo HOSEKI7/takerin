@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Button, BrandLogo, Badge, formatBlogDate, PublicNavbar } from '#lib';
+	import { Button, BrandLogo, Badge, PublicNavbar } from '#lib';
+	import { formatBlogDate } from '#lib/blog';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		SparklesIcon,

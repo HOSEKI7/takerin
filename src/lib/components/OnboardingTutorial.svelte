@@ -109,7 +109,10 @@
 			class="p-6 sm:p-8"
 			role="group"
 			aria-roledescription="slide"
-			aria-label={t('onboarding.tutorial.slideAria', { current: currentSlide + 1, total: TOTAL_SLIDES })}
+			aria-label={t('onboarding.tutorial.slideAria', {
+				current: currentSlide + 1,
+				total: TOTAL_SLIDES
+			})}
 		>
 			{#if currentSlide === 0}
 				<!-- Slide 1: Dashboard & Sisa Jatah -->
@@ -358,7 +361,10 @@
 			class="flex flex-col gap-4 border-t border-fog bg-fog/20 px-6 py-5 sm:flex-row sm:items-center sm:justify-between dark:border-dark-border dark:bg-dark-surface/40"
 		>
 			<!-- Carousel Stepper Dots -->
-			<div class="flex items-center justify-center gap-1" aria-label={t('onboarding.tutorial.indicatorAria')}>
+			<div
+				class="flex items-center justify-center gap-1"
+				aria-label={t('onboarding.tutorial.indicatorAria')}
+			>
 				{#each slideIndices as idx (idx)}
 					<button
 						type="button"

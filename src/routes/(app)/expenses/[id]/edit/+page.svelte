@@ -65,7 +65,8 @@
 		</div>
 		{#if data.period}
 			<div class="text-xs text-slate dark:text-pebble">
-				{t('common.period')}: <span class="font-medium"
+				{t('common.period')}:
+				<span class="font-medium"
 					>{formatDate(data.period.startDate, getLocale())} – {formatDate(
 						data.period.endDate,
 						getLocale()

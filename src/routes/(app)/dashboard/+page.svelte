@@ -610,7 +610,9 @@
 		{#if showAccountSecurity}
 			<div id="account-security-section" class="mt-6 grid gap-6 md:grid-cols-2">
 				<Card variant="default" padding="lg">
-					<h4 class="text-sm font-bold text-obsidian dark:text-paper">{t('dashboard.accountInfo')}</h4>
+					<h4 class="text-sm font-bold text-obsidian dark:text-paper">
+						{t('dashboard.accountInfo')}
+					</h4>
 					<div class="mt-4 space-y-3 text-sm">
 						<div>
 							<span class="text-xs text-slate dark:text-pebble">{t('dashboard.nameLabel')}</span>
@@ -627,13 +629,17 @@
 							</p>
 						</div>
 						<div>
-							<span class="text-xs text-slate dark:text-pebble">{t('dashboard.verificationStatus')}</span>
+							<span class="text-xs text-slate dark:text-pebble"
+								>{t('dashboard.verificationStatus')}</span
+							>
 							<p
 								class="font-semibold {data.user?.emailVerified
 									? 'text-forest-ink dark:text-lime-voltage'
 									: 'text-alarm-red'}"
 							>
-								{data.user?.emailVerified ? t('dashboard.emailVerified') : t('dashboard.emailUnverified')}
+								{data.user?.emailVerified
+									? t('dashboard.emailVerified')
+									: t('dashboard.emailUnverified')}
 							</p>
 						</div>
 					</div>
@@ -649,14 +655,14 @@
 								? 'bg-linen-mist text-forest-ink dark:bg-spruce dark:text-lime-voltage'
 								: 'bg-fog text-slate dark:bg-dark-border dark:text-linen-mist/80'}"
 						>
-							{twoFactorEnabled ? t('dashboard.twoFactorStatusActive') : t('dashboard.twoFactorStatusInactive')}
+							{twoFactorEnabled
+								? t('dashboard.twoFactorStatusActive')
+								: t('dashboard.twoFactorStatusInactive')}
 						</span>
 					</div>
 
 					<p class="mt-3 text-xs text-slate dark:text-linen-mist/80">
-						{twoFactorEnabled
-							? t('dashboard.twoFactorActive')
-							: t('dashboard.twoFactorInactive')}
+						{twoFactorEnabled ? t('dashboard.twoFactorActive') : t('dashboard.twoFactorInactive')}
 					</p>
 
 					<!-- 2FA Actions -->

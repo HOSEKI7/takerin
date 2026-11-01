@@ -78,7 +78,10 @@ export function cleanAndParseAiSummary(raw: string | undefined): string {
 
 	// Strip markdown code block wrappers if any
 	if (cleaned.startsWith('```')) {
-		cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+		cleaned = cleaned
+			.replace(/^```(?:json)?\s*/i, '')
+			.replace(/\s*```$/, '')
+			.trim();
 	}
 
 	// Try extracting JSON substring if surrounded by prose

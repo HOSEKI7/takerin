@@ -5,7 +5,10 @@ export interface RegisterInput {
 	confirmPassword?: string;
 }
 
-export function validateRegisterInput(input: RegisterInput, locale: 'id' | 'en' = 'id'): string | null {
+export function validateRegisterInput(
+	input: RegisterInput,
+	locale: 'id' | 'en' = 'id'
+): string | null {
 	if (!input.name || !input.name.trim()) {
 		return locale === 'en' ? 'Full name is required.' : 'Nama lengkap wajib diisi.';
 	}
@@ -102,9 +105,7 @@ export function validateBackupCodeInput(code: string, locale: 'id' | 'en' = 'id'
 		return locale === 'en' ? 'Backup code is required.' : 'Kode cadangan wajib diisi.';
 	}
 	if (code.trim().length < 6) {
-		return locale === 'en'
-			? 'Invalid backup code format.'
-			: 'Format kode cadangan tidak valid.';
+		return locale === 'en' ? 'Invalid backup code format.' : 'Format kode cadangan tidak valid.';
 	}
 	return null;
 }
@@ -173,9 +174,7 @@ export function formatAuthError(
 			: 'Kode verifikasi sudah kedaluwarsa. Silakan minta kode baru.';
 	}
 	if (lower.includes('user not found') || lower.includes('user_not_found')) {
-		return locale === 'en'
-			? 'Email address is not registered.'
-			: 'Alamat email tidak terdaftar.';
+		return locale === 'en' ? 'Email address is not registered.' : 'Alamat email tidak terdaftar.';
 	}
 	if (lower.includes('invalid') && lower.includes('password')) {
 		return locale === 'en'

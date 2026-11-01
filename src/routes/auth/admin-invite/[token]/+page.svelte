@@ -94,11 +94,14 @@
 						use:enhance={({ cancel }) => {
 							clientError = '';
 
-							const validationError = validateAdminInviteActivationInput({
-								name,
-								password,
-								confirmPassword
-							}, getLocale());
+							const validationError = validateAdminInviteActivationInput(
+								{
+									name,
+									password,
+									confirmPassword
+								},
+								getLocale()
+							);
 
 							if (validationError) {
 								clientError = validationError;

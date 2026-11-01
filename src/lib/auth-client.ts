@@ -10,9 +10,7 @@ export interface AuthClientExtended {
 		newPassword: string;
 		token: string;
 	}) => Promise<{ error: { message?: string } | null }>;
-	verifyPassword: (opts: {
-		password: string;
-	}) => Promise<{
+	verifyPassword: (opts: { password: string }) => Promise<{
 		data?: { status?: boolean } | null;
 		error?: { message?: string; code?: string } | null;
 	}>;
@@ -44,14 +42,14 @@ export interface AuthClientExtended {
 	};
 }
 
-export const authClient = (createAuthClient({
+export const authClient = createAuthClient({
 	plugins: [
 		twoFactorClient({
 			twoFactorPage: '/auth/two-factor'
 		}),
 		emailOTPClient()
 	]
-}) as unknown) as ReturnType<typeof createAuthClient> &
+}) as unknown as ReturnType<typeof createAuthClient> &
 	AuthClientExtended & {
 		twoFactor: {
 			enable: (opts: { password: string; issuer?: string }) => Promise<{

@@ -111,7 +111,7 @@ export function getBreadcrumbs(rawPath: string, locale: Locale = 'id'): Breadcru
 
 			const subPath = path.slice(config.prefix.length + 1);
 			const subRouteObj = config.subRoutes?.[subPath];
-			let detailLabel = subRouteObj ? (subRouteObj[locale] || subRouteObj.id) : undefined;
+			let detailLabel = subRouteObj ? subRouteObj[locale] || subRouteObj.id : undefined;
 
 			if (!detailLabel) {
 				if (subPath.endsWith('/edit')) {
@@ -138,7 +138,7 @@ export function getBreadcrumbs(rawPath: string, locale: Locale = 'id'): Breadcru
 		accumulated += `/${seg}`;
 		const isLast = i === segments.length - 1;
 		const segObj = SEGMENT_LABELS[seg];
-		const label = segObj ? (segObj[locale] || segObj.id) : seg.charAt(0).toUpperCase() + seg.slice(1);
+		const label = segObj ? segObj[locale] || segObj.id : seg.charAt(0).toUpperCase() + seg.slice(1);
 
 		items.push({
 			label,

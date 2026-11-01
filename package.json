@@ -49,6 +49,7 @@
 	},
 	"imports": {
 		"#lib": "./src/lib/index.js",
+		"#lib/blog": "./src/lib/blog/index.js",
 		"#lib/*": "./src/lib/*"
 	},
 	"dependencies": {

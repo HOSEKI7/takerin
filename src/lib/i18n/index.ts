@@ -1,6 +1,4 @@
 import i18n from 'sveltekit-i18n';
-import idTranslations from './id.json';
-import enTranslations from './en.json';
 
 export const SUPPORTED_LOCALES = ['id', 'en'] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
@@ -9,12 +7,18 @@ export const LANGUAGE_STORAGE_KEY = 'takerin_lang';
 export const LANGUAGE_COOKIE_KEY = 'takerin_lang';
 
 export const i18nInstance = new i18n({
-	translations: {
-		id: idTranslations,
-		en: enTranslations
-	},
-	fallbackLocale: 'id',
-	initLocale: 'id'
+	loaders: [
+		{
+			locale: 'id',
+			namespace: '',
+			loader: async () => (await import('./id.json')).default
+		},
+		{
+			locale: 'en',
+			namespace: '',
+			loader: async () => (await import('./en.json')).default
+		}
+	]
 });
 
 let currentLocale: Locale = 'id';
@@ -23,10 +27,14 @@ export function getLocale(): Locale {
 	return (i18nInstance.locale as Locale) || currentLocale;
 }
 
-export function setLocale(locale: Locale): void {
+export async function loadLocale(locale: Locale): Promise<void> {
 	if (!SUPPORTED_LOCALES.includes(locale)) return;
+	await i18nInstance.loadTranslations(locale);
+}
+
+export function setLocale(locale: Locale): Promise<void> {
+	if (!SUPPORTED_LOCALES.includes(locale)) return Promise.resolve();
 	currentLocale = locale;
-	void i18nInstance.setLocale(locale);
 
 	if (typeof window !== 'undefined') {
 		try {
@@ -44,6 +52,8 @@ export function setLocale(locale: Locale): void {
 			}
 		}
 	}
+
+	return i18nInstance.loadTranslations(locale);
 }
 
 export function initI18n(initialLocale?: string): Locale {
@@ -62,10 +72,20 @@ export function initI18n(initialLocale?: string): Locale {
 		}
 	}
 
-	setLocale(selected);
+	currentLocale = selected;
+	void setLocale(selected);
 	return selected;
 }
 
 export function t(key: string, params?: Record<string, unknown>): string {
-	return i18nInstance.t(key, params);
+	return i18nInstance.t(key, params) || key;
+}
+
+// In test environment (Node/Vitest), eagerly preload default locale for headless component tests
+if (
+	typeof window === 'undefined' &&
+	typeof process !== 'undefined' &&
+	process.env?.NODE_ENV === 'test'
+) {
+	void loadLocale('id');
 }

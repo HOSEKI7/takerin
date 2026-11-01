@@ -190,31 +190,12 @@ function escapeCsvValue(val: string | number | null | undefined): string {
 /**
  * Formats a list of expenses into an RFC 4180 compliant CSV string with UTF-8 BOM.
  */
-export function formatExpensesCsv(
-	expenses: CsvExpenseItem[],
-	locale: 'id' | 'en' = 'id'
-): string {
+export function formatExpensesCsv(expenses: CsvExpenseItem[], locale: 'id' | 'en' = 'id'): string {
 	const BOM = '\uFEFF';
 	const headers =
 		locale === 'en'
-			? [
-					'Date',
-					'Time',
-					'Expense Name',
-					'Category',
-					'Amount',
-					'Notes',
-					'Monthly Period'
-				]
-			: [
-					'Tanggal',
-					'Waktu',
-					'Nama Pengeluaran',
-					'Kategori',
-					'Nominal',
-					'Catatan',
-					'Periode Bulan'
-				];
+			? ['Date', 'Time', 'Expense Name', 'Category', 'Amount', 'Notes', 'Monthly Period']
+			: ['Tanggal', 'Waktu', 'Nama Pengeluaran', 'Kategori', 'Nominal', 'Catatan', 'Periode Bulan'];
 
 	const rows = expenses.map((exp) => [
 		escapeCsvValue(exp.date),

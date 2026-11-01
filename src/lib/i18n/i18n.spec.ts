@@ -29,7 +29,7 @@ describe('i18n runtime (Seam 1)', () => {
 	let mockDoc: { cookie: string };
 	let eventListeners: Map<string, EventListener[]>;
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		vi.restoreAllMocks();
 		mockStorage = createMockStorage();
 		mockDoc = { cookie: '' };
@@ -56,7 +56,7 @@ describe('i18n runtime (Seam 1)', () => {
 		});
 		vi.stubGlobal('document', mockDoc);
 
-		setLocale('id');
+		await setLocale('id');
 	});
 
 	afterEach(() => {
@@ -74,24 +74,24 @@ describe('i18n runtime (Seam 1)', () => {
 		expect(t('nav.dashboard')).toBe('Dashboard');
 	});
 
-	it('translates keys in English after setLocale("en")', () => {
-		setLocale('en');
+	it('translates keys in English after setLocale("en")', async () => {
+		await setLocale('en');
 		expect(getLocale()).toBe('en');
 		expect(t('common.save')).toBe('Save');
 		expect(t('common.cancel')).toBe('Cancel');
 		expect(t('nav.dashboard')).toBe('Dashboard');
 	});
 
-	it('interpolates placeholders with curly syntax {{var}}', () => {
-		setLocale('id');
+	it('interpolates placeholders with curly syntax {{var}}', async () => {
+		await setLocale('id');
 		expect(t('onboarding.stepIndicator', { current: 1, total: 3 })).toBe('Langkah 1 dari 3');
 
-		setLocale('en');
+		await setLocale('en');
 		expect(t('onboarding.stepIndicator', { current: 1, total: 3 })).toBe('Step 1 of 3');
 	});
 
-	it('falls back to "id" if a translation key is missing in "en"', () => {
-		setLocale('en');
+	it('falls back to "id" if a translation key is missing in "en"', async () => {
+		await setLocale('en');
 		expect(t('common.save')).toBe('Save');
 	});
 

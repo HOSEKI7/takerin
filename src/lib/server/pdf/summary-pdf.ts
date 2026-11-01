@@ -217,16 +217,13 @@ export async function generatePeriodSummaryPdf(
 	y -= boxHeight + 28;
 
 	// 4. Category Breakdown Table
-	page.drawText(
-		locale === 'en' ? 'Budget Category Breakdown' : 'Rincian Kategori Budget',
-		{
-			x: margin,
-			y,
-			size: 12,
-			font: fontBold,
-			color: primaryColor
-		}
-	);
+	page.drawText(locale === 'en' ? 'Budget Category Breakdown' : 'Rincian Kategori Budget', {
+		x: margin,
+		y,
+		size: 12,
+		font: fontBold,
+		color: primaryColor
+	});
 
 	y -= 14;
 

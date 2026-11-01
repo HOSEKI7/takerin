@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { BlogPost, BlogPostSummary } from '#lib';
+import type { BlogPost, BlogPostSummary } from '#lib/blog';
 import { load as blogIndexLoad, prerender as blogIndexPrerender } from './+page.js';
 import {
 	load as blogSlugLoad,

@@ -1,4 +1,4 @@
-import { getAllBlogPosts } from '#lib';
+import { getAllBlogPosts } from '#lib/blog';
 import type { PageLoad } from './$types';
 
 export const prerender = true;

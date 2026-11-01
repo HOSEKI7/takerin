@@ -1,4 +1,4 @@
-import { getAllBlogPosts } from '#lib';
+import { getAllBlogPosts } from '#lib/blog';
 
 export const prerender = true;
 

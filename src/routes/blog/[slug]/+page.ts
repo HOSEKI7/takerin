@@ -1,4 +1,4 @@
-import { getBlogPostBySlug, getAllBlogPosts } from '#lib';
+import { getBlogPostBySlug, getAllBlogPosts } from '#lib/blog';
 import { error } from '@sveltejs/kit';
 import type { PageLoad, EntryGenerator } from './$types';
 

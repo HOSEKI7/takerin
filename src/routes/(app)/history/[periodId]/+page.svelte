@@ -88,7 +88,10 @@
 				</span>
 			</div>
 			<h1 class="mt-1 text-2xl font-extrabold text-obsidian sm:text-3xl dark:text-paper">
-				{formatDate(data.period.startDate, getLocale())} – {formatDate(data.period.endDate, getLocale())}
+				{formatDate(data.period.startDate, getLocale())} – {formatDate(
+					data.period.endDate,
+					getLocale()
+				)}
 			</h1>
 		</div>
 	</div>
@@ -132,7 +135,9 @@
 							>
 								{t('history.aiNotes')}
 							</span>
-							<span class="text-[11px] text-slate dark:text-linen-mist/70"> {t('history.saved')} </span>
+							<span class="text-[11px] text-slate dark:text-linen-mist/70">
+								{t('history.saved')}
+							</span>
 						</div>
 						<p class="mt-2 text-base font-bold text-obsidian sm:text-lg dark:text-paper">
 							"{displayAiSummary}"
@@ -149,7 +154,9 @@
 						<HugeiconsIcon icon={Alert02Icon} class="h-4 w-4" />
 						<span>{aiError}</span>
 					</div>
-					<Button variant="secondary" size="sm" onclick={fetchAiSummary}>{t('history.retry')}</Button>
+					<Button variant="secondary" size="sm" onclick={fetchAiSummary}
+						>{t('history.retry')}</Button
+					>
 				</div>
 			</Card>
 		{/if}
