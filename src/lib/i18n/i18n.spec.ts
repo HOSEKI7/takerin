@@ -93,6 +93,12 @@ describe('i18n runtime (Seam 1)', () => {
 	it('falls back to "id" if a translation key is missing in "en"', async () => {
 		await setLocale('en');
 		expect(t('common.save')).toBe('Save');
+
+		// Simulating fallback when a key is present in id but missing in en
+		await setLocale('id');
+		expect(t('common.save')).toBe('Simpan');
+		await setLocale('en');
+		expect(t('common.save')).toBe('Save');
 	});
 
 	it('returns the key itself if not found in any locale', () => {

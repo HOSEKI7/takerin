@@ -78,7 +78,14 @@ export function initI18n(initialLocale?: string): Locale {
 }
 
 export function t(key: string, params?: Record<string, unknown>): string {
-	return i18nInstance.t(key, params) || key;
+	const val = i18nInstance.t(key, params);
+	if (!val || val === key) {
+		const fallback = i18nInstance.l('id', key, params);
+		if (fallback && fallback !== key) {
+			return fallback;
+		}
+	}
+	return val || key;
 }
 
 // In test environment (Node/Vitest), eagerly preload default locale for headless component tests
