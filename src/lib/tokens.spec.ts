@@ -29,9 +29,24 @@ describe('Design Tokens & Theme in layout.css', () => {
 	});
 
 	it('configures Manrope for display and Inter for body/sans fonts inside @theme', () => {
-		expect(cssContent).toMatch(/--font-display:\s*['"]?Manrope['"]?/);
-		expect(cssContent).toMatch(/--font-body:\s*['"]?Inter['"]?/);
-		expect(cssContent).toMatch(/--font-sans:\s*['"]?Inter['"]?/);
+		expect(cssContent).toMatch(/--font-display:\s*['"]?Manrope Variable['"]?,\s*['"]?Manrope['"]?/);
+		expect(cssContent).toMatch(/--font-body:\s*['"]?Inter Variable['"]?,\s*['"]?Inter['"]?/);
+		expect(cssContent).toMatch(/--font-sans:\s*['"]?Inter Variable['"]?,\s*['"]?Inter['"]?/);
+	});
+
+	it('self-hosts variable fonts via @fontsource-variable imports in layout.css', () => {
+		expect(cssContent).toMatch(/@import\s+['"]@fontsource-variable\/inter['"];/);
+		expect(cssContent).toMatch(/@import\s+['"]@fontsource-variable\/manrope['"];/);
+	});
+
+	it('removes external Google Fonts links and configures preload tap in app.html', () => {
+		const appHtmlPath = path.resolve(process.cwd(), 'src/app.html');
+		const appHtml = fs.readFileSync(appHtmlPath, 'utf-8');
+
+		expect(appHtml).not.toContain('fonts.googleapis.com');
+		expect(appHtml).not.toContain('fonts.gstatic.com');
+		expect(appHtml).toContain('data-sveltekit-preload-data="tap"');
+		expect(appHtml).not.toContain('data-sveltekit-preload-data="hover"');
 	});
 
 	it('configures key border radius tokens (10px cards/inputs, 9999px pills)', () => {
