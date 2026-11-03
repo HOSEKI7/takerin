@@ -2,12 +2,14 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-describe('Design Tokens & Theme in layout.css', () => {
+describe('Design Tokens, Typography & App Shell Assets', () => {
 	const cssPath = path.resolve(process.cwd(), 'src/routes/layout.css');
 	const tokensPath = path.resolve(process.cwd(), 'tokens.json');
+	const appHtmlPath = path.resolve(process.cwd(), 'src/app.html');
 
 	const cssContent = fs.readFileSync(cssPath, 'utf-8');
 	const tokens = JSON.parse(fs.readFileSync(tokensPath, 'utf-8'));
+	const appHtml = fs.readFileSync(appHtmlPath, 'utf-8');
 
 	it('configures custom dark variant for class-based toggling', () => {
 		expect(cssContent).toMatch(/@custom-variant\s+dark\s+\(&:where\(\.dark,\s*\.dark\s+\*\)\);/);
@@ -40,9 +42,6 @@ describe('Design Tokens & Theme in layout.css', () => {
 	});
 
 	it('removes external Google Fonts links and configures preload tap in app.html', () => {
-		const appHtmlPath = path.resolve(process.cwd(), 'src/app.html');
-		const appHtml = fs.readFileSync(appHtmlPath, 'utf-8');
-
 		expect(appHtml).not.toContain('fonts.googleapis.com');
 		expect(appHtml).not.toContain('fonts.gstatic.com');
 		expect(appHtml).toContain('data-sveltekit-preload-data="tap"');
