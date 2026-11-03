@@ -115,4 +115,50 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		expect(historyPeriod).not.toContain("aria-label={t('common.back')}");
 		expect(historyPeriod).not.toContain("{t('history.periodList')}");
 	});
+
+	it('provides activePeriod and incomeSources from +layout.server.ts (Issue #46)', async () => {
+		const { load } = await import('./+layout.server.js');
+
+		// 1. When no user or period
+		const emptyResult = await load({
+			locals: { user: null, activePeriod: null },
+			platform: undefined
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(emptyResult).toBeDefined();
+		if (!emptyResult) return;
+		expect(emptyResult.activePeriod).toBeNull();
+		expect(emptyResult.incomeSources).toEqual([]);
+
+		// 2. When activePeriod and user exist
+		const mockPeriod = {
+			id: 'p-1',
+			userId: 'u-1',
+			startDate: '2026-10-25',
+			endDate: '2026-11-24',
+			payDay: 25,
+			totalIncome: 10000000,
+			status: 'active' as const,
+			aiSummary: null,
+			incomeConfirmedAt: null,
+			createdAt: new Date()
+		};
+
+		const populatedResult = await load({
+			locals: {
+				user: { id: 'u-1', name: 'Tester', email: 'test@example.com' },
+				activePeriod: mockPeriod
+			},
+			platform: {
+				env: {
+					DB: undefined
+				}
+			}
+		} as unknown as Parameters<typeof load>[0]);
+
+		expect(populatedResult).toBeDefined();
+		if (!populatedResult) return;
+		expect(populatedResult.activePeriod).toEqual(mockPeriod);
+		expect(populatedResult.incomeSources).toEqual([]);
+	});
 });

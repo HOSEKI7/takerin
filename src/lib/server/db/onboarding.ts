@@ -261,6 +261,7 @@ export async function completeOnboarding(
 			payDay: data.payDay,
 			totalIncome,
 			status: 'active',
+			incomeConfirmedAt: now,
 			createdAt: now
 		})
 	);

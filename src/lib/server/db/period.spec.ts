@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index';
 import { user, userSettings, incomeSource, monthlyPeriod, category, expense } from './schema';
-import { ensureActivePeriod } from './period';
+import { ensureActivePeriod, confirmPeriodIncome } from './period';
 import fs from 'node:fs';
 import path from 'node:path';
 import { eq } from 'drizzle-orm';
@@ -226,6 +226,7 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 		expect(result.period?.startDate).toBe('2026-10-25');
 		expect(result.period?.endDate).toBe('2026-11-24');
 		expect(result.period?.status).toBe('active');
+		expect(result.period?.incomeConfirmedAt).toBeNull();
 		expect(result.period?.totalIncome).toBe(10000000);
 
 		// Verify old period is completed
@@ -370,6 +371,7 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 		expect(result.period?.startDate).toBe('2026-04-25');
 		expect(result.period?.endDate).toBe('2026-05-24');
 		expect(result.period?.status).toBe('active');
+		expect(result.period?.incomeConfirmedAt).toBeNull();
 
 		// Old Jan period is marked completed
 		const oldRows = await db.select().from(monthlyPeriod).where(eq(monthlyPeriod.id, oldPeriodId));
@@ -382,5 +384,111 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 			.where(eq(category.periodId, result.period!.id));
 		expect(newCats).toHaveLength(1);
 		expect(newCats[0].name).toBe('Operational');
+	});
+
+	describe('confirmPeriodIncome Atomic D1 Mutation', () => {
+		const periodId = 'p-confirm-test-1';
+		const startDate = '2026-10-25';
+		const endDate = '2026-11-24';
+		const initialDate = new Date('2026-10-25T00:00:00Z');
+
+		beforeEach(async () => {
+			// Seed a monthly period with incomeConfirmedAt = null
+			await db.insert(monthlyPeriod).values({
+				id: periodId,
+				userId: testUserId,
+				startDate,
+				endDate,
+				payDay: 25,
+				totalIncome: 7000000,
+				status: 'active',
+				incomeConfirmedAt: null,
+				createdAt: initialDate
+			});
+
+			// Seed initial income source
+			await db.insert(incomeSource).values({
+				id: 'inc-old-1',
+				userId: testUserId,
+				name: 'Gaji Lama',
+				amount: 7000000,
+				createdAt: initialDate,
+				updatedAt: initialDate
+			});
+		});
+
+		it('atomically replaces income sources, recalculates total_income, and stamps income_confirmed_at', async () => {
+			const confirmDate = new Date('2026-10-25T08:30:00Z');
+			const updatedSources = [
+				{ name: 'Gaji Pokok Baru', amount: 9500000 },
+				{ name: 'Pekerjaan Sampingan', amount: 2500000 }
+			];
+
+			const result = await confirmPeriodIncome(
+				proxy.env.DB,
+				testUserId,
+				periodId,
+				updatedSources,
+				confirmDate
+			);
+
+			expect(result.success).toBe(true);
+			expect(result.totalIncome).toBe(12000000);
+			expect(result.incomeConfirmedAt).toEqual(confirmDate);
+
+			// Verify in database: monthly_period updated
+			const periodRows = await db
+				.select()
+				.from(monthlyPeriod)
+				.where(eq(monthlyPeriod.id, periodId));
+			expect(periodRows).toHaveLength(1);
+			expect(periodRows[0].totalIncome).toBe(12000000);
+			expect(periodRows[0].incomeConfirmedAt).not.toBeNull();
+			expect(periodRows[0].incomeConfirmedAt?.getTime()).toBe(confirmDate.getTime());
+
+			// Verify in database: old income sources removed and replaced
+			const sourcesRows = await db
+				.select()
+				.from(incomeSource)
+				.where(eq(incomeSource.userId, testUserId));
+			expect(sourcesRows).toHaveLength(2);
+			const names = sourcesRows.map((s) => s.name);
+			expect(names).toContain('Gaji Pokok Baru');
+			expect(names).toContain('Pekerjaan Sampingan');
+			expect(names).not.toContain('Gaji Lama');
+			const amounts = sourcesRows.map((s) => s.amount);
+			expect(amounts).toContain(9500000);
+			expect(amounts).toContain(2500000);
+		});
+
+		it('throws an error if incomeSources array is empty', async () => {
+			await expect(confirmPeriodIncome(proxy.env.DB, testUserId, periodId, [])).rejects.toThrow(
+				'Minimal harus memiliki satu sumber pemasukan.'
+			);
+		});
+
+		it('throws an error if an income source has an empty or whitespace name', async () => {
+			await expect(
+				confirmPeriodIncome(proxy.env.DB, testUserId, periodId, [{ name: '   ', amount: 5000000 }])
+			).rejects.toThrow('Nama sumber pemasukan tidak boleh kosong.');
+		});
+
+		it('throws an error if an income source has amount <= 0', async () => {
+			await expect(
+				confirmPeriodIncome(proxy.env.DB, testUserId, periodId, [{ name: 'Bonus', amount: 0 }])
+			).rejects.toThrow('Nominal sumber pemasukan harus lebih besar dari 0.');
+
+			await expect(
+				confirmPeriodIncome(proxy.env.DB, testUserId, periodId, [{ name: 'Minus', amount: -50000 }])
+			).rejects.toThrow('Nominal sumber pemasukan harus lebih besar dari 0.');
+		});
+
+		it('throws an error if monthly period does not exist or belongs to another user', async () => {
+			await expect(
+				confirmPeriodIncome(proxy.env.DB, 'another-user-id', periodId, [
+					{ name: 'Gaji', amount: 5000000 }
+				])
+			).rejects.toThrow('Periode bulanan tidak ditemukan.');
+		});
 	});
 });

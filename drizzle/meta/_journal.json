@@ -57,6 +57,13 @@
       "when": 1793532023190,
       "tag": "0007_youthful_vanisher",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1793697262982,
+      "tag": "0008_sloppy_chat",
+      "breakpoints": true
     }
   ]
 }

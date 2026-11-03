@@ -246,6 +246,8 @@ describe('Onboarding D1 Database & Drizzle Operations (Miniflare)', () => {
 		expect(period.payDay).toBe(25);
 		expect(period.totalIncome).toBe(10000000);
 		expect(period.status).toBe('active');
+		expect(period.incomeConfirmedAt).not.toBeNull();
+		expect(period.incomeConfirmedAt).toBeInstanceOf(Date);
 
 		// Check categories created for this period
 		const categories = await db.select().from(category).where(eq(category.periodId, period.id));

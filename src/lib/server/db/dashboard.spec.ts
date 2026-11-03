@@ -487,6 +487,7 @@ describe('Dashboard D1 Operations & Calculations (Miniflare)', () => {
 			totalIncome: 8000000,
 			status: 'active',
 			aiSummary: null,
+			incomeConfirmedAt: now,
 			createdAt: now
 		};
 

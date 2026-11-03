@@ -86,6 +86,7 @@ export async function ensureActivePeriod(
 		totalIncome,
 		status: 'active',
 		aiSummary: null,
+		incomeConfirmedAt: null,
 		createdAt: now
 	};
 
@@ -126,5 +127,102 @@ export async function ensureActivePeriod(
 	return {
 		period: newPeriodRecord,
 		transitioned: true
+	};
+}
+
+export interface IncomeSourceInput {
+	name: string;
+	amount: number;
+}
+
+export interface ConfirmPeriodIncomeResult {
+	success: boolean;
+	totalIncome: number;
+	incomeConfirmedAt: Date;
+}
+
+/**
+ * Confirms or updates income sources for an active monthly period atomically.
+ * 1. Validates that incomeSources contains at least 1 valid item (non-empty name, amount > 0).
+ * 2. Purges user's old income_source records and inserts the updated ones.
+ * 3. Updates monthly_period.total_income with the sum of updated sources.
+ * 4. Stamps monthly_period.income_confirmed_at = now.
+ * Executed atomically in a single D1 batch.
+ */
+export async function confirmPeriodIncome(
+	d1: D1Database,
+	userId: string,
+	periodId: string,
+	incomeSources: IncomeSourceInput[],
+	now: Date = new Date()
+): Promise<ConfirmPeriodIncomeResult> {
+	if (!incomeSources || !Array.isArray(incomeSources) || incomeSources.length === 0) {
+		throw new Error('Minimal harus memiliki satu sumber pemasukan.');
+	}
+
+	for (const source of incomeSources) {
+		const name = source?.name?.trim();
+		const amount = Math.round(Number(source?.amount));
+		if (!name) {
+			throw new Error('Nama sumber pemasukan tidak boleh kosong.');
+		}
+		if (isNaN(amount) || amount <= 0) {
+			throw new Error('Nominal sumber pemasukan harus lebih besar dari 0.');
+		}
+	}
+
+	const db = getDb(d1);
+
+	// Verify period exists and belongs to user
+	const periods = await db
+		.select()
+		.from(schema.monthlyPeriod)
+		.where(and(eq(schema.monthlyPeriod.id, periodId), eq(schema.monthlyPeriod.userId, userId)))
+		.limit(1);
+
+	if (periods.length === 0) {
+		throw new Error('Periode bulanan tidak ditemukan.');
+	}
+
+	const totalIncome = incomeSources.reduce((sum, s) => sum + Math.round(Number(s.amount)), 0);
+
+	const newSources = incomeSources.map((source) => ({
+		id: crypto.randomUUID(),
+		userId,
+		name: source.name.trim(),
+		amount: Math.round(Number(source.amount)),
+		createdAt: now,
+		updatedAt: now
+	}));
+
+	// Prepare atomic batch statements
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const batchStatements: any[] = [];
+
+	// 1. Delete old income sources
+	batchStatements.push(
+		db.delete(schema.incomeSource).where(eq(schema.incomeSource.userId, userId))
+	);
+
+	// 2. Insert new income sources
+	batchStatements.push(db.insert(schema.incomeSource).values(newSources));
+
+	// 3. Update monthly period total income & income_confirmed_at
+	batchStatements.push(
+		db
+			.update(schema.monthlyPeriod)
+			.set({
+				totalIncome,
+				incomeConfirmedAt: now
+			})
+			.where(and(eq(schema.monthlyPeriod.id, periodId), eq(schema.monthlyPeriod.userId, userId)))
+	);
+
+	await db.batch(batchStatements as [(typeof batchStatements)[0], ...typeof batchStatements]);
+
+	return {
+		success: true,
+		totalIncome,
+		incomeConfirmedAt: now
 	};
 }

@@ -119,6 +119,7 @@ export const monthlyPeriod = sqliteTable(
 		totalIncome: integer('total_income').notNull(),
 		status: text('status').notNull().default('active'),
 		aiSummary: text('ai_summary'),
+		incomeConfirmedAt: integer('income_confirmed_at', { mode: 'timestamp' }),
 		createdAt: integer('created_at', { mode: 'timestamp' }).notNull()
 	},
 	(table) => [index('monthly_period_user_id_status_idx').on(table.userId, table.status)]

@@ -1,0 +1,1 @@
+ALTER TABLE `monthly_period` ADD `income_confirmed_at` integer;
