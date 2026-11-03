@@ -80,17 +80,6 @@ self.addEventListener('fetch', (event) => {
 			}
 		}
 
-		// Cache dashboard shell in background when any dashboard data or page is requested
-		if (url.pathname.startsWith('/dashboard')) {
-			void fetch(resolveUrl('/dashboard'), { headers: { Accept: 'text/html' } })
-				.then((htmlRes) => {
-					if (htmlRes.status === 200) {
-						void cache.put(resolveUrl('/dashboard'), htmlRes);
-					}
-				})
-				.catch(() => {});
-		}
-
 		// 2. Navigation requests (HTML document views e.g. /dashboard)
 		if (event.request.mode === 'navigate') {
 			try {

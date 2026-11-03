@@ -91,7 +91,8 @@ describe('PWA Manifest, Icons & Offline Fallback', () => {
 		expect(swContent).toContain("addEventListener('fetch'");
 		expect(swContent).toContain("'/offline'");
 		expect(swContent).toContain("request.mode === 'navigate'");
-		expect(swContent).toContain("url.pathname.startsWith('/dashboard')");
+		expect(swContent).toContain("url.pathname === '/dashboard'");
+		expect(swContent).not.toContain("fetch(resolveUrl('/dashboard')");
 		expect(swContent).toContain('caches.open');
 
 		const tsconfigContent = JSON.parse(fs.readFileSync(tsconfigPath, 'utf-8'));
