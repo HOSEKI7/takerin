@@ -112,6 +112,19 @@ describe('IncomeConfirmationModal Component (Seam 3)', () => {
 		expect(html).toContain('Konfirmasi &amp; Lanjutkan');
 	});
 
+	it('adheres to Wise design system tokens (10px input radius, no gradients, no button shadow)', () => {
+		const { html } = render(IncomeConfirmationModal, {
+			props: { isOpen: true, initialSources: mockSources }
+		});
+
+		// Inputs use rounded-[10px] as specified in DESIGN.md
+		expect(html).toContain('rounded-[10px]');
+		// No gradient in header block
+		expect(html).not.toContain('bg-linear-to-b');
+		// Primary CTA pill button has no drop shadow
+		expect(html).not.toContain('shadow-md');
+	});
+
 	it('supports English translation when locale is en', async () => {
 		await setLocale('en');
 

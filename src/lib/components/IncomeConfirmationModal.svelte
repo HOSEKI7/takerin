@@ -9,12 +9,8 @@
 		CheckmarkCircle02Icon,
 		Coins01Icon
 	} from '@hugeicons/core-free-icons';
-	import { t, getLocale } from '#lib/i18n/index.js';
-	import {
-		formatRupiah,
-		calculateTotalIncome,
-		validateIncomeSources
-	} from '#lib/validation/onboarding.js';
+	import { t } from '#lib/i18n/index.js';
+	import { formatRupiah, calculateTotalIncome } from '#lib/validation/onboarding.js';
 
 	export interface IncomeSourceItem {
 		id?: string;
@@ -44,13 +40,18 @@
 		amount: number | string;
 	}
 
+	interface FieldErrors {
+		name?: string;
+		amount?: string;
+	}
+
 	function generateSourceId(): string {
 		return 'src-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
 	}
 
-	function initializeSources(sources: IncomeSourceItem[]): SourceState[] {
-		if (sources && sources.length > 0) {
-			return sources.map((s) => ({
+	function initializeSources(sourcesList: IncomeSourceItem[]): SourceState[] {
+		if (sourcesList && sourcesList.length > 0) {
+			return sourcesList.map((s) => ({
 				id: s.id || generateSourceId(),
 				name: s.name,
 				amount: s.amount
@@ -59,8 +60,16 @@
 		return [{ id: generateSourceId(), name: '', amount: '' }];
 	}
 
+	function normalizeSources(items: SourceState[]): Array<{ name: string; amount: number }> {
+		return items.map((s) => ({
+			name: s.name.trim(),
+			amount: Math.round(Number(s.amount) || 0)
+		}));
+	}
+
 	let sources = $state<SourceState[]>(untrack(() => initializeSources(initialSources)));
-	let validationError = $state<string | null>(null);
+	let rowErrors = $state<Record<string, FieldErrors>>({});
+	let formError = $state<string | null>(null);
 	let internalSubmitting = $state(false);
 	let modalContainer = $state<HTMLElement | null>(null);
 
@@ -68,7 +77,8 @@
 	$effect(() => {
 		if (isOpen) {
 			sources = initializeSources(initialSources);
-			validationError = null;
+			rowErrors = {};
+			formError = null;
 		}
 	});
 
@@ -76,17 +86,61 @@
 
 	const totalIncome = $derived(calculateTotalIncome(sources));
 
-	const serializedSources = $derived(
-		JSON.stringify(
-			sources.map((s) => ({
-				name: s.name.trim(),
-				amount: Math.round(Number(s.amount) || 0)
-			}))
-		)
-	);
+	const serializedSources = $derived(JSON.stringify(normalizeSources(sources)));
+
+	function clearFieldError(id: string, field: 'name' | 'amount') {
+		if (rowErrors[id]?.[field]) {
+			delete rowErrors[id][field];
+		}
+		if (formError) {
+			formError = null;
+		}
+	}
+
+	function validateAll(): boolean {
+		const errors: Record<string, FieldErrors> = {};
+		let hasError = false;
+
+		if (sources.length === 0) {
+			formError = t('incomeConfirmation.minOneSource');
+			return false;
+		}
+
+		for (const source of sources) {
+			const sourceErrors: FieldErrors = {};
+			const trimmed = source.name ? source.name.trim() : '';
+
+			if (!trimmed) {
+				sourceErrors.name = t('incomeConfirmation.errorNameRequired');
+				hasError = true;
+			}
+
+			if (source.amount === '' || source.amount === null || source.amount === undefined) {
+				sourceErrors.amount = t('incomeConfirmation.errorAmountInvalid');
+				hasError = true;
+			} else {
+				const num = Number(source.amount);
+				if (Number.isNaN(num)) {
+					sourceErrors.amount = t('incomeConfirmation.errorAmountInvalid');
+					hasError = true;
+				} else if (num <= 0) {
+					sourceErrors.amount = t('incomeConfirmation.errorAmountPositive');
+					hasError = true;
+				}
+			}
+
+			if (sourceErrors.name || sourceErrors.amount) {
+				errors[source.id] = sourceErrors;
+			}
+		}
+
+		rowErrors = errors;
+		formError = hasError ? null : null;
+		return !hasError;
+	}
 
 	function handleAddSource() {
-		validationError = null;
+		formError = null;
 		sources = [
 			...sources,
 			{
@@ -99,11 +153,24 @@
 
 	function handleRemoveSource(index: number) {
 		if (sources.length <= 1) {
-			validationError = t('incomeConfirmation.minOneSource');
+			formError = t('incomeConfirmation.minOneSource');
 			return;
 		}
-		validationError = null;
+		formError = null;
+		const removedId = sources[index].id;
+		delete rowErrors[removedId];
 		sources = sources.filter((_, i) => i !== index);
+
+		// Prevent focus leak when deleted button is unmounted from DOM
+		requestAnimationFrame(() => {
+			const remainingInteractive = modalContainer?.querySelectorAll<HTMLElement>(
+				'button:not([disabled]), input:not([disabled])'
+			);
+			if (remainingInteractive && remainingInteractive.length > 0) {
+				const targetIndex = Math.min(index, remainingInteractive.length - 1);
+				remainingInteractive[targetIndex]?.focus();
+			}
+		});
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
@@ -183,9 +250,9 @@
 			transition:scale={{ start: 0.95, duration: 200 }}
 			class="relative z-10 flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-fog bg-paper shadow-2xl transition-all sm:rounded-[28px] dark:border-dark-border dark:bg-dark-surface"
 		>
-			<!-- Header Celebration Block -->
+			<!-- Header Celebration Block (Flat design, no gradient) -->
 			<div
-				class="border-b border-fog/80 bg-linear-to-b from-linen-mist/50 to-transparent p-5 text-center sm:p-6 dark:border-dark-border/80 dark:from-dark-card/60"
+				class="border-b border-fog/80 bg-linen-mist/30 p-5 text-center sm:p-6 dark:border-dark-border/80 dark:bg-dark-card/50"
 			>
 				<!-- Badge -->
 				<div
@@ -219,12 +286,11 @@
 				method="POST"
 				action={actionUrl}
 				use:enhance={({ cancel }) => {
-					validationError = null;
+					formError = null;
 
-					// Validate income sources
-					const error = validateIncomeSources(sources, getLocale());
-					if (error) {
-						validationError = error;
+					// Execute field-level inline validation
+					const isValid = validateAll();
+					if (!isValid) {
 						cancel();
 						return;
 					}
@@ -232,11 +298,7 @@
 					internalSubmitting = true;
 
 					if (onConfirm) {
-						const mapped = sources.map((s) => ({
-							name: s.name.trim(),
-							amount: Math.round(Number(s.amount) || 0)
-						}));
-						onConfirm(mapped);
+						onConfirm(normalizeSources(sources));
 					}
 
 					return async ({ update }) => {
@@ -250,12 +312,12 @@
 
 				<!-- Scrollable Sources List -->
 				<div class="flex-1 space-y-3.5 overflow-y-auto p-5 sm:p-6">
-					{#if validationError}
+					{#if formError}
 						<div
 							role="alert"
 							class="rounded-xl border border-alarm-red/20 bg-alarm-red/10 p-3.5 text-xs font-semibold text-alarm-red dark:bg-alarm-red/15 dark:text-red-300"
 						>
-							{validationError}
+							{formError}
 						</div>
 					{/if}
 
@@ -270,6 +332,7 @@
 
 					<div class="space-y-3">
 						{#each sources as source, index (source.id)}
+							{@const errors = rowErrors[source.id]}
 							<div
 								class="relative rounded-[10px] border border-fog bg-fog/30 p-3.5 transition-colors sm:p-4 dark:border-dark-border dark:bg-dark-card/40"
 							>
@@ -295,7 +358,7 @@
 								</div>
 
 								<div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-									<!-- Name Input -->
+									<!-- Name Input with Inline Validation -->
 									<div class="flex flex-col gap-1">
 										<label
 											for="source-name-{source.id}"
@@ -307,13 +370,26 @@
 											id="source-name-{source.id}"
 											type="text"
 											bind:value={source.name}
+											oninput={() => clearFieldError(source.id, 'name')}
 											disabled={isBusy}
 											placeholder={t('incomeConfirmation.namePlaceholder')}
-											class="w-full rounded-lg border border-pebble bg-paper px-3 py-2 text-sm text-obsidian transition placeholder:text-pebble focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none disabled:opacity-50 dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:placeholder:text-pebble/60 dark:focus:border-lime-voltage dark:focus:ring-lime-voltage"
+											aria-invalid={errors?.name ? 'true' : undefined}
+											aria-describedby={errors?.name ? `source-name-error-${source.id}` : undefined}
+											class="w-full rounded-[10px] border px-3 py-2 text-sm text-obsidian transition placeholder:text-pebble focus:ring-1 focus:outline-none disabled:opacity-50 dark:bg-dark-surface dark:text-paper dark:placeholder:text-pebble/60 {errors?.name
+												? 'border-alarm-red focus:border-alarm-red focus:ring-alarm-red'
+												: 'border-pebble focus:border-forest-ink focus:ring-forest-ink dark:border-dark-border dark:focus:border-lime-voltage dark:focus:ring-lime-voltage'}"
 										/>
+										{#if errors?.name}
+											<p
+												id="source-name-error-{source.id}"
+												class="text-[11px] font-semibold text-alarm-red dark:text-red-400"
+											>
+												{errors.name}
+											</p>
+										{/if}
 									</div>
 
-									<!-- Amount Input -->
+									<!-- Amount Input with Inline Validation -->
 									<div class="flex flex-col gap-1">
 										<label
 											for="source-amount-{source.id}"
@@ -327,10 +403,25 @@
 											min="1"
 											step="1"
 											bind:value={source.amount}
+											oninput={() => clearFieldError(source.id, 'amount')}
 											disabled={isBusy}
 											placeholder={t('incomeConfirmation.amountPlaceholder')}
-											class="w-full rounded-lg border border-pebble bg-paper px-3 py-2 text-sm text-obsidian tabular-nums transition placeholder:text-pebble focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none disabled:opacity-50 dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:placeholder:text-pebble/60 dark:focus:border-lime-voltage dark:focus:ring-lime-voltage"
+											aria-invalid={errors?.amount ? 'true' : undefined}
+											aria-describedby={errors?.amount
+												? `source-amount-error-${source.id}`
+												: undefined}
+											class="w-full rounded-[10px] border px-3 py-2 text-sm text-obsidian tabular-nums transition placeholder:text-pebble focus:ring-1 focus:outline-none disabled:opacity-50 dark:bg-dark-surface dark:text-paper dark:placeholder:text-pebble/60 {errors?.amount
+												? 'border-alarm-red focus:border-alarm-red focus:ring-alarm-red'
+												: 'border-pebble focus:border-forest-ink focus:ring-forest-ink dark:border-dark-border dark:focus:border-lime-voltage dark:focus:ring-lime-voltage'}"
 										/>
+										{#if errors?.amount}
+											<p
+												id="source-amount-error-{source.id}"
+												class="text-[11px] font-semibold text-alarm-red dark:text-red-400"
+											>
+												{errors.amount}
+											</p>
+										{/if}
 									</div>
 								</div>
 							</div>
@@ -371,14 +462,14 @@
 					</div>
 				</div>
 
-				<!-- Footer Action Block -->
+				<!-- Footer Action Block (Flat pill button, no shadow) -->
 				<div
 					class="border-t border-fog bg-paper p-4 sm:p-5 dark:border-dark-border dark:bg-dark-surface"
 				>
 					<button
 						type="submit"
 						disabled={isBusy}
-						class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-lime-voltage px-6 py-3 text-sm font-bold text-forest-ink shadow-md transition hover:brightness-95 focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:text-base dark:shadow-none dark:focus-visible:ring-lime-voltage"
+						class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-lime-voltage px-6 py-3 text-sm font-bold text-forest-ink transition hover:brightness-95 focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:text-base dark:focus-visible:ring-lime-voltage"
 					>
 						{#if isBusy}
 							<span
