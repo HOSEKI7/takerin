@@ -5,6 +5,7 @@ import { user, monthlyPeriod, category } from './schema.js';
 import {
 	createExpense,
 	getExpenses,
+	countExpenses,
 	getExpenseById,
 	updateExpense,
 	deleteExpense,
@@ -367,5 +368,34 @@ describe('Expense D1 Database & Domain Operations (Seam 2)', () => {
 		expect(filteredCat2).toHaveLength(1);
 		expect(filteredCat2[0].name).toBe('Beli Emas 1 gram');
 		expect(filteredCat2[0].isSavings).toBe(true);
+
+		// Pagination: limit and offset
+		const paginatedFirst = await getExpenses(proxy.env.DB, {
+			userId: testUserId,
+			periodId,
+			limit: 1,
+			offset: 0
+		});
+		expect(paginatedFirst).toHaveLength(1);
+
+		const paginatedSecond = await getExpenses(proxy.env.DB, {
+			userId: testUserId,
+			periodId,
+			limit: 1,
+			offset: 1
+		});
+		expect(paginatedSecond).toHaveLength(1);
+		expect(paginatedSecond[0].id).not.toBe(paginatedFirst[0].id);
+
+		// Total count
+		const totalAll = await countExpenses(proxy.env.DB, { userId: testUserId, periodId });
+		expect(totalAll).toBe(2);
+
+		const totalCat1 = await countExpenses(proxy.env.DB, {
+			userId: testUserId,
+			periodId,
+			categoryId: cat1
+		});
+		expect(totalCat1).toBe(1);
 	});
 });

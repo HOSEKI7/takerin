@@ -25,6 +25,50 @@
 	let isDeleting = $state(false);
 	let deleteError = $state<string | null>(null);
 
+	let displayedExpenses = $state<typeof data.expenses>([]);
+	let hasMore = $state(false);
+	let totalCount = $state(0);
+	let isLoadingMore = $state(false);
+
+	$effect(() => {
+		displayedExpenses = [...data.expenses];
+		hasMore = data.hasMore;
+		totalCount = data.totalCount;
+	});
+
+	async function handleLoadMore() {
+		if (isLoadingMore || !hasMore || !data.period) return;
+		isLoadingMore = true;
+
+		try {
+			const queryParts = [
+				`periodId=${encodeURIComponent(data.period.id)}`,
+				'limit=20',
+				`offset=${displayedExpenses.length}`
+			];
+			if (data.selectedCategory) {
+				queryParts.push(`categoryId=${encodeURIComponent(data.selectedCategory)}`);
+			}
+
+			const res = await fetch(`/api/expenses?${queryParts.join('&')}`);
+			if (!res.ok) throw new Error('Failed to load more expenses');
+			const json = (await res.json()) as {
+				expenses: typeof data.expenses;
+				totalCount?: number;
+				hasMore: boolean;
+			};
+			displayedExpenses = [...displayedExpenses, ...json.expenses];
+			hasMore = json.hasMore;
+			if (typeof json.totalCount === 'number') {
+				totalCount = json.totalCount;
+			}
+		} catch (e) {
+			console.error(e);
+		} finally {
+			isLoadingMore = false;
+		}
+	}
+
 	function handleCategoryFilter(categoryId: string) {
 		const url = new URL(page.url.href);
 		if (categoryId) {
@@ -101,7 +145,7 @@
 		>
 			<span>{t('common.all')}</span>
 			<span class="py-0.2 rounded-full bg-paper/20 px-1.5 text-[10px] dark:bg-dark-surface/40">
-				{data.expenses.length}
+				{totalCount}
 			</span>
 		</button>
 
@@ -125,7 +169,7 @@
 	</div>
 
 	<!-- EXPENSES LIST -->
-	{#if data.expenses.length === 0}
+	{#if displayedExpenses.length === 0}
 		<!-- Empty State -->
 		<Card variant="tinted" padding="lg" class="text-center">
 			<div
@@ -147,7 +191,7 @@
 		</Card>
 	{:else}
 		<div class="space-y-3">
-			{#each data.expenses as exp (exp.id)}
+			{#each displayedExpenses as exp (exp.id)}
 				<div
 					class="flex flex-col justify-between gap-3 rounded-xl border border-fog bg-paper p-4 transition-colors hover:border-pebble/50 sm:flex-row sm:items-center dark:border-dark-border dark:bg-dark-card dark:hover:border-slate/60"
 				>
@@ -241,12 +285,35 @@
 				</div>
 			{/each}
 		</div>
+
+		{#if hasMore}
+			<div class="flex justify-center pt-6 pb-2">
+				<Button
+					type="button"
+					variant="secondary"
+					size="md"
+					disabled={isLoadingMore}
+					class="flex items-center gap-2 font-bold shadow-xs hover:border-forest-ink dark:hover:border-lime-voltage"
+					onclick={handleLoadMore}
+				>
+					{#if isLoadingMore}
+						<div
+							class="h-4 w-4 animate-spin rounded-full border-2 border-forest-ink border-t-transparent dark:border-lime-voltage"
+							aria-hidden="true"
+						></div>
+						<span>{t('expenses.loadingMore')}</span>
+					{:else}
+						<span>{t('expenses.loadMore')}</span>
+					{/if}
+				</Button>
+			</div>
+		{/if}
 	{/if}
 </main>
 
 <!-- DELETE CONFIRMATION MODAL -->
 {#if deleteCandidateId}
-	{@const targetExp = data.expenses.find((e) => e.id === deleteCandidateId)}
+	{@const targetExp = displayedExpenses.find((e) => e.id === deleteCandidateId)}
 	<div
 		role="dialog"
 		aria-modal="true"

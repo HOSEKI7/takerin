@@ -1,4 +1,4 @@
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
 
@@ -112,12 +112,20 @@ export async function createExpense(
 	return { id, success: true };
 }
 
+export interface GetExpensesParams {
+	userId: string;
+	periodId: string;
+	categoryId?: string;
+	limit?: number;
+	offset?: number;
+}
+
 /**
  * Fetches expenses in the monthly period, optionally filtered by category.
  */
 export async function getExpenses(
 	d1: D1Database,
-	params: { userId: string; periodId: string; categoryId?: string }
+	params: GetExpensesParams
 ): Promise<ExpenseItem[]> {
 	const db = getDb(d1);
 
@@ -130,7 +138,7 @@ export async function getExpenses(
 		conditions.push(eq(schema.expense.categoryId, params.categoryId.trim()));
 	}
 
-	const rows = await db
+	let query = db
 		.select({
 			id: schema.expense.id,
 			userId: schema.expense.userId,
@@ -151,10 +159,48 @@ export async function getExpenses(
 		.where(and(...conditions))
 		.orderBy(desc(schema.expense.date), desc(schema.expense.createdAt));
 
+	if (params.limit !== undefined && params.limit > 0) {
+		query = query.limit(params.limit) as typeof query;
+	}
+
+	if (params.offset !== undefined && params.offset > 0) {
+		query = query.offset(params.offset) as typeof query;
+	}
+
+	const rows = await query;
+
 	return rows.map((r) => ({
 		...r,
 		isSavings: Boolean(r.isSavings)
 	}));
+}
+
+/**
+ * Returns total count of expenses matching criteria.
+ */
+export async function countExpenses(
+	d1: D1Database,
+	params: { userId: string; periodId: string; categoryId?: string }
+): Promise<number> {
+	const db = getDb(d1);
+
+	const conditions = [
+		eq(schema.expense.userId, params.userId),
+		eq(schema.expense.periodId, params.periodId)
+	];
+
+	if (params.categoryId && params.categoryId.trim().length > 0) {
+		conditions.push(eq(schema.expense.categoryId, params.categoryId.trim()));
+	}
+
+	const rows = await db
+		.select({
+			count: sql<number>`cast(count(${schema.expense.id}) as int)`
+		})
+		.from(schema.expense)
+		.where(and(...conditions));
+
+	return rows[0]?.count ?? 0;
 }
 
 /**

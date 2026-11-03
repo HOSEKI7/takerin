@@ -442,7 +442,10 @@
 		},
 		"warningOverBudgetTitle": "Warning: Exceeds Category Balance",
 		"warningOverBudgetDesc": "Amount {{amount}} exceeds category balance ({{balance}}). Expense can still be saved, but this category balance will be negative (over-budget).",
-		"deleteFailed": "Failed to delete expense."
+		"deleteFailed": "Failed to delete expense.",
+		"loadMore": "Load More",
+		"loadingMore": "Loading...",
+		"allLoaded": "All expenses loaded"
 	},
 	"categories": {
 		"title": "Category Management",

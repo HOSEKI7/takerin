@@ -3,6 +3,7 @@
 	import Button from '#lib/components/Button.svelte';
 	import Card from '#lib/components/Card.svelte';
 	import Input from '#lib/components/Input.svelte';
+	import Textarea from '#lib/components/Textarea.svelte';
 	import NumpadCalculator from '#lib/components/NumpadCalculator.svelte';
 	import CategoryPicker from '#lib/components/CategoryPicker.svelte';
 	import { formatRupiah, formatDateISO, formatDate } from '#lib/validation/onboarding.js';
@@ -131,6 +132,8 @@
 						label={t('expenses.form.nameLabel')}
 						placeholder={t('expenses.form.namePlaceholder')}
 						bind:value={name}
+						maxlength={100}
+						showCharCount
 						required
 					/>
 				</div>
@@ -173,20 +176,16 @@
 				>
 					<!-- Catatan (Opsional) -->
 					<div>
-						<label
-							for="expense-notes"
-							class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
-						>
-							{t('expenses.form.notesLabel')}
-						</label>
-						<textarea
+						<Textarea
 							id="expense-notes"
 							name="notes"
-							rows="2"
+							label={t('expenses.form.notesLabel')}
+							rows={2}
 							bind:value={notes}
+							maxlength={500}
+							showCharCount
 							placeholder={t('expenses.form.notesPlaceholder')}
-							class="mt-1 w-full rounded-lg border border-fog bg-paper px-3.5 py-2 text-sm text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
-						></textarea>
+						/>
 					</div>
 
 					<!-- Jam (Opsional, tidak auto-fill) -->

@@ -4,6 +4,7 @@ const mockGetDashboardData = vi.fn();
 const mockGetActivePeriodCategories = vi.fn();
 const mockCreateExpense = vi.fn();
 const mockGetExpenses = vi.fn();
+const mockCountExpenses = vi.fn();
 const mockGetExpenseById = vi.fn();
 const mockUpdateExpense = vi.fn();
 const mockDeleteExpense = vi.fn();
@@ -16,6 +17,7 @@ vi.mock('#lib/server/db/expense.js', () => ({
 	getActivePeriodCategories: (...args: unknown[]) => mockGetActivePeriodCategories(...args),
 	createExpense: (...args: unknown[]) => mockCreateExpense(...args),
 	getExpenses: (...args: unknown[]) => mockGetExpenses(...args),
+	countExpenses: (...args: unknown[]) => mockCountExpenses(...args),
 	getExpenseById: (...args: unknown[]) => mockGetExpenseById(...args),
 	updateExpense: (...args: unknown[]) => mockUpdateExpense(...args),
 	deleteExpense: (...args: unknown[]) => mockDeleteExpense(...args)
@@ -179,6 +181,7 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 					date: '2026-10-21'
 				}
 			]);
+			mockCountExpenses.mockResolvedValue(1);
 
 			const mockUrl = new URL('http://localhost/expenses?category=c-1');
 			const mockEvent = {
@@ -190,10 +193,24 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 			const data = (await loadList(mockEvent)) as {
 				expenses: Array<{ id: string; name: string }>;
 				selectedCategory: string;
+				totalCount: number;
+				hasMore: boolean;
 			};
 			expect(data.expenses).toHaveLength(1);
 			expect(data.selectedCategory).toBe('c-1');
+			expect(data.totalCount).toBe(1);
+			expect(data.hasMore).toBe(false);
 			expect(mockGetExpenses).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({
+					userId: 'u-1',
+					periodId: 'p-1',
+					categoryId: 'c-1',
+					limit: 20,
+					offset: 0
+				})
+			);
+			expect(mockCountExpenses).toHaveBeenCalledWith(
 				expect.anything(),
 				expect.objectContaining({
 					userId: 'u-1',
@@ -210,6 +227,7 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 				categories: []
 			});
 			mockGetExpenses.mockResolvedValue([]);
+			mockCountExpenses.mockResolvedValue(0);
 
 			const mockEvent = {
 				locals: { user: { id: 'u-1' }, activePeriod: mockPeriod },

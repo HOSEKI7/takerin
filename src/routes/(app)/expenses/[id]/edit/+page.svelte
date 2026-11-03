@@ -3,6 +3,7 @@
 	import Button from '#lib/components/Button.svelte';
 	import Card from '#lib/components/Card.svelte';
 	import Input from '#lib/components/Input.svelte';
+	import Textarea from '#lib/components/Textarea.svelte';
 	import NumpadCalculator from '#lib/components/NumpadCalculator.svelte';
 	import CategoryPicker from '#lib/components/CategoryPicker.svelte';
 	import { resolve } from '$app/paths';
@@ -137,6 +138,8 @@
 						label={t('expenses.form.nameLabel')}
 						placeholder={t('expenses.form.namePlaceholder')}
 						bind:value={name}
+						maxlength={100}
+						showCharCount
 						required
 					/>
 				</div>
@@ -164,20 +167,16 @@
 					class="space-y-3 rounded-xl border border-fog/80 bg-fog/20 p-3.5 dark:border-dark-border/60 dark:bg-dark-surface/40"
 				>
 					<div>
-						<label
-							for="edit-expense-notes"
-							class="block text-xs font-semibold text-charcoal dark:text-linen-mist"
-						>
-							{t('expenses.form.notesLabel')}
-						</label>
-						<textarea
+						<Textarea
 							id="edit-expense-notes"
 							name="notes"
-							rows="2"
+							label={t('expenses.form.notesLabel')}
+							rows={2}
 							bind:value={notes}
+							maxlength={500}
+							showCharCount
 							placeholder={t('expenses.form.notesPlaceholder')}
-							class="mt-1 w-full rounded-lg border border-fog bg-paper px-3.5 py-2 text-sm text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
-						></textarea>
+						/>
 					</div>
 
 					<div>

@@ -7,6 +7,7 @@ describe('Base UI Components & HugeIcons Seam', () => {
 		expect(lib.Button).toBeDefined();
 		expect(lib.Card).toBeDefined();
 		expect(lib.Input).toBeDefined();
+		expect(lib.Textarea).toBeDefined();
 		expect(lib.Badge).toBeDefined();
 		expect(lib.ProgressBar).toBeDefined();
 		expect(lib.ThemeToggle).toBeDefined();

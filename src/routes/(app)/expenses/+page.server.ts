@@ -1,7 +1,7 @@
 import type { PageServerLoad, Actions } from './$types.js';
 import { redirect, fail } from '@sveltejs/kit';
 import { getDashboardData } from '#lib/server/db/dashboard.js';
-import { getExpenses, deleteExpense } from '#lib/server/db/expense.js';
+import { getExpenses, countExpenses, deleteExpense } from '#lib/server/db/expense.js';
 
 export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	if (!locals.user) {
@@ -14,6 +14,8 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 			summary: null,
 			categories: [],
 			expenses: [],
+			totalCount: 0,
+			hasMore: false,
 			selectedCategory: ''
 		};
 	}
@@ -29,18 +31,30 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	}
 
 	const selectedCategory = url.searchParams.get('category') ?? '';
+	const limit = 20;
 
-	const expenses = await getExpenses(platform.env.DB, {
-		userId: locals.user.id,
-		periodId: dashboardData.period.id,
-		categoryId: selectedCategory || undefined
-	});
+	const [expenses, totalCount] = await Promise.all([
+		getExpenses(platform.env.DB, {
+			userId: locals.user.id,
+			periodId: dashboardData.period.id,
+			categoryId: selectedCategory || undefined,
+			limit,
+			offset: 0
+		}),
+		countExpenses(platform.env.DB, {
+			userId: locals.user.id,
+			periodId: dashboardData.period.id,
+			categoryId: selectedCategory || undefined
+		})
+	]);
 
 	return {
 		period: dashboardData.period,
 		summary: dashboardData.summary,
 		categories: dashboardData.categories,
 		expenses,
+		totalCount,
+		hasMore: totalCount > limit,
 		selectedCategory
 	};
 };

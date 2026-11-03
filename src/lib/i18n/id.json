@@ -442,7 +442,10 @@
 		},
 		"warningOverBudgetTitle": "Peringatan: Melebihi Saldo Kategori",
 		"warningOverBudgetDesc": "Nominal {{amount}} melebihi sisa saldo kategori ({{balance}}). Pengeluaran tetap dapat disimpan, namun saldo kategori ini akan bernilai minus (over-budget).",
-		"deleteFailed": "Gagal menghapus pengeluaran."
+		"deleteFailed": "Gagal menghapus pengeluaran.",
+		"loadMore": "Muat Lebih Banyak",
+		"loadingMore": "Memuat...",
+		"allLoaded": "Semua pengeluaran telah dimuat"
 	},
 	"categories": {
 		"title": "Manajemen Kategori",

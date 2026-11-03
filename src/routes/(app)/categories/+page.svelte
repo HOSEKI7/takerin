@@ -460,6 +460,7 @@
 
 									<input
 										type="text"
+										maxlength="100"
 										bind:value={cat.name}
 										placeholder={t('categories.namePlaceholder')}
 										aria-label={t('categories.nameLabel')}
@@ -500,6 +501,7 @@
 													min="1"
 													max="100"
 													step="0.5"
+													inputmode="numeric"
 													bind:value={cat.percentage}
 													required
 													class="w-full rounded-lg border border-fog bg-paper px-1.5 py-0.5 text-right font-mono text-xs font-bold text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
@@ -597,6 +599,7 @@
 								</span>
 								<input
 									type="text"
+									maxlength="100"
 									bind:value={fCat.name}
 									aria-label={fCat.name}
 									class="rounded-lg border border-fog/80 bg-paper px-2.5 py-1 text-sm font-bold text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
@@ -700,10 +703,16 @@
 					<input
 						id="new-cat-name"
 						type="text"
+						maxlength="100"
 						bind:value={newCatName}
 						placeholder={t('categories.namePlaceholder')}
 						class="mt-1 w-full rounded-lg border border-fog bg-paper px-3 py-2 text-sm text-obsidian focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
 					/>
+					<div
+						class="mt-1 flex justify-end text-[11px] text-slate/75 tabular-nums dark:text-pebble/75"
+					>
+						{newCatName.length}/100
+					</div>
 				</div>
 
 				<div>
@@ -719,6 +728,7 @@
 							type="number"
 							min="1"
 							max="99"
+							inputmode="numeric"
 							bind:value={newCatPercentage}
 							class="w-full rounded-lg border border-fog bg-paper px-3 py-2 text-sm font-bold text-obsidian focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
 						/>
@@ -805,6 +815,7 @@
 													min="0"
 													max={c.percentage - 0.5}
 													step="0.5"
+													inputmode="numeric"
 													bind:value={manualReductions[key]}
 													class="w-16 rounded-lg border border-fog bg-paper px-2 py-1 text-right font-mono text-xs dark:border-dark-border dark:bg-dark-card"
 												/>
@@ -914,6 +925,7 @@
 											min="0"
 											max="100"
 											step="0.5"
+											inputmode="numeric"
 											bind:value={manualAllocations[key]}
 											class="w-16 rounded-lg border border-fog bg-paper px-2 py-1 text-right font-mono text-xs dark:border-dark-border dark:bg-dark-card"
 										/>
