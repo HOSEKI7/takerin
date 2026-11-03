@@ -14,6 +14,7 @@ export { default as PwaInstallPrompt } from './components/PwaInstallPrompt.svelt
 export { default as OnboardingTutorial } from './components/OnboardingTutorial.svelte';
 export { default as SupportMascot } from './components/SupportMascot.svelte';
 export { default as DonationModal } from './components/DonationModal.svelte';
+export { default as IncomeConfirmationModal } from './components/IncomeConfirmationModal.svelte';
 export { default as PublicNavbar } from './components/PublicNavbar.svelte';
 
 // Theme Utilities

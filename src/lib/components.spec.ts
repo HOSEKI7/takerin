@@ -17,6 +17,7 @@ describe('Base UI Components & HugeIcons Seam', () => {
 		expect(lib.MobileNav).toBeDefined();
 		expect(lib.PwaInstallPrompt).toBeDefined();
 		expect(lib.OnboardingTutorial).toBeDefined();
+		expect(lib.IncomeConfirmationModal).toBeDefined();
 	});
 
 	it('successfully imports and verifies HugeIcons definitions', () => {

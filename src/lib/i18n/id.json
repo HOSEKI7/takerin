@@ -830,5 +830,27 @@
 		"desc": "Koneksi internet Anda terputus dan halaman ini belum tersimpan di memori cache perangkat. Anda tetap dapat membuka Dashboard yang sudah tersimpan sebelumnya.",
 		"openDashboard": "Buka Dashboard",
 		"retry": "Coba Lagi"
+	},
+	"incomeConfirmation": {
+		"badge": "Periode Bulan Baru",
+		"title": "Selamat Hari Gajian! 🎉",
+		"subtitle": "Mari verifikasi atau perbarui daftar Sumber Pemasukan Anda untuk memulai Periode Bulan baru ini.",
+		"sourcesHeading": "Daftar Sumber Pemasukan",
+		"sourceItem": "Sumber {{index}}",
+		"nameLabel": "Nama Sumber Pemasukan",
+		"namePlaceholder": "misal: Pekerjaan Utama",
+		"amountLabel": "Nominal Pemasukan (Rp)",
+		"amountPlaceholder": "0",
+		"addSource": "Tambah Sumber Pemasukan",
+		"removeSource": "Hapus Sumber Pemasukan",
+		"removeSourceAria": "Hapus sumber pemasukan {{name}}",
+		"totalLabel": "Total Pemasukan Bulanan",
+		"totalSourcesCount": "{{count}} Sumber Pemasukan",
+		"submit": "Konfirmasi & Lanjutkan",
+		"submitting": "Memproses...",
+		"minOneSource": "Minimal harus memiliki satu Sumber Pemasukan.",
+		"errorNameRequired": "Nama Sumber Pemasukan tidak boleh kosong.",
+		"errorAmountInvalid": "Nominal Sumber Pemasukan harus berupa angka yang valid.",
+		"errorAmountPositive": "Nominal Sumber Pemasukan harus lebih besar dari 0."
 	}
 }
