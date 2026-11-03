@@ -26,6 +26,11 @@ Sebelumnya, transisi ke Periode Bulan baru terjadi secara otomatis di latar bela
    * Konfirmasi pemasukan mengeksekusi batch database atomik di Cloudflare D1: memperbarui tabel master `income_source`, memperbarui `monthly_period.total_income`, dan mencatat `monthly_period.income_confirmed_at`.
    * Nominal alokasi tiap Kategori dihitung otomatis berdasarkan persentase yang sudah ada terhadap total pemasukan baru tanpa membebani modal dengan konfigurasi kategori.
 
+4. **Mekanisme Form Action SvelteKit & Proteksi Navigasi**:
+   * SvelteKit secara ketat membatasi ekspor `actions` hanya pada `+page.server.ts` (tidak diizinkan pada `+layout.server.ts`).
+   * Logika aksi konfirmasi dipusatkan pada handler `confirmIncomeAction` di `src/lib/server/actions/confirm-income.ts`, didaftarkan sebagai form action `confirmIncome` di `src/routes/(app)/dashboard/+page.server.ts`, dan ditargetkan melalui `actionUrl="/dashboard?/confirmIncome"` dari modal layout global.
+   * Isolasi antarmuka dijamin dengan menambahkan atribut `inert` pada shell tata letak saat gate aktif serta mengadang upaya navigasi klien melalui hook `beforeNavigate`.
+
 ## Konsekuensi & Trade-off
 
 * **Positif**: Menjamin integritas data anggaran pengguna selalu sinkron dengan kondisi pemasukan riil di setiap awal siklus gajian. Friksi diminimalkan melalui pre-filled input dan aksi satu klik.
