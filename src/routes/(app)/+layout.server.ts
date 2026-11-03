@@ -20,6 +20,7 @@ export const load: LayoutServerLoad = async ({ locals, platform }) => {
 
 	return {
 		activePeriod: locals.activePeriod ?? null,
+		incomeConfirmedAt: locals.activePeriod?.incomeConfirmedAt ?? null,
 		incomeSources
 	};
 };

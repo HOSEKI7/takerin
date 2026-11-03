@@ -2,7 +2,9 @@ import { eq, and, desc } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
 import { isPeriodExpired, calculateCurrentPeriodDates } from '#lib/validation/period.js';
-import { calculateTotalIncome } from '#lib/validation/onboarding.js';
+import { calculateTotalIncome, type IncomeSourceInput } from '#lib/validation/onboarding.js';
+
+export type { IncomeSourceInput };
 
 export interface EnsureActivePeriodResult {
 	period: typeof schema.monthlyPeriod.$inferSelect | null;
@@ -130,11 +132,6 @@ export async function ensureActivePeriod(
 	};
 }
 
-export interface IncomeSourceInput {
-	name: string;
-	amount: number;
-}
-
 export interface ConfirmPeriodIncomeResult {
 	success: boolean;
 	totalIncome: number;
@@ -157,34 +154,40 @@ export async function confirmPeriodIncome(
 	now: Date = new Date()
 ): Promise<ConfirmPeriodIncomeResult> {
 	if (!incomeSources || !Array.isArray(incomeSources) || incomeSources.length === 0) {
-		throw new Error('Minimal harus memiliki satu sumber pemasukan.');
+		throw new Error('Minimal harus memiliki satu Sumber Pemasukan.');
 	}
 
 	for (const source of incomeSources) {
 		const name = source?.name?.trim();
 		const amount = Math.round(Number(source?.amount));
 		if (!name) {
-			throw new Error('Nama sumber pemasukan tidak boleh kosong.');
+			throw new Error('Nama Sumber Pemasukan tidak boleh kosong.');
 		}
 		if (isNaN(amount) || amount <= 0) {
-			throw new Error('Nominal sumber pemasukan harus lebih besar dari 0.');
+			throw new Error('Nominal Sumber Pemasukan harus lebih besar dari 0.');
 		}
 	}
 
 	const db = getDb(d1);
 
-	// Verify period exists and belongs to user
+	// Verify period exists, is active, and belongs to user
 	const periods = await db
 		.select()
 		.from(schema.monthlyPeriod)
-		.where(and(eq(schema.monthlyPeriod.id, periodId), eq(schema.monthlyPeriod.userId, userId)))
+		.where(
+			and(
+				eq(schema.monthlyPeriod.id, periodId),
+				eq(schema.monthlyPeriod.userId, userId),
+				eq(schema.monthlyPeriod.status, 'active')
+			)
+		)
 		.limit(1);
 
 	if (periods.length === 0) {
-		throw new Error('Periode bulanan tidak ditemukan.');
+		throw new Error('Periode Bulan tidak ditemukan atau tidak aktif.');
 	}
 
-	const totalIncome = incomeSources.reduce((sum, s) => sum + Math.round(Number(s.amount)), 0);
+	const totalIncome = calculateTotalIncome(incomeSources);
 
 	const newSources = incomeSources.map((source) => ({
 		id: crypto.randomUUID(),
@@ -215,7 +218,13 @@ export async function confirmPeriodIncome(
 				totalIncome,
 				incomeConfirmedAt: now
 			})
-			.where(and(eq(schema.monthlyPeriod.id, periodId), eq(schema.monthlyPeriod.userId, userId)))
+			.where(
+				and(
+					eq(schema.monthlyPeriod.id, periodId),
+					eq(schema.monthlyPeriod.userId, userId),
+					eq(schema.monthlyPeriod.status, 'active')
+				)
+			)
 	);
 
 	await db.batch(batchStatements as [(typeof batchStatements)[0], ...typeof batchStatements]);

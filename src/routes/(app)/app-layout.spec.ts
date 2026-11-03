@@ -128,6 +128,7 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		expect(emptyResult).toBeDefined();
 		if (!emptyResult) return;
 		expect(emptyResult.activePeriod).toBeNull();
+		expect(emptyResult.incomeConfirmedAt).toBeNull();
 		expect(emptyResult.incomeSources).toEqual([]);
 
 		// 2. When activePeriod and user exist
@@ -159,6 +160,7 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		expect(populatedResult).toBeDefined();
 		if (!populatedResult) return;
 		expect(populatedResult.activePeriod).toEqual(mockPeriod);
+		expect(populatedResult.incomeConfirmedAt).toBeNull();
 		expect(populatedResult.incomeSources).toEqual([]);
 	});
 });

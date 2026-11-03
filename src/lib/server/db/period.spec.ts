@@ -463,24 +463,24 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 
 		it('throws an error if incomeSources array is empty', async () => {
 			await expect(confirmPeriodIncome(proxy.env.DB, testUserId, periodId, [])).rejects.toThrow(
-				'Minimal harus memiliki satu sumber pemasukan.'
+				'Minimal harus memiliki satu Sumber Pemasukan.'
 			);
 		});
 
 		it('throws an error if an income source has an empty or whitespace name', async () => {
 			await expect(
 				confirmPeriodIncome(proxy.env.DB, testUserId, periodId, [{ name: '   ', amount: 5000000 }])
-			).rejects.toThrow('Nama sumber pemasukan tidak boleh kosong.');
+			).rejects.toThrow('Nama Sumber Pemasukan tidak boleh kosong.');
 		});
 
 		it('throws an error if an income source has amount <= 0', async () => {
 			await expect(
 				confirmPeriodIncome(proxy.env.DB, testUserId, periodId, [{ name: 'Bonus', amount: 0 }])
-			).rejects.toThrow('Nominal sumber pemasukan harus lebih besar dari 0.');
+			).rejects.toThrow('Nominal Sumber Pemasukan harus lebih besar dari 0.');
 
 			await expect(
 				confirmPeriodIncome(proxy.env.DB, testUserId, periodId, [{ name: 'Minus', amount: -50000 }])
-			).rejects.toThrow('Nominal sumber pemasukan harus lebih besar dari 0.');
+			).rejects.toThrow('Nominal Sumber Pemasukan harus lebih besar dari 0.');
 		});
 
 		it('throws an error if monthly period does not exist or belongs to another user', async () => {
@@ -488,7 +488,28 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 				confirmPeriodIncome(proxy.env.DB, 'another-user-id', periodId, [
 					{ name: 'Gaji', amount: 5000000 }
 				])
-			).rejects.toThrow('Periode bulanan tidak ditemukan.');
+			).rejects.toThrow('Periode Bulan tidak ditemukan atau tidak aktif.');
+		});
+
+		it('throws an error if monthly period is not in active status', async () => {
+			const completedPeriodId = 'p-completed-period';
+			await db.insert(monthlyPeriod).values({
+				id: completedPeriodId,
+				userId: testUserId,
+				startDate: '2026-08-25',
+				endDate: '2026-09-24',
+				payDay: 25,
+				totalIncome: 7000000,
+				status: 'completed',
+				incomeConfirmedAt: null,
+				createdAt: initialDate
+			});
+
+			await expect(
+				confirmPeriodIncome(proxy.env.DB, testUserId, completedPeriodId, [
+					{ name: 'Gaji', amount: 5000000 }
+				])
+			).rejects.toThrow('Periode Bulan tidak ditemukan atau tidak aktif.');
 		});
 	});
 });
