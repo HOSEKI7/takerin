@@ -1,5 +1,6 @@
 import type { LayoutServerLoad } from './$types.js';
 import { getIncomeSources } from '#lib/server/db/onboarding.js';
+import { confirmIncomeAction } from '#lib/server/actions/confirm-income.js';
 
 export const load: LayoutServerLoad = async ({ locals, platform }) => {
 	const d1 = platform?.env?.DB;
@@ -24,3 +25,9 @@ export const load: LayoutServerLoad = async ({ locals, platform }) => {
 		incomeSources
 	};
 };
+
+/**
+ * Monthly income confirmation action handler.
+ * Named with leading underscore to conform with SvelteKit's layout server exports rules.
+ */
+export const _confirmIncome = confirmIncomeAction;

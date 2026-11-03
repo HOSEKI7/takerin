@@ -1,6 +1,7 @@
-import type { PageServerLoad } from './$types.js';
+import type { PageServerLoad, Actions } from './$types.js';
 import { redirect } from '@sveltejs/kit';
 import { getDashboardData, calculateDashboardSummary } from '#lib/server/db/dashboard.js';
+import { confirmIncomeAction } from '#lib/server/actions/confirm-income.js';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
 	if (!locals.user) {
@@ -29,4 +30,10 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 		categories: dashboardData.categories,
 		recentExpenses: dashboardData.recentExpenses
 	};
+};
+
+export const actions: Actions = {
+	confirmIncome: async (event) => {
+		return confirmIncomeAction(event);
+	}
 };

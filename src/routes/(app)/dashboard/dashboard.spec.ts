@@ -10,7 +10,7 @@ vi.mock(import('#lib/server/db/dashboard.js'), async (importOriginal) => {
 	};
 });
 
-import { load } from './+page.server';
+import { load, actions } from './+page.server';
 
 describe('Dashboard Route Server (+page.server.ts)', () => {
 	beforeEach(() => {
@@ -209,5 +209,22 @@ describe('Dashboard Route Server (+page.server.ts)', () => {
 		await load(mockEvent);
 
 		expect(mockGetDashboardData).toHaveBeenCalledWith(expect.anything(), 'u-1', mockActivePeriod);
+	});
+
+	it('exports confirmIncome form action that delegates to confirmIncomeAction', async () => {
+		expect(actions).toBeDefined();
+		expect(actions.confirmIncome).toBeDefined();
+
+		// Calling without user rejects with redirect to login
+		await expect(
+			actions.confirmIncome({
+				locals: { user: null },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: { formData: async () => new FormData() }
+			} as unknown as Parameters<typeof actions.confirmIncome>[0])
+		).rejects.toMatchObject({
+			status: 303,
+			location: '/auth/login'
+		});
 	});
 });

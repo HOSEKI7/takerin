@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as periodDb from '#lib/server/db/period.js';
 
 describe('App Route Group & Centralized Layout (Issue #26)', () => {
 	const appDir = path.resolve('src/routes/(app)');
@@ -162,5 +163,216 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		expect(populatedResult.activePeriod).toEqual(mockPeriod);
 		expect(populatedResult.incomeConfirmedAt).toBeNull();
 		expect(populatedResult.incomeSources).toEqual([]);
+	});
+
+	it('integrates IncomeConfirmationModal as blocking gate in (app)/+layout.svelte (Issue #48)', () => {
+		const layoutPath = path.join(appDir, '+layout.svelte');
+		const content = fs.readFileSync(layoutPath, 'utf-8');
+
+		expect(content).toContain('IncomeConfirmationModal');
+		expect(content).toContain('<IncomeConfirmationModal');
+		expect(content).toContain('showIncomeGate');
+		expect(content).toContain('data.incomeSources');
+		expect(content).toContain('inert={showIncomeGate');
+		expect(content).toContain('beforeNavigate');
+	});
+
+	describe('confirmIncome Form Action (Issue #48)', () => {
+		it('redirects to login when unauthenticated', async () => {
+			const { _confirmIncome } = await import('./+layout.server.js');
+			expect(_confirmIncome).toBeDefined();
+
+			await expect(
+				_confirmIncome({
+					locals: { user: null, activePeriod: null },
+					platform: { env: { DB: {} as unknown as D1Database } },
+					request: { formData: async () => new FormData() }
+				} as unknown as Parameters<typeof _confirmIncome>[0])
+			).rejects.toMatchObject({
+				status: 303,
+				location: '/auth/login'
+			});
+		});
+
+		it('returns fail(500) when D1 database is unavailable (supporting bilingual messages)', async () => {
+			const { _confirmIncome } = await import('./+layout.server.js');
+
+			// Default / Indonesian
+			const resultId = await _confirmIncome({
+				locals: {
+					user: { id: 'u-1', email: 'user@example.com' },
+					activePeriod: { id: 'p-1', totalIncome: 5000000 }
+				},
+				platform: undefined,
+				request: { formData: async () => new FormData() },
+				cookies: { get: () => 'id' }
+			} as unknown as Parameters<typeof _confirmIncome>[0]);
+
+			expect(resultId).toMatchObject({
+				status: 500,
+				data: expect.objectContaining({ error: 'Database tidak tersedia.' })
+			});
+
+			// English
+			const resultEn = await _confirmIncome({
+				locals: {
+					user: { id: 'u-1', email: 'user@example.com' },
+					activePeriod: { id: 'p-1', totalIncome: 5000000 }
+				},
+				platform: undefined,
+				request: { formData: async () => new FormData() },
+				cookies: { get: () => 'en' }
+			} as unknown as Parameters<typeof _confirmIncome>[0]);
+
+			expect(resultEn).toMatchObject({
+				status: 500,
+				data: expect.objectContaining({ error: 'Database is unavailable.' })
+			});
+		});
+
+		it('returns fail(400) when no active period exists', async () => {
+			const { _confirmIncome } = await import('./+layout.server.js');
+			vi.spyOn(periodDb, 'ensureActivePeriod').mockResolvedValueOnce({
+				period: null,
+				transitioned: false
+			});
+
+			const formData = new FormData();
+			formData.set('incomeSources', JSON.stringify([{ name: 'Gaji', amount: 10000000 }]));
+
+			const result = await _confirmIncome({
+				locals: {
+					user: { id: 'u-1', email: 'user@example.com' },
+					activePeriod: null
+				},
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: { formData: async () => formData }
+			} as unknown as Parameters<typeof _confirmIncome>[0]);
+
+			expect(result).toMatchObject({
+				status: 400,
+				data: expect.objectContaining({ error: expect.any(String) })
+			});
+		});
+
+		it('returns fail(400) when incomeSources payload is invalid or empty', async () => {
+			const { _confirmIncome } = await import('./+layout.server.js');
+
+			// Empty string
+			const formDataEmpty = new FormData();
+			formDataEmpty.set('incomeSources', '');
+
+			const resEmpty = await _confirmIncome({
+				locals: {
+					user: { id: 'u-1', email: 'user@example.com' },
+					activePeriod: { id: 'p-1' }
+				},
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: { formData: async () => formDataEmpty }
+			} as unknown as Parameters<typeof _confirmIncome>[0]);
+
+			expect(resEmpty).toMatchObject({
+				status: 400
+			});
+
+			// Empty array
+			const formDataEmptyArr = new FormData();
+			formDataEmptyArr.set('incomeSources', '[]');
+
+			const resEmptyArr = await _confirmIncome({
+				locals: {
+					user: { id: 'u-1', email: 'user@example.com' },
+					activePeriod: { id: 'p-1' }
+				},
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: { formData: async () => formDataEmptyArr }
+			} as unknown as Parameters<typeof _confirmIncome>[0]);
+
+			expect(resEmptyArr).toMatchObject({
+				status: 400
+			});
+
+			// Item with empty name
+			const formDataInvalidName = new FormData();
+			formDataInvalidName.set('incomeSources', JSON.stringify([{ name: '  ', amount: 5000000 }]));
+
+			const resInvalidName = await _confirmIncome({
+				locals: {
+					user: { id: 'u-1', email: 'user@example.com' },
+					activePeriod: { id: 'p-1' }
+				},
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: { formData: async () => formDataInvalidName }
+			} as unknown as Parameters<typeof _confirmIncome>[0]);
+
+			expect(resInvalidName).toMatchObject({
+				status: 400
+			});
+
+			// Item with zero or negative amount
+			const formDataZero = new FormData();
+			formDataZero.set('incomeSources', JSON.stringify([{ name: 'Gaji', amount: 0 }]));
+
+			const resZero = await _confirmIncome({
+				locals: {
+					user: { id: 'u-1', email: 'user@example.com' },
+					activePeriod: { id: 'p-1' }
+				},
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: { formData: async () => formDataZero }
+			} as unknown as Parameters<typeof _confirmIncome>[0]);
+
+			expect(resZero).toMatchObject({
+				status: 400
+			});
+		});
+
+		it('confirms income, updates database and mutates locals.activePeriod successfully', async () => {
+			const { _confirmIncome } = await import('./+layout.server.js');
+			const confirmedAt = new Date();
+			const confirmSpy = vi.spyOn(periodDb, 'confirmPeriodIncome').mockResolvedValueOnce({
+				success: true,
+				totalIncome: 15000000,
+				incomeConfirmedAt: confirmedAt
+			});
+
+			const formData = new FormData();
+			formData.set(
+				'incomeSources',
+				JSON.stringify([
+					{ name: 'Gaji Utama', amount: 10000000 },
+					{ name: 'Freelance', amount: 5000000 }
+				])
+			);
+
+			const mockActivePeriod = {
+				id: 'p-1',
+				userId: 'u-1',
+				totalIncome: 10000000,
+				incomeConfirmedAt: null as Date | null
+			};
+
+			const result = await _confirmIncome({
+				locals: {
+					user: { id: 'u-1', email: 'user@example.com' },
+					activePeriod: mockActivePeriod
+				},
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: { formData: async () => formData }
+			} as unknown as Parameters<typeof _confirmIncome>[0]);
+
+			expect(confirmSpy).toHaveBeenCalledWith(expect.anything(), 'u-1', 'p-1', [
+				{ name: 'Gaji Utama', amount: 10000000 },
+				{ name: 'Freelance', amount: 5000000 }
+			]);
+
+			expect(result).toMatchObject({
+				success: true,
+				totalIncome: 15000000
+			});
+
+			expect(mockActivePeriod.totalIncome).toBe(15000000);
+			expect(mockActivePeriod.incomeConfirmedAt).toBe(confirmedAt);
+		});
 	});
 });
