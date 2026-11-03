@@ -3,16 +3,16 @@ import { getExpenses, countExpenses } from '#lib/server/db/expense.js';
 
 export const GET: RequestHandler = async ({ locals, platform, url }) => {
 	if (!locals?.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
+		return json({ error: 'Tidak terotentikasi' }, { status: 401 });
 	}
 
 	if (!platform?.env?.DB) {
-		return json({ error: 'Database unavailable' }, { status: 500 });
+		return json({ error: 'Database tidak tersedia' }, { status: 500 });
 	}
 
 	const periodId = url.searchParams.get('periodId') ?? locals.activePeriod?.id;
 	if (!periodId) {
-		return json({ error: 'Active period not found' }, { status: 400 });
+		return json({ error: 'Periode aktif tidak ditemukan' }, { status: 400 });
 	}
 
 	const categoryParam = url.searchParams.get('categoryId') || url.searchParams.get('category');

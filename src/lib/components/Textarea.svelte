@@ -35,7 +35,7 @@
 
 <div class="flex w-full flex-col gap-1.5 font-sans">
 	{#if label}
-		<label for={textareaId} class="block text-xs font-semibold text-charcoal dark:text-linen-mist">
+		<label for={textareaId} class="text-sm font-medium text-charcoal dark:text-stone-200">
 			{label}
 		</label>
 	{/if}
@@ -46,9 +46,9 @@
 		{rows}
 		{maxlength}
 		bind:value
-		class="w-full rounded-lg border border-fog bg-paper px-3.5 py-2 text-sm text-obsidian transition placeholder:text-pebble focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:placeholder:text-pebble dark:focus:border-lime-voltage dark:focus:ring-lime-voltage {error
+		class="w-full rounded-lg border px-3.5 py-2 text-sm text-obsidian transition placeholder:text-pebble focus:ring-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-dark-surface dark:text-paper dark:placeholder:text-pebble {error
 			? 'border-alarm-red focus:border-alarm-red focus:ring-alarm-red'
-			: ''} {className}"
+			: 'border-pebble focus:border-forest-ink focus:ring-forest-ink dark:border-dark-border dark:focus:border-lime-voltage dark:focus:ring-lime-voltage'} {className}"
 		{...restProps}></textarea>
 
 	{#if error || hint || displayCounter}

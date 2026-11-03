@@ -25,7 +25,7 @@ describe('GET /api/expenses Route Handler (Issue #41)', () => {
 
 		expect(res.status).toBe(401);
 		const json = await res.json();
-		expect(json).toEqual({ error: 'Unauthorized' });
+		expect(json).toEqual({ error: 'Tidak terotentikasi' });
 	});
 
 	it('returns 500 when database is unavailable', async () => {
@@ -38,7 +38,7 @@ describe('GET /api/expenses Route Handler (Issue #41)', () => {
 
 		expect(res.status).toBe(500);
 		const json = await res.json();
-		expect(json).toEqual({ error: 'Database unavailable' });
+		expect(json).toEqual({ error: 'Database tidak tersedia' });
 	});
 
 	it('returns 400 when periodId is missing and no activePeriod exists', async () => {
@@ -51,7 +51,7 @@ describe('GET /api/expenses Route Handler (Issue #41)', () => {
 
 		expect(res.status).toBe(400);
 		const json = await res.json();
-		expect(json).toEqual({ error: 'Active period not found' });
+		expect(json).toEqual({ error: 'Periode aktif tidak ditemukan' });
 	});
 
 	it('returns paginated expenses with hasMore flag', async () => {

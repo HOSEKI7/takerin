@@ -501,7 +501,7 @@
 													min="1"
 													max="100"
 													step="0.5"
-													inputmode="numeric"
+													inputmode="decimal"
 													bind:value={cat.percentage}
 													required
 													class="w-full rounded-lg border border-fog bg-paper px-1.5 py-0.5 text-right font-mono text-xs font-bold text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
@@ -815,7 +815,7 @@
 													min="0"
 													max={c.percentage - 0.5}
 													step="0.5"
-													inputmode="numeric"
+													inputmode="decimal"
 													bind:value={manualReductions[key]}
 													class="w-16 rounded-lg border border-fog bg-paper px-2 py-1 text-right font-mono text-xs dark:border-dark-border dark:bg-dark-card"
 												/>
@@ -925,7 +925,7 @@
 											min="0"
 											max="100"
 											step="0.5"
-											inputmode="numeric"
+											inputmode="decimal"
 											bind:value={manualAllocations[key]}
 											class="w-16 rounded-lg border border-fog bg-paper px-2 py-1 text-right font-mono text-xs dark:border-dark-border dark:bg-dark-card"
 										/>

@@ -445,7 +445,7 @@
 		"deleteFailed": "Failed to delete expense.",
 		"loadMore": "Load More",
 		"loadingMore": "Loading...",
-		"allLoaded": "All expenses loaded"
+		"loadMoreError": "Failed to load more expenses."
 	},
 	"categories": {
 		"title": "Category Management",

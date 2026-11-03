@@ -29,16 +29,19 @@
 	let hasMore = $state(false);
 	let totalCount = $state(0);
 	let isLoadingMore = $state(false);
+	let loadMoreError = $state<string | null>(null);
 
 	$effect(() => {
 		displayedExpenses = [...data.expenses];
 		hasMore = data.hasMore;
 		totalCount = data.totalCount;
+		loadMoreError = null;
 	});
 
 	async function handleLoadMore() {
 		if (isLoadingMore || !hasMore || !data.period) return;
 		isLoadingMore = true;
+		loadMoreError = null;
 
 		try {
 			const queryParts = [
@@ -64,6 +67,7 @@
 			}
 		} catch (e) {
 			console.error(e);
+			loadMoreError = t('expenses.loadMoreError');
 		} finally {
 			isLoadingMore = false;
 		}
@@ -145,7 +149,7 @@
 		>
 			<span>{t('common.all')}</span>
 			<span class="py-0.2 rounded-full bg-paper/20 px-1.5 text-[10px] dark:bg-dark-surface/40">
-				{totalCount}
+				{data.allExpensesCount ?? totalCount}
 			</span>
 		</button>
 
@@ -287,7 +291,7 @@
 		</div>
 
 		{#if hasMore}
-			<div class="flex justify-center pt-6 pb-2">
+			<div class="flex flex-col items-center justify-center pt-6 pb-2">
 				<Button
 					type="button"
 					variant="secondary"
@@ -306,6 +310,12 @@
 						<span>{t('expenses.loadMore')}</span>
 					{/if}
 				</Button>
+
+				{#if loadMoreError}
+					<p role="alert" class="mt-2 text-xs font-medium text-alarm-red">
+						{loadMoreError}
+					</p>
+				{/if}
 			</div>
 		{/if}
 	{/if}

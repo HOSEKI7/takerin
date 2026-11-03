@@ -194,11 +194,13 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 				expenses: Array<{ id: string; name: string }>;
 				selectedCategory: string;
 				totalCount: number;
+				allExpensesCount: number;
 				hasMore: boolean;
 			};
 			expect(data.expenses).toHaveLength(1);
 			expect(data.selectedCategory).toBe('c-1');
 			expect(data.totalCount).toBe(1);
+			expect(data.allExpensesCount).toBe(1);
 			expect(data.hasMore).toBe(false);
 			expect(mockGetExpenses).toHaveBeenCalledWith(
 				expect.anything(),

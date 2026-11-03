@@ -445,7 +445,7 @@
 		"deleteFailed": "Gagal menghapus pengeluaran.",
 		"loadMore": "Muat Lebih Banyak",
 		"loadingMore": "Memuat...",
-		"allLoaded": "Semua pengeluaran telah dimuat"
+		"loadMoreError": "Gagal memuat pengeluaran tambahan."
 	},
 	"categories": {
 		"title": "Manajemen Kategori",

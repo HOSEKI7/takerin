@@ -15,6 +15,7 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 			categories: [],
 			expenses: [],
 			totalCount: 0,
+			allExpensesCount: 0,
 			hasMore: false,
 			selectedCategory: ''
 		};
@@ -33,7 +34,7 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	const selectedCategory = url.searchParams.get('category') ?? '';
 	const limit = 20;
 
-	const [expenses, totalCount] = await Promise.all([
+	const [expenses, totalCount, rawAllCount] = await Promise.all([
 		getExpenses(platform.env.DB, {
 			userId: locals.user.id,
 			periodId: dashboardData.period.id,
@@ -45,8 +46,16 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 			userId: locals.user.id,
 			periodId: dashboardData.period.id,
 			categoryId: selectedCategory || undefined
-		})
+		}),
+		selectedCategory
+			? countExpenses(platform.env.DB, {
+					userId: locals.user.id,
+					periodId: dashboardData.period.id
+				})
+			: 0
 	]);
+
+	const allExpensesCount = selectedCategory ? rawAllCount : totalCount;
 
 	return {
 		period: dashboardData.period,
@@ -54,6 +63,7 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 		categories: dashboardData.categories,
 		expenses,
 		totalCount,
+		allExpensesCount,
 		hasMore: totalCount > limit,
 		selectedCategory
 	};
