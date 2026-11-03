@@ -34,11 +34,7 @@
 		onConfirm
 	}: Props = $props();
 
-	interface SourceState {
-		id: string;
-		name: string;
-		amount: number | string;
-	}
+	type SourceState = Required<Pick<IncomeSourceItem, 'id' | 'name' | 'amount'>>;
 
 	interface FieldErrors {
 		name?: string;
@@ -73,13 +69,15 @@
 	let internalSubmitting = $state(false);
 	let modalContainer = $state<HTMLElement | null>(null);
 
-	// Sync when initialSources changes and modal opens
+	// Synchronize on modal opening transition (false -> true) only, preserving active user typing
+	let wasOpen = false;
 	$effect(() => {
-		if (isOpen) {
-			sources = initializeSources(initialSources);
+		if (isOpen && !wasOpen) {
+			sources = untrack(() => initializeSources(initialSources));
 			rowErrors = {};
 			formError = null;
 		}
+		wasOpen = isOpen;
 	});
 
 	const isBusy = $derived(externalSubmitting || internalSubmitting);
@@ -135,7 +133,6 @@
 		}
 
 		rowErrors = errors;
-		formError = hasError ? null : null;
 		return !hasError;
 	}
 
@@ -250,13 +247,13 @@
 			transition:scale={{ start: 0.95, duration: 200 }}
 			class="relative z-10 flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-fog bg-paper shadow-2xl transition-all sm:rounded-[28px] dark:border-dark-border dark:bg-dark-surface"
 		>
-			<!-- Header Celebration Block (Flat design, no gradient) -->
+			<!-- Header Celebration Block (Flat design, no gradient, no drop shadow) -->
 			<div
 				class="border-b border-fog/80 bg-linen-mist/30 p-5 text-center sm:p-6 dark:border-dark-border/80 dark:bg-dark-card/50"
 			>
 				<!-- Badge -->
 				<div
-					class="mb-3 inline-flex items-center gap-1.5 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink shadow-xs dark:bg-spruce/60 dark:text-lime-voltage"
+					class="mb-3 inline-flex items-center gap-1.5 rounded-full bg-linen-mist px-3 py-1 text-xs font-bold text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage"
 				>
 					<HugeiconsIcon
 						icon={Coins01Icon}
@@ -269,7 +266,7 @@
 				<!-- Title & Description -->
 				<h2
 					id="income-confirmation-title"
-					class="font-display text-2xl font-black tracking-tight text-obsidian sm:text-3xl dark:text-white"
+					class="font-display text-2xl font-black tracking-tight text-obsidian sm:text-3xl dark:text-paper"
 				>
 					{t('incomeConfirmation.title')}
 				</h2>
@@ -295,11 +292,13 @@
 						return;
 					}
 
-					internalSubmitting = true;
-
 					if (onConfirm) {
 						onConfirm(normalizeSources(sources));
+						cancel();
+						return;
 					}
+
+					internalSubmitting = true;
 
 					return async ({ update }) => {
 						internalSubmitting = false;
@@ -315,7 +314,7 @@
 					{#if formError}
 						<div
 							role="alert"
-							class="rounded-xl border border-alarm-red/20 bg-alarm-red/10 p-3.5 text-xs font-semibold text-alarm-red dark:bg-alarm-red/15 dark:text-red-300"
+							class="rounded-xl border border-alarm-red/20 bg-alarm-red/10 p-3.5 text-xs font-semibold text-alarm-red dark:bg-alarm-red/15 dark:text-alarm-red"
 						>
 							{formError}
 						</div>
@@ -351,7 +350,7 @@
 										aria-label={t('incomeConfirmation.removeSourceAria', {
 											name: source.name || t('incomeConfirmation.nameLabel')
 										})}
-										class="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate transition hover:bg-alarm-red/10 hover:text-alarm-red focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30 dark:text-pebble dark:hover:bg-alarm-red/20 dark:hover:text-red-400 dark:focus-visible:ring-lime-voltage"
+										class="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate transition hover:bg-alarm-red/10 hover:text-alarm-red focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30 dark:text-pebble dark:hover:bg-alarm-red/20 dark:hover:text-alarm-red dark:focus-visible:ring-lime-voltage"
 									>
 										<HugeiconsIcon icon={Delete02Icon} size={15} />
 									</button>
@@ -382,7 +381,7 @@
 										{#if errors?.name}
 											<p
 												id="source-name-error-{source.id}"
-												class="text-[11px] font-semibold text-alarm-red dark:text-red-400"
+												class="text-[11px] font-semibold text-alarm-red dark:text-alarm-red"
 											>
 												{errors.name}
 											</p>
@@ -417,7 +416,7 @@
 										{#if errors?.amount}
 											<p
 												id="source-amount-error-{source.id}"
-												class="text-[11px] font-semibold text-alarm-red dark:text-red-400"
+												class="text-[11px] font-semibold text-alarm-red dark:text-alarm-red"
 											>
 												{errors.amount}
 											</p>

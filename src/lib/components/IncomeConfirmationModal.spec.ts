@@ -112,7 +112,7 @@ describe('IncomeConfirmationModal Component (Seam 3)', () => {
 		expect(html).toContain('Konfirmasi &amp; Lanjutkan');
 	});
 
-	it('adheres to Wise design system tokens (10px input radius, no gradients, no button shadow)', () => {
+	it('adheres to Wise design system tokens (10px input radius, no gradients, no button shadow, no shadow-xs)', () => {
 		const { html } = render(IncomeConfirmationModal, {
 			props: { isOpen: true, initialSources: mockSources }
 		});
@@ -123,6 +123,11 @@ describe('IncomeConfirmationModal Component (Seam 3)', () => {
 		expect(html).not.toContain('bg-linear-to-b');
 		// Primary CTA pill button has no drop shadow
 		expect(html).not.toContain('shadow-md');
+		// Flat badge, no shadow-xs
+		expect(html).not.toContain('shadow-xs');
+		// Token text color
+		expect(html).not.toContain('dark:text-white');
+		expect(html).toContain('dark:text-paper');
 	});
 
 	it('supports English translation when locale is en', async () => {
