@@ -16,8 +16,8 @@
 	const showIncomeGate = $derived(Boolean(data.activePeriod && data.incomeConfirmedAt === null));
 
 	// Prevent client-side navigation bypass while gate is active
-	beforeNavigate(({ cancel }) => {
-		if (showIncomeGate) {
+	beforeNavigate(({ cancel, type }) => {
+		if (showIncomeGate && !isLoggingOut && (type === 'link' || type === 'popstate')) {
 			cancel();
 		}
 	});

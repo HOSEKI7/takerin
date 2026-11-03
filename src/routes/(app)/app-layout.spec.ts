@@ -175,6 +175,7 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		expect(content).toContain('data.incomeSources');
 		expect(content).toContain('inert={showIncomeGate');
 		expect(content).toContain('beforeNavigate');
+		expect(content).toContain("type === 'link' || type === 'popstate'");
 	});
 
 	describe('confirmIncome Form Action (Issue #48)', () => {

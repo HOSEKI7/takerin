@@ -302,7 +302,7 @@
 
 					return async ({ update }) => {
 						internalSubmitting = false;
-						await update();
+						await update({ reset: false });
 					};
 				}}
 				class="flex flex-1 flex-col overflow-hidden"
