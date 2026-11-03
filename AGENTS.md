@@ -30,6 +30,10 @@ Takerin is a bilingual application (Bahasa Indonesia & English). Every user-faci
 
 My device os is Mac OS on **MacBook Air M1 Apple Silicon**, everything is running on default zsh terminal (unix).
 
+## Design
+
+Always follow DESIGN.md and and tokens.json for design system when designing or developing any frontend ui.  
+
 ## Working agreement
 
 - **Communication language**: All shipped output explanations, chat responses, and task summaries are written in Bahasa Indonesia (even if prompted in English).
