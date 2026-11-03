@@ -20,6 +20,10 @@ _Avoid_: Salary, gaji (terlalu spesifik — tidak semua pemasukan berasal dari g
 Total dari semua Sumber Pemasukan. Menjadi basis perhitungan alokasi persentase ke setiap Kategori.
 _Avoid_: Total income, budget total
 
+**Konfirmasi Pemasukan Bulanan (Monthly Income Confirmation)**:
+Dialog pemblokir interaktif yang muncul pertama kali saat pengguna membuka aplikasi setelah Tanggal Gajian untuk memverifikasi atau memperbarui daftar Sumber Pemasukan pada Periode Bulan yang baru dimulai.
+_Avoid_: Popup gaji, konfirmasi salary, alert gajian
+
 **Kategori (Category)**:
 Pos alokasi budget dengan nama dan persentase dari Pemasukan Bulanan. Jumlah persentase semua Kategori aktif harus selalu 100%. Setiap Kategori memiliki flag apakah termasuk Kategori Tabungan atau bukan.
 _Avoid_: Pos, envelope, bucket
