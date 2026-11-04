@@ -2,6 +2,7 @@
 	import type { PageProps } from './$types.js';
 	import Button from '#lib/components/Button.svelte';
 	import Card from '#lib/components/Card.svelte';
+	import Badge from '#lib/components/Badge.svelte';
 	import ProgressBar from '#lib/components/ProgressBar.svelte';
 	import { resolve } from '$app/paths';
 	import { formatRupiah, formatDate } from '#lib/validation/onboarding.js';
@@ -225,6 +226,65 @@
 					</p>
 				</div>
 			</div>
+		</Card>
+	</div>
+
+	<!-- Income Sources Breakdown Section -->
+	<div class="mb-8">
+		<div class="mb-4">
+			<h2 class="text-lg font-bold text-obsidian sm:text-xl dark:text-paper">
+				{t('history.incomeBreakdown')}
+			</h2>
+			<p class="text-xs text-slate dark:text-pebble">
+				{t('history.incomeBreakdownSubtitle')}
+			</p>
+		</div>
+
+		<Card variant="default" class="p-5 sm:p-6">
+			<div class="mb-4 flex items-center justify-between border-b border-fog pb-4 dark:border-dark-border">
+				<div class="flex items-center gap-2.5">
+					<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-voltage/20 text-forest-ink dark:text-lime-voltage">
+						<HugeiconsIcon icon={Coins01Icon} class="h-4 w-4" />
+					</div>
+					<span class="text-sm font-bold text-obsidian dark:text-paper">
+						{t('incomes.sourcesSectionTitle')}
+					</span>
+				</div>
+				<Badge variant="neutral" class="text-xs">
+					{t('incomes.totalSourcesCount', { count: data.incomeSources?.length ?? 0 })}
+				</Badge>
+			</div>
+
+			{#if !data.incomeSources || data.incomeSources.length === 0}
+				<p class="py-6 text-center text-sm text-slate dark:text-pebble">
+					{t('history.noIncomeSources')}
+				</p>
+			{:else}
+				<ul class="divide-y divide-fog/60 dark:divide-dark-border/60">
+					{#each data.incomeSources as source, index (source.id ?? index)}
+						<li class="flex items-center justify-between py-3.5 first:pt-0 last:pb-0">
+							<div class="flex items-center gap-3">
+								<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-fog text-slate dark:bg-dark-surface dark:text-pebble">
+									<HugeiconsIcon icon={Coins01Icon} class="h-4 w-4" />
+								</div>
+								<div>
+									<p class="font-medium text-obsidian dark:text-paper">
+										{source.name}
+									</p>
+									<p class="text-xs text-slate dark:text-pebble">
+										{t('incomes.sourceItem', { index: index + 1 })}
+									</p>
+								</div>
+							</div>
+							<div class="text-right">
+								<span class="font-heading text-base font-bold text-forest-ink dark:text-lime-voltage">
+									{formatRupiah(source.amount)}
+								</span>
+							</div>
+						</li>
+					{/each}
+				</ul>
+			{/if}
 		</Card>
 	</div>
 

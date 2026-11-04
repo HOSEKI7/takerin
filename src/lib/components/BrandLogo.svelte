@@ -59,6 +59,11 @@
 			gap: 'gap-3.5 sm:gap-4'
 		}
 	};
+
+	function toResolvedHref(target: StaticRoute): string {
+		// @ts-expect-error SvelteKit resolve requires literal tuple argument
+		return resolve(target);
+	}
 </script>
 
 {#snippet logoBody()}
@@ -127,7 +132,7 @@
 
 {#if href}
 	<a
-		href={resolve(href)}
+		href={toResolvedHref(href)}
 		class="group inline-flex items-center rounded-lg transition-opacity outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:ring-offset-2 dark:focus-visible:ring-lime-voltage dark:focus-visible:ring-offset-dark-surface {className}"
 		{...restProps}
 	>

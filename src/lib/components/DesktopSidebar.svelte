@@ -19,6 +19,7 @@
 	import {
 		LayoutDashboardIcon,
 		Wallet01Icon,
+		Coins01Icon,
 		Layers01Icon,
 		Calendar01Icon,
 		Settings01Icon,
@@ -104,6 +105,12 @@
 			href: resolve('/(app)/expenses'),
 			label: t('nav.expenses'),
 			icon: Wallet01Icon,
+			exact: false
+		},
+		{
+			href: resolve('/(app)/incomes'),
+			label: t('nav.incomes'),
+			icon: Coins01Icon,
 			exact: false
 		},
 		{

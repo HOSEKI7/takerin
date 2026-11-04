@@ -10,6 +10,7 @@ export interface BreadcrumbItem {
 const SEGMENT_LABELS: Record<string, { id: string; en: string }> = {
 	dashboard: { id: 'Dashboard', en: 'Dashboard' },
 	expenses: { id: 'Pengeluaran', en: 'Expenses' },
+	incomes: { id: 'Pemasukan', en: 'Income' },
 	categories: { id: 'Kategori', en: 'Categories' },
 	history: { id: 'Riwayat', en: 'History' },
 	settings: { id: 'Pengaturan', en: 'Settings' }
@@ -32,6 +33,12 @@ const SUB_ROUTE_CONFIGS: SubRouteConfig[] = [
 			new: { id: 'Catat Baru', en: 'New Expense' }
 		},
 		defaultDetailLabel: { id: 'Detail Pengeluaran', en: 'Expense Detail' }
+	},
+	{
+		prefix: '/incomes',
+		parentLabel: { id: 'Pemasukan', en: 'Income' },
+		parentHref: resolve('/(app)/incomes'),
+		defaultDetailLabel: { id: 'Detail Pemasukan', en: 'Income Detail' }
 	},
 	{
 		prefix: '/categories',

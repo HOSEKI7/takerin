@@ -85,16 +85,21 @@ export const userSettings = sqliteTable('user_settings', {
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
 });
 
-export const incomeSource = sqliteTable('income_source', {
-	id: text('id').primaryKey(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' }),
-	name: text('name').notNull(),
-	amount: integer('amount').notNull(),
-	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-	updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
-});
+export const incomeSource = sqliteTable(
+	'income_source',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		periodId: text('period_id').references(() => monthlyPeriod.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		amount: integer('amount').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+	},
+	(table) => [index('income_source_user_id_period_id_idx').on(table.userId, table.periodId)]
+);
 
 export const categoryTemplate = sqliteTable('category_template', {
 	id: text('id').primaryKey(),

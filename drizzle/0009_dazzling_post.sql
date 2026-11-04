@@ -1,0 +1,2 @@
+ALTER TABLE `income_source` ADD `period_id` text REFERENCES monthly_period(id) ON DELETE cascade;--> statement-breakpoint
+CREATE INDEX `income_source_user_id_period_id_idx` ON `income_source` (`user_id`,`period_id`);

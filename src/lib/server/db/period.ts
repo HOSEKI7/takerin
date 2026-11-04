@@ -1,4 +1,4 @@
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, isNull } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
 import { isPeriodExpired, calculateCurrentPeriodDates } from '#lib/validation/period.js';
@@ -69,11 +69,29 @@ export async function ensureActivePeriod(
 			and(eq(schema.category.periodId, activePeriod.id), eq(schema.category.status, 'active'))
 		);
 
-	// Fetch income sources to compute total_income for new period
-	const incomeSources = await db
+	// Fetch income sources from old active period to clone to new period
+	let incomeSources = await db
 		.select()
 		.from(schema.incomeSource)
-		.where(eq(schema.incomeSource.userId, userId));
+		.where(
+			and(
+				eq(schema.incomeSource.userId, userId),
+				eq(schema.incomeSource.periodId, activePeriod.id)
+			)
+		);
+
+	// Fallback for legacy records without periodId
+	if (incomeSources.length === 0) {
+		incomeSources = await db
+			.select()
+			.from(schema.incomeSource)
+			.where(
+				and(
+					eq(schema.incomeSource.userId, userId),
+					isNull(schema.incomeSource.periodId)
+				)
+			);
+	}
 
 	const totalIncome =
 		incomeSources.length > 0 ? calculateTotalIncome(incomeSources) : activePeriod.totalIncome;
@@ -122,6 +140,21 @@ export async function ensureActivePeriod(
 		}));
 
 		batchStatements.push(db.insert(schema.category).values(newCategories));
+	}
+
+	// Clone income sources to the new period
+	if (incomeSources.length > 0) {
+		const newIncomeSources = incomeSources.map((s) => ({
+			id: crypto.randomUUID(),
+			userId,
+			periodId: newPeriodId,
+			name: s.name,
+			amount: s.amount,
+			createdAt: now,
+			updatedAt: now
+		}));
+
+		batchStatements.push(db.insert(schema.incomeSource).values(newIncomeSources));
 	}
 
 	await db.batch(batchStatements as [(typeof batchStatements)[0], ...typeof batchStatements]);
@@ -192,6 +225,7 @@ export async function confirmPeriodIncome(
 	const newSources = incomeSources.map((source) => ({
 		id: crypto.randomUUID(),
 		userId,
+		periodId,
 		name: source.name.trim(),
 		amount: Math.round(Number(source.amount)),
 		createdAt: now,
@@ -202,9 +236,16 @@ export async function confirmPeriodIncome(
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const batchStatements: any[] = [];
 
-	// 1. Delete old income sources
+	// 1. Delete old income sources scoped to this active period
 	batchStatements.push(
-		db.delete(schema.incomeSource).where(eq(schema.incomeSource.userId, userId))
+		db
+			.delete(schema.incomeSource)
+			.where(
+				and(
+					eq(schema.incomeSource.userId, userId),
+					eq(schema.incomeSource.periodId, periodId)
+				)
+			)
 	);
 
 	// 2. Insert new income sources
@@ -234,4 +275,24 @@ export async function confirmPeriodIncome(
 		totalIncome,
 		incomeConfirmedAt: now
 	};
+}
+
+/**
+ * Fetches all income sources belonging to a specific monthly period.
+ */
+export async function getPeriodIncomeSources(
+	d1: D1Database,
+	userId: string,
+	periodId: string
+) {
+	const db = getDb(d1);
+	return db
+		.select()
+		.from(schema.incomeSource)
+		.where(
+			and(
+				eq(schema.incomeSource.userId, userId),
+				eq(schema.incomeSource.periodId, periodId)
+			)
+		);
 }

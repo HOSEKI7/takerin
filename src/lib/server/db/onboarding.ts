@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
 import {
@@ -99,10 +99,36 @@ export async function getUserSettings(d1: D1Database, userId: string) {
 }
 
 /**
- * Retrieves all income sources for a given user.
+ * Retrieves all income sources for a given user, optionally scoped to a specific period.
+ * Falls back to legacy income sources (periodId IS NULL) if no period-specific sources are found.
  */
-export async function getIncomeSources(d1: D1Database, userId: string) {
+export async function getIncomeSources(d1: D1Database, userId: string, periodId?: string) {
 	const db = getDb(d1);
+	if (periodId) {
+		const periodSources = await db
+			.select()
+			.from(schema.incomeSource)
+			.where(
+				and(
+					eq(schema.incomeSource.userId, userId),
+					eq(schema.incomeSource.periodId, periodId)
+				)
+			);
+		if (periodSources.length > 0) {
+			return periodSources;
+		}
+
+		// Fallback only for legacy records without periodId
+		return db
+			.select()
+			.from(schema.incomeSource)
+			.where(
+				and(
+					eq(schema.incomeSource.userId, userId),
+					isNull(schema.incomeSource.periodId)
+				)
+			);
+	}
 	return db.select().from(schema.incomeSource).where(eq(schema.incomeSource.userId, userId));
 }
 
@@ -240,18 +266,6 @@ export async function completeOnboarding(
 		db.delete(schema.incomeSource).where(eq(schema.incomeSource.userId, userId))
 	);
 
-	if (data.incomeSources.length > 0) {
-		const newSources = data.incomeSources.map((source) => ({
-			id: crypto.randomUUID(),
-			userId,
-			name: source.name.trim(),
-			amount: Math.round(Number(source.amount)),
-			createdAt: now,
-			updatedAt: now
-		}));
-		batchStatements.push(db.insert(schema.incomeSource).values(newSources));
-	}
-
 	batchStatements.push(
 		db.insert(schema.monthlyPeriod).values({
 			id: periodId,
@@ -265,6 +279,19 @@ export async function completeOnboarding(
 			createdAt: now
 		})
 	);
+
+	if (data.incomeSources.length > 0) {
+		const newSources = data.incomeSources.map((source) => ({
+			id: crypto.randomUUID(),
+			userId,
+			periodId,
+			name: source.name.trim(),
+			amount: Math.round(Number(source.amount)),
+			createdAt: now,
+			updatedAt: now
+		}));
+		batchStatements.push(db.insert(schema.incomeSource).values(newSources));
+	}
 
 	if (data.categories.length > 0) {
 		const newCategories = data.categories.map((c) => ({

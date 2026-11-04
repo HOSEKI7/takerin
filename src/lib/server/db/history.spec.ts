@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index';
-import { user, monthlyPeriod, category, expense } from './schema';
+import { user, monthlyPeriod, category, expense, incomeSource } from './schema';
 import { getCompletedPeriods, getCompletedPeriodDetail, savePeriodAiSummary } from './history';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,9 +20,9 @@ describe('History D1 Database Operations (Seam 2)', () => {
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS admin_invitations;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS expense;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS income_source;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS monthly_period;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category_template;');
-		await proxy.env.DB.exec('DROP TABLE IF EXISTS income_source;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS user_settings;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS two_factor;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS verification;');
@@ -65,6 +65,7 @@ describe('History D1 Database Operations (Seam 2)', () => {
 	beforeEach(async () => {
 		await proxy.env.DB.exec('DELETE FROM expense;');
 		await proxy.env.DB.exec('DELETE FROM category;');
+		await proxy.env.DB.exec('DELETE FROM income_source;');
 		await proxy.env.DB.exec('DELETE FROM monthly_period;');
 		await proxy.env.DB.exec('DELETE FROM user;');
 
@@ -294,6 +295,57 @@ describe('History D1 Database Operations (Seam 2)', () => {
 		expect(detail?.aiAggregateData.categories).toHaveLength(3);
 		expect(detail?.aiAggregateData.totalIncome).toBe(10000000);
 		expect(detail?.aiAggregateData.totalSpent).toBe(2000000);
+	});
+
+	it('includes historical income sources bound to the completed period', async () => {
+		const now = new Date();
+		const periodId = 'period-detail-income-sources';
+
+		await db.insert(monthlyPeriod).values({
+			id: periodId,
+			userId: testUserId,
+			startDate: '2026-01-25',
+			endDate: '2026-02-24',
+			payDay: 25,
+			totalIncome: 12000000,
+			status: 'completed',
+			aiSummary: null,
+			createdAt: now
+		});
+
+		// Insert income sources bound to this period
+		await db.insert(incomeSource).values([
+			{
+				id: 'inc-1',
+				userId: testUserId,
+				periodId,
+				name: 'Gaji Pokok',
+				amount: 10000000,
+				createdAt: now,
+				updatedAt: now
+			},
+			{
+				id: 'inc-2',
+				userId: testUserId,
+				periodId,
+				name: 'Freelance Design',
+				amount: 2000000,
+				createdAt: now,
+				updatedAt: now
+			}
+		]);
+
+		const detail = await getCompletedPeriodDetail(proxy.env.DB, testUserId, periodId);
+
+		expect(detail).not.toBeNull();
+		expect(detail?.incomeSources).toBeDefined();
+		expect(detail?.incomeSources).toHaveLength(2);
+		expect(detail?.incomeSources).toEqual(
+			expect.arrayContaining([
+				{ id: 'inc-1', name: 'Gaji Pokok', amount: 10000000 },
+				{ id: 'inc-2', name: 'Freelance Design', amount: 2000000 }
+			])
+		);
 	});
 
 	it('returns null if period is not found or belongs to another user', async () => {

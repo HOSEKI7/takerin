@@ -8,7 +8,7 @@ export const load: LayoutServerLoad = async ({ locals, platform }) => {
 
 	if (d1 && locals.user?.id) {
 		try {
-			const sources = await getIncomeSources(d1, locals.user.id);
+			const sources = await getIncomeSources(d1, locals.user.id, locals.activePeriod?.id);
 			incomeSources = sources.map((s) => ({
 				id: s.id,
 				name: s.name,

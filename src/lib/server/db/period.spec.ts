@@ -2,10 +2,10 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index';
 import { user, userSettings, incomeSource, monthlyPeriod, category, expense } from './schema';
-import { ensureActivePeriod, confirmPeriodIncome } from './period';
+import { ensureActivePeriod, confirmPeriodIncome, getPeriodIncomeSources } from './period';
 import fs from 'node:fs';
 import path from 'node:path';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 	let proxy: Awaited<ReturnType<typeof getPlatformProxy<Env>>>;
@@ -20,9 +20,9 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS admin_invitations;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS expense;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS income_source;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS monthly_period;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category_template;');
-		await proxy.env.DB.exec('DROP TABLE IF EXISTS income_source;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS user_settings;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS two_factor;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS verification;');
@@ -81,8 +81,8 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 		// Clear user-specific tables
 		await db.delete(expense);
 		await db.delete(category);
-		await db.delete(monthlyPeriod);
 		await db.delete(incomeSource);
+		await db.delete(monthlyPeriod);
 		await db.delete(userSettings);
 	});
 
@@ -133,25 +133,6 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 			updatedAt: oldDate
 		});
 
-		await db.insert(incomeSource).values([
-			{
-				id: 'inc-1',
-				userId: testUserId,
-				name: 'Gaji Pokok',
-				amount: 8000000,
-				createdAt: oldDate,
-				updatedAt: oldDate
-			},
-			{
-				id: 'inc-2',
-				userId: testUserId,
-				name: 'Freelance',
-				amount: 2000000,
-				createdAt: oldDate,
-				updatedAt: oldDate
-			}
-		]);
-
 		await db.insert(monthlyPeriod).values({
 			id: oldPeriodId,
 			userId: testUserId,
@@ -162,6 +143,27 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 			status: 'active',
 			createdAt: oldDate
 		});
+
+		await db.insert(incomeSource).values([
+			{
+				id: 'inc-1',
+				userId: testUserId,
+				periodId: oldPeriodId,
+				name: 'Gaji Pokok',
+				amount: 8000000,
+				createdAt: oldDate,
+				updatedAt: oldDate
+			},
+			{
+				id: 'inc-2',
+				userId: testUserId,
+				periodId: oldPeriodId,
+				name: 'Freelance',
+				amount: 2000000,
+				createdAt: oldDate,
+				updatedAt: oldDate
+			}
+		]);
 
 		// Categories in old period: 2 active, 1 frozen
 		const activeCat1Id = 'cat-active-1';
@@ -254,6 +256,22 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 			.from(expense)
 			.where(eq(expense.periodId, result.period!.id));
 		expect(newExpenses).toHaveLength(0);
+
+		// Verify income sources cloned to new period
+		const newIncomeSources = await db
+			.select()
+			.from(incomeSource)
+			.where(and(eq(incomeSource.userId, testUserId), eq(incomeSource.periodId, result.period!.id)));
+		expect(newIncomeSources).toHaveLength(2);
+		expect(newIncomeSources.map((s) => s.name)).toEqual(expect.arrayContaining(['Gaji Pokok', 'Freelance']));
+		expect(newIncomeSources.map((s) => s.amount)).toEqual(expect.arrayContaining([8000000, 2000000]));
+
+		// Verify old income sources remained untouched (immutable history)
+		const oldIncomeSources = await db
+			.select()
+			.from(incomeSource)
+			.where(and(eq(incomeSource.userId, testUserId), eq(incomeSource.periodId, oldPeriodId)));
+		expect(oldIncomeSources).toHaveLength(2);
 	});
 
 	it('handles pay day fallback (payDay = 31 in a 30-day month) during transition', async () => {
@@ -388,6 +406,7 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 
 	describe('confirmPeriodIncome Atomic D1 Mutation', () => {
 		const periodId = 'p-confirm-test-1';
+		const pastPeriodId = 'past-period-confirmed';
 		const startDate = '2026-10-25';
 		const endDate = '2026-11-24';
 		const initialDate = new Date('2026-10-25T00:00:00Z');
@@ -406,10 +425,34 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 				createdAt: initialDate
 			});
 
-			// Seed initial income source
+			// Seed a past completed period with its own income source
+			await db.insert(monthlyPeriod).values({
+				id: pastPeriodId,
+				userId: testUserId,
+				startDate: '2026-08-25',
+				endDate: '2026-09-24',
+				payDay: 25,
+				totalIncome: 6000000,
+				status: 'completed',
+				incomeConfirmedAt: initialDate,
+				createdAt: initialDate
+			});
+
+			await db.insert(incomeSource).values({
+				id: 'inc-past-1',
+				userId: testUserId,
+				periodId: pastPeriodId,
+				name: 'Gaji Masa Lalu',
+				amount: 6000000,
+				createdAt: initialDate,
+				updatedAt: initialDate
+			});
+
+			// Seed initial income source for active period
 			await db.insert(incomeSource).values({
 				id: 'inc-old-1',
 				userId: testUserId,
+				periodId: periodId,
 				name: 'Gaji Lama',
 				amount: 7000000,
 				createdAt: initialDate,
@@ -446,19 +489,26 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 			expect(periodRows[0].incomeConfirmedAt).not.toBeNull();
 			expect(periodRows[0].incomeConfirmedAt?.getTime()).toBe(confirmDate.getTime());
 
-			// Verify in database: old income sources removed and replaced
-			const sourcesRows = await db
-				.select()
-				.from(incomeSource)
-				.where(eq(incomeSource.userId, testUserId));
-			expect(sourcesRows).toHaveLength(2);
-			const names = sourcesRows.map((s) => s.name);
+			// Verify in database: active period income sources updated with periodId
+			const activeSources = await getPeriodIncomeSources(proxy.env.DB, testUserId, periodId);
+			expect(activeSources).toHaveLength(2);
+			const names = activeSources.map((s) => s.name);
 			expect(names).toContain('Gaji Pokok Baru');
 			expect(names).toContain('Pekerjaan Sampingan');
 			expect(names).not.toContain('Gaji Lama');
-			const amounts = sourcesRows.map((s) => s.amount);
+			const amounts = activeSources.map((s) => s.amount);
 			expect(amounts).toContain(9500000);
 			expect(amounts).toContain(2500000);
+			for (const s of activeSources) {
+				expect(s.periodId).toBe(periodId);
+			}
+
+			// Verify in database: past completed period income source was NOT touched
+			const pastSources = await getPeriodIncomeSources(proxy.env.DB, testUserId, pastPeriodId);
+			expect(pastSources).toHaveLength(1);
+			expect(pastSources[0].name).toBe('Gaji Masa Lalu');
+			expect(pastSources[0].amount).toBe(6000000);
+			expect(pastSources[0].periodId).toBe(pastPeriodId);
 		});
 
 		it('throws an error if incomeSources array is empty', async () => {

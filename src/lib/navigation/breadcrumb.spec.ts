@@ -21,6 +21,11 @@ describe('Breadcrumb Navigation Logic (Seam 1)', () => {
 			{ label: 'Pengeluaran', href: '/expenses', current: true }
 		]);
 
+		expect(getBreadcrumbs('/incomes')).toEqual<BreadcrumbItem[]>([
+			{ label: 'Keuangan', href: '/dashboard' },
+			{ label: 'Pemasukan', href: '/incomes', current: true }
+		]);
+
 		expect(getBreadcrumbs('/categories')).toEqual<BreadcrumbItem[]>([
 			{ label: 'Keuangan', href: '/dashboard' },
 			{ label: 'Kategori', href: '/categories', current: true }

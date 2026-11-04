@@ -26,9 +26,9 @@ describe('Onboarding D1 Database & Drizzle Operations (Miniflare)', () => {
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS admin_invitations;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS expense;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS income_source;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS monthly_period;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category_template;');
-		await proxy.env.DB.exec('DROP TABLE IF EXISTS income_source;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS user_settings;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS two_factor;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS verification;');
@@ -230,9 +230,10 @@ describe('Onboarding D1 Database & Drizzle Operations (Miniflare)', () => {
 		const settings = await getUserSettings(proxy.env.DB, testUserId);
 		expect(settings?.payDay).toBe(25);
 
-		// Check income sources
-		const sources = await getIncomeSources(proxy.env.DB, testUserId);
+		// Check income sources linked to period
+		const sources = await getIncomeSources(proxy.env.DB, testUserId, result.periodId);
 		expect(sources).toHaveLength(2);
+		expect(sources.every((s) => s.periodId === result.periodId)).toBe(true);
 
 		// Check monthly period
 		const periods = await db

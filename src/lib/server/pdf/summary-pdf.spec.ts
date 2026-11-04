@@ -55,6 +55,13 @@ describe('PDF Generation Service (Seam 3)', () => {
 				status: 'frozen'
 			}
 		],
+		incomeSources: [
+			{
+				id: 'inc-1',
+				name: 'Gaji Pokok',
+				amount: 10000000
+			}
+		],
 		aiAggregateData: {
 			totalIncome: 10000000,
 			totalSpent: 6500000,

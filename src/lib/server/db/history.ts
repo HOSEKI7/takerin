@@ -1,6 +1,7 @@
 import { eq, and, desc, inArray, sql } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
+import { getIncomeSources } from './onboarding.js';
 import type { AiAggregateData } from '#lib/server/ai/summary.js';
 
 export interface PeriodFinancialMetrics {
@@ -31,6 +32,12 @@ export interface CompletedCategoryDetail {
 	status: 'active' | 'frozen';
 }
 
+export interface CompletedIncomeSourceDetail {
+	id: string;
+	name: string;
+	amount: number;
+}
+
 export interface CompletedPeriodDetail {
 	period: {
 		id: string;
@@ -43,6 +50,7 @@ export interface CompletedPeriodDetail {
 	};
 	summary: PeriodFinancialMetrics;
 	categories: CompletedCategoryDetail[];
+	incomeSources: CompletedIncomeSourceDetail[];
 	aiAggregateData: AiAggregateData;
 }
 
@@ -209,6 +217,14 @@ export async function getCompletedPeriodDetail(
 		}))
 	};
 
+	// 4. Fetch income sources for this period (scoped to periodId with fallback to legacy)
+	const rawSources = await getIncomeSources(d1, userId, periodId);
+	const detailedIncomeSources: CompletedIncomeSourceDetail[] = rawSources.map((s) => ({
+		id: s.id,
+		name: s.name,
+		amount: s.amount
+	}));
+
 	return {
 		period: {
 			id: period.id,
@@ -221,6 +237,7 @@ export async function getCompletedPeriodDetail(
 		},
 		summary,
 		categories: detailedCategories,
+		incomeSources: detailedIncomeSources,
 		aiAggregateData
 	};
 }

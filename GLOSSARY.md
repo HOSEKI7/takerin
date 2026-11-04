@@ -13,7 +13,7 @@ Angka hari (1-31) yang menandai awal Periode Bulan baru. Ditentukan user saat on
 _Avoid_: Start date, cycle date
 
 **Sumber Pemasukan (Income Source)**:
-Satu entri pemasukan bernama dengan jumlah nominal. User bisa punya beberapa Sumber Pemasukan (gaji, freelance, side hustle) yang dijumlahkan menjadi Pemasukan Bulanan.
+Satu entri pemasukan bernama dengan jumlah nominal. User bisa punya beberapa Sumber Pemasukan (gaji, freelance, side hustle) yang dijumlahkan menjadi Pemasukan Bulanan. Hanya dapat ditambah, diubah, atau dihapus selama Periode Bulan aktif sebelum batas 1 hari sebelum Tanggal Gajian berikutnya (H-1). Setelah batas waktu tersebut atau ketika Periode Bulan berakhir, statusnya menjadi Terkunci (Locked) dan hanya bersifat ringkasan (view-only).
 _Avoid_: Salary, gaji (terlalu spesifik — tidak semua pemasukan berasal dari gaji)
 
 **Pemasukan Bulanan (Monthly Income)**:

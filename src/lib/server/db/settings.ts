@@ -1,6 +1,7 @@
 import { eq, and, desc } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
+import { getIncomeSources } from './onboarding.js';
 import type { CsvExpenseItem } from '#lib/validation/settings.js';
 
 export interface UserProfileAndSettings {
@@ -290,6 +291,13 @@ export async function getPeriodDetailForExport(
 	const spentPercentage =
 		period.totalIncome > 0 ? Math.round((totalSpent / period.totalIncome) * 100) : 0;
 
+	const rawSources = await getIncomeSources(d1, userId, periodId);
+	const incomeSources = rawSources.map((s) => ({
+		id: s.id,
+		name: s.name,
+		amount: s.amount
+	}));
+
 	return {
 		period: {
 			id: period.id,
@@ -307,6 +315,7 @@ export async function getPeriodDetailForExport(
 			spentPercentage
 		},
 		categories: categoryDetails,
+		incomeSources,
 		aiAggregateData: {
 			totalIncome: period.totalIncome,
 			totalSpent,

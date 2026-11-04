@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render } from 'svelte/server';
+import HistoryDetailPage from './[periodId]/+page.svelte';
+import type { PageProps } from './[periodId]/$types.js';
 
 const mockGetCompletedPeriods = vi.fn();
 const mockGetCompletedPeriodDetail = vi.fn();
@@ -135,6 +138,13 @@ describe('History Routes & API Handlers (Seam 3)', () => {
 						status: 'active'
 					}
 				],
+				incomeSources: [
+					{
+						id: 'inc-1',
+						name: 'Gaji Pokok',
+						amount: 10000000
+					}
+				],
 				aiAggregateData: {
 					totalIncome: 10000000,
 					totalSpent: 5000000,
@@ -156,6 +166,12 @@ describe('History Routes & API Handlers (Seam 3)', () => {
 
 			expect(result.period.id).toBe('p-1');
 			expect(result.categories).toHaveLength(1);
+			expect(result.incomeSources).toHaveLength(1);
+			expect(result.incomeSources[0]).toEqual({
+				id: 'inc-1',
+				name: 'Gaji Pokok',
+				amount: 10000000
+			});
 			expect(result.summary.totalSpent).toBe(5000000);
 		});
 	});
@@ -277,6 +293,96 @@ describe('History Routes & API Handlers (Seam 3)', () => {
 			const data = await res.json();
 			expect(data).toHaveProperty('error');
 			expect(mockSavePeriodAiSummary).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('History Detail Page Component Rendering (+page.svelte)', () => {
+		it('renders historical income sources breakdown card with items', () => {
+			const { html } = render(HistoryDetailPage, {
+				props: {
+					data: {
+						user: mockUser,
+						period: {
+							id: 'p-1',
+							startDate: '2026-01-25',
+							endDate: '2026-02-24',
+							payDay: 25,
+							totalIncome: 10000000,
+							status: 'completed',
+							aiSummary: 'Bulan ini hemat!'
+						},
+						summary: {
+							totalIncome: 10000000,
+							totalSpent: 4000000,
+							remaining: 6000000,
+							spentPercentage: 40
+						},
+						categories: [
+							{
+								id: 'c-1',
+								name: 'Kebutuhan',
+								percentage: 50,
+								allocation: 5000000,
+								spent: 4000000,
+								balance: 1000000,
+								spentPercentage: 80,
+								isSavings: false,
+								status: 'active'
+							}
+						],
+						incomeSources: [
+							{
+								id: 'inc-1',
+								name: 'Gaji Pokok',
+								amount: 8000000
+							},
+							{
+								id: 'inc-2',
+								name: 'Side Project',
+								amount: 2000000
+							}
+						]
+					},
+					params: { periodId: 'p-1' },
+					form: null
+				} as unknown as PageProps
+			});
+
+			expect(html).toContain('Rincian Sumber Pemasukan');
+			expect(html).toContain('Gaji Pokok');
+			expect(html).toContain('Side Project');
+		});
+
+		it('renders empty state message when incomeSources is empty', () => {
+			const { html } = render(HistoryDetailPage, {
+				props: {
+					data: {
+						user: mockUser,
+						period: {
+							id: 'p-1',
+							startDate: '2026-01-25',
+							endDate: '2026-02-24',
+							payDay: 25,
+							totalIncome: 0,
+							status: 'completed',
+							aiSummary: null
+						},
+						summary: {
+							totalIncome: 0,
+							totalSpent: 0,
+							remaining: 0,
+							spentPercentage: 0
+						},
+						categories: [],
+						incomeSources: []
+					},
+					params: { periodId: 'p-1' },
+					form: null
+				} as unknown as PageProps
+			});
+
+			expect(html).toContain('Rincian Sumber Pemasukan');
+			expect(html).toContain('Tidak ada Sumber Pemasukan yang tercatat untuk periode ini.');
 		});
 	});
 });
