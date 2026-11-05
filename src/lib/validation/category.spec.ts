@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	validateCategoryManagementInput,
 	redistributePercentage,
+	hasCategoryChanges,
 	type ManagedCategoryInput
 } from './category.js';
 
@@ -97,5 +98,123 @@ describe('Category Management Validation & Redistribution Logic (Seam 1)', () =>
 		const remaining = [{ id: '1', name: 'A', percentage: 60 }];
 		const redistributed = redistributePercentage(remaining, 40);
 		expect(redistributed[0].percentage).toBe(100);
+	});
+
+	describe('hasCategoryChanges (Dirty State Detection)', () => {
+		const initialActive = [
+			{ id: 'cat-1', name: 'Makan', percentage: 50, isSavings: false },
+			{ id: 'cat-2', name: 'Tabungan', percentage: 50, isSavings: true }
+		];
+
+		it('returns false when no changes have been made', () => {
+			const currentActive = [
+				{ id: 'cat-1', name: 'Makan', percentage: 50, isSavings: false },
+				{ id: 'cat-2', name: 'Tabungan', percentage: 50, isSavings: true }
+			];
+
+			expect(
+				hasCategoryChanges({
+					initialActive,
+					currentActive
+				})
+			).toBe(false);
+		});
+
+		it('returns true when category percentage is changed', () => {
+			const currentActive = [
+				{ id: 'cat-1', name: 'Makan', percentage: 40, isSavings: false },
+				{ id: 'cat-2', name: 'Tabungan', percentage: 60, isSavings: true }
+			];
+
+			expect(
+				hasCategoryChanges({
+					initialActive,
+					currentActive
+				})
+			).toBe(true);
+		});
+
+		it('returns true when category name is changed', () => {
+			const currentActive = [
+				{ id: 'cat-1', name: 'Makan & Minum', percentage: 50, isSavings: false },
+				{ id: 'cat-2', name: 'Tabungan', percentage: 50, isSavings: true }
+			];
+
+			expect(
+				hasCategoryChanges({
+					initialActive,
+					currentActive
+				})
+			).toBe(true);
+		});
+
+		it('returns true when isSavings toggle is changed', () => {
+			const currentActive = [
+				{ id: 'cat-1', name: 'Makan', percentage: 50, isSavings: true },
+				{ id: 'cat-2', name: 'Tabungan', percentage: 50, isSavings: true }
+			];
+
+			expect(
+				hasCategoryChanges({
+					initialActive,
+					currentActive
+				})
+			).toBe(true);
+		});
+
+		it('returns true when a new category is added', () => {
+			const currentActive = [
+				{ id: 'cat-1', name: 'Makan', percentage: 40, isSavings: false },
+				{ id: 'cat-2', name: 'Tabungan', percentage: 40, isSavings: true },
+				{ id: 'new-uuid', name: 'Investasi', percentage: 20, isSavings: true }
+			];
+
+			expect(
+				hasCategoryChanges({
+					initialActive,
+					currentActive
+				})
+			).toBe(true);
+		});
+
+		it('returns true when a category is marked for freeze', () => {
+			const currentActive = [{ id: 'cat-2', name: 'Tabungan', percentage: 100, isSavings: true }];
+
+			expect(
+				hasCategoryChanges({
+					initialActive,
+					currentActive,
+					freezeCategoryIds: ['cat-1']
+				})
+			).toBe(true);
+		});
+
+		it('returns true when a frozen category is renamed', () => {
+			const initialFrozen = [{ id: 'f-1', name: 'Koleksi Lama' }];
+			const currentFrozen = [{ id: 'f-1', name: 'Koleksi Baru' }];
+
+			expect(
+				hasCategoryChanges({
+					initialActive,
+					currentActive: initialActive,
+					initialFrozen,
+					currentFrozen
+				})
+			).toBe(true);
+		});
+
+		it('returns false when changes are reverted back to initial values', () => {
+			const currentActive = [
+				{ id: 'cat-1', name: '  Makan  ', percentage: 50, isSavings: false },
+				{ id: 'cat-2', name: 'Tabungan', percentage: 50, isSavings: true }
+			];
+
+			expect(
+				hasCategoryChanges({
+					initialActive,
+					currentActive
+				})
+			).toBe(false);
+		});
 	});
 });

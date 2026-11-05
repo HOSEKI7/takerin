@@ -4,11 +4,11 @@
 	import Card from '#lib/components/Card.svelte';
 	import ProgressBar from '#lib/components/ProgressBar.svelte';
 	import { untrack } from 'svelte';
+	import { fly } from 'svelte/transition';
 	import type { CategoryManagementItem } from '#lib/server/db/category.js';
 	import { enhance } from '$app/forms';
-	import { resolve } from '$app/paths';
 	import { formatRupiah, formatDate } from '#lib/validation/onboarding.js';
-	import { redistributePercentage } from '#lib/validation/category.js';
+	import { redistributePercentage, hasCategoryChanges } from '#lib/validation/category.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
@@ -53,6 +53,19 @@
 
 	let isSaving = $state(false);
 
+	function syncFromData() {
+		categories = (data.activeCategories ?? []).map((c) => ({
+			id: c.id,
+			name: c.name,
+			percentage: Number(c.percentage),
+			isSavings: Boolean(c.isSavings),
+			spent: c.spent,
+			balance: c.balance
+		}));
+		frozenCategories = (data.frozenCategories ?? []).map((c) => ({ ...c }));
+		freezeCategoryIds = [];
+	}
+
 	// Total percentage computed reactive state
 	const totalPercentage = $derived(
 		Math.round(
@@ -68,8 +81,24 @@
 
 	const hasEmptyNames = $derived(categories.some((c) => c.name.trim().length === 0));
 	const hasInvalidPercentages = $derived(categories.some((c) => c.percentage <= 0));
+
+	const hasChanges = $derived(
+		hasCategoryChanges({
+			initialActive: data.activeCategories ?? [],
+			currentActive: categories,
+			initialFrozen: data.frozenCategories ?? [],
+			currentFrozen: frozenCategories,
+			freezeCategoryIds
+		})
+	);
+
 	const canSave = $derived(
-		isExactly100 && !hasEmptyNames && !hasInvalidPercentages && categories.length > 0 && !isSaving
+		hasChanges &&
+			isExactly100 &&
+			!hasEmptyNames &&
+			!hasInvalidPercentages &&
+			categories.length > 0 &&
+			!isSaving
 	);
 
 	// --- ADD CATEGORY MODAL STATE ---
@@ -390,9 +419,12 @@
 		method="POST"
 		use:enhance={() => {
 			isSaving = true;
-			return async ({ update }) => {
+			return async ({ update, result }) => {
 				isSaving = false;
-				await update();
+				await update({ reset: false });
+				if (result.type === 'success') {
+					syncFromData();
+				}
 			};
 		}}
 		class="space-y-6"
@@ -627,41 +659,50 @@
 			</section>
 		{/if}
 
-		<!-- SUBMIT / SAVE ACTIONS -->
-		<div
-			class="sticky bottom-4 z-10 flex flex-col items-center justify-between gap-3 rounded-2xl border border-fog bg-paper/95 p-4 shadow-lg backdrop-blur sm:flex-row dark:border-dark-border dark:bg-dark-card/95"
-		>
-			<div>
-				{#if !isExactly100}
-					<p class="text-xs font-semibold text-alarm-red">
-						{t('categories.validationExact100', { total: totalPercentage })}
-					</p>
-				{:else if hasEmptyNames}
-					<p class="text-xs font-semibold text-alarm-red">
-						{t('categories.validationEmptyNames')}
-					</p>
-				{:else}
-					<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
-						{t('categories.validationReady')}
-					</p>
-				{/if}
-			</div>
+		<!-- SUBMIT / SAVE ACTIONS (Floating bar only appears when changes are made) -->
+		{#if hasChanges}
+			<div
+				transition:fly={{ y: 24, duration: 200 }}
+				class="sticky bottom-4 z-10 flex flex-col items-center justify-between gap-3 rounded-2xl border border-fog bg-paper/95 p-4 shadow-lg backdrop-blur sm:flex-row dark:border-dark-border dark:bg-dark-card/95"
+			>
+				<div>
+					{#if !isExactly100}
+						<p class="text-xs font-semibold text-alarm-red">
+							{t('categories.validationExact100', { total: totalPercentage })}
+						</p>
+					{:else if hasEmptyNames}
+						<p class="text-xs font-semibold text-alarm-red">
+							{t('categories.validationEmptyNames')}
+						</p>
+					{:else}
+						<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
+							{t('categories.validationReady')}
+						</p>
+					{/if}
+				</div>
 
-			<div class="flex items-center gap-3">
-				<a href={resolve('/(app)/dashboard')}>
-					<Button type="button" variant="secondary" size="md">{t('common.cancel')}</Button>
-				</a>
-				<Button
-					type="submit"
-					variant="primary"
-					size="md"
-					disabled={!canSave}
-					class="font-bold shadow-md"
-				>
-					{isSaving ? t('common.saving') : t('common.save')}
-				</Button>
+				<div class="flex items-center gap-3">
+					<Button
+						type="button"
+						variant="secondary"
+						size="md"
+						onclick={syncFromData}
+						disabled={isSaving}
+					>
+						{t('common.cancel')}
+					</Button>
+					<Button
+						type="submit"
+						variant="primary"
+						size="md"
+						disabled={!canSave}
+						class="font-bold shadow-md"
+					>
+						{isSaving ? t('common.saving') : t('common.save')}
+					</Button>
+				</div>
 			</div>
-		</div>
+		{/if}
 	</form>
 </main>
 

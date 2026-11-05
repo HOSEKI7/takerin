@@ -105,3 +105,98 @@ export function redistributePercentage<T extends { percentage: number }>(
 		};
 	});
 }
+
+export interface ActiveCategoryStateItem {
+	id?: string;
+	name: string;
+	percentage: number | string;
+	isSavings?: boolean | null;
+}
+
+export interface FrozenCategoryStateItem {
+	id: string;
+	name: string;
+}
+
+export interface HasCategoryChangesParams {
+	initialActive: ActiveCategoryStateItem[];
+	currentActive: ActiveCategoryStateItem[];
+	initialFrozen?: FrozenCategoryStateItem[];
+	currentFrozen?: FrozenCategoryStateItem[];
+	freezeCategoryIds?: string[];
+}
+
+/**
+ * Checks if there are any uncommitted changes in category management:
+ * - Active categories count difference
+ * - New category added (id starts with 'new-' or undefined)
+ * - Category marked to freeze (freezeCategoryIds > 0)
+ * - Active category name modified
+ * - Active category percentage modified (> 0.001 delta)
+ * - Active category isSavings status modified
+ * - Frozen category name modified
+ */
+export function hasCategoryChanges(params: HasCategoryChangesParams): boolean {
+	const {
+		initialActive = [],
+		currentActive = [],
+		initialFrozen = [],
+		currentFrozen = [],
+		freezeCategoryIds = []
+	} = params;
+
+	if (freezeCategoryIds.length > 0) {
+		return true;
+	}
+
+	if (currentActive.length !== initialActive.length) {
+		return true;
+	}
+
+	const initialActiveMap = new Map<string, ActiveCategoryStateItem>();
+	for (const item of initialActive) {
+		if (item.id) {
+			initialActiveMap.set(item.id, item);
+		}
+	}
+
+	for (const current of currentActive) {
+		if (!current.id || current.id.startsWith('new-')) {
+			return true;
+		}
+
+		const initial = initialActiveMap.get(current.id);
+		if (!initial) {
+			return true;
+		}
+
+		if ((current.name ?? '').trim() !== (initial.name ?? '').trim()) {
+			return true;
+		}
+
+		if (Math.abs(Number(current.percentage) - Number(initial.percentage)) > 0.001) {
+			return true;
+		}
+
+		if (Boolean(current.isSavings) !== Boolean(initial.isSavings)) {
+			return true;
+		}
+	}
+
+	if (currentFrozen.length > 0 && initialFrozen.length > 0) {
+		const initialFrozenMap = new Map<string, string>();
+		for (const f of initialFrozen) {
+			initialFrozenMap.set(f.id, (f.name ?? '').trim());
+		}
+
+		for (const currentF of currentFrozen) {
+			const initialName = initialFrozenMap.get(currentF.id);
+			if (initialName !== undefined && (currentF.name ?? '').trim() !== initialName) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
