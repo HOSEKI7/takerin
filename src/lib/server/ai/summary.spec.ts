@@ -96,19 +96,90 @@ describe('AI Summary Generator (Seam 1)', () => {
 		expect(url).toBe('https://api.groq.com/openai/v1/chat/completions');
 		expect(options.headers['Authorization']).toBe('Bearer gsk_mock_test');
 		const body = JSON.parse(options.body);
-		expect(body.model).toBe('llama-3.3-70b-versatile');
+		expect(body.model).toBe('qwen/qwen3.8-27b');
 	});
 
-	it('falls back to Gemini Flash API when Groq fails', async () => {
+	it('tries secondary Groq model if primary Groq model fails', async () => {
 		const mockFetch = vi
 			.fn()
-			// First call (Groq) fails with 500
+			.mockResolvedValueOnce({
+				ok: false,
+				status: 404,
+				text: async () => 'Model not found'
+			})
+			.mockResolvedValueOnce({
+				ok: true,
+				json: async () => ({
+					choices: [
+						{
+							message: {
+								content: JSON.stringify({
+									id: 'Bulan ini hemat banget! 🔥',
+									en: 'Very frugal this month! 🔥'
+								})
+							}
+						}
+					]
+				})
+			});
+
+		const result = await generateAiSummary(sampleData, {
+			groqApiKey: 'gsk_mock_test',
+			fetchFn: mockFetch as unknown as typeof fetch
+		});
+
+		expect(mockFetch).toHaveBeenCalledTimes(2);
+		const firstCallBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+		const secondCallBody = JSON.parse(mockFetch.mock.calls[1][1].body);
+		expect(firstCallBody.model).toBe('qwen/qwen3.8-27b');
+		expect(secondCallBody.model).toBe('openai/gpt-oss-20b');
+		const parsed = JSON.parse(result);
+		expect(parsed.id).toBe('Bulan ini hemat banget! 🔥');
+	});
+
+	it('respects groqModel override if specified', async () => {
+		const mockFetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ({
+				choices: [
+					{
+						message: {
+							content: JSON.stringify({
+								id: 'Hemat! 🔥',
+								en: 'Frugal! 🔥'
+							})
+						}
+					}
+				]
+			})
+		});
+
+		await generateAiSummary(sampleData, {
+			groqApiKey: 'gsk_mock_test',
+			groqModel: 'custom-groq-model',
+			fetchFn: mockFetch as unknown as typeof fetch
+		});
+
+		const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+		expect(body.model).toBe('custom-groq-model');
+	});
+
+	it('falls back to Gemini Flash API when all Groq models fail', async () => {
+		const mockFetch = vi
+			.fn()
+			// Groq model 1 fails
+			.mockResolvedValueOnce({
+				ok: false,
+				status: 404,
+				text: async () => 'Groq model 1 not found'
+			})
+			// Groq model 2 fails
 			.mockResolvedValueOnce({
 				ok: false,
 				status: 500,
-				text: async () => 'Groq Rate limit or server error'
+				text: async () => 'Groq model 2 error'
 			})
-			// Second call (Gemini Flash) succeeds
+			// Gemini Flash succeeds
 			.mockResolvedValueOnce({
 				ok: true,
 				json: async () => ({
@@ -138,12 +209,43 @@ describe('AI Summary Generator (Seam 1)', () => {
 		const parsed = JSON.parse(result);
 		expect(parsed.id).toBe('Kategori Kebutuhan aman dan tabunganmu on fire! 💪');
 		expect(parsed.en).toBe('Needs are safe and your savings are on fire! 💪');
-		expect(mockFetch).toHaveBeenCalledTimes(2);
+		expect(mockFetch).toHaveBeenCalledTimes(3);
 
-		const [geminiUrl, geminiOptions] = mockFetch.mock.calls[1];
+		const [geminiUrl, geminiOptions] = mockFetch.mock.calls[2];
 		expect(geminiUrl).toContain('generativelanguage.googleapis.com');
-		expect(geminiUrl).toContain('gemini-1.5-flash');
+		expect(geminiUrl).toContain('gemini-flash-latest');
 		expect(geminiOptions.headers['x-goog-api-key']).toBe('gemini_mock_test');
+	});
+
+	it('respects geminiModel override if specified', async () => {
+		const mockFetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ({
+				candidates: [
+					{
+						content: {
+							parts: [
+								{
+									text: JSON.stringify({
+										id: 'Bagus! 👍',
+										en: 'Good! 👍'
+									})
+								}
+							]
+						}
+					}
+				]
+			})
+		});
+
+		await generateAiSummary(sampleData, {
+			geminiApiKey: 'gemini_mock_test',
+			geminiModel: 'custom-gemini-model',
+			fetchFn: mockFetch as unknown as typeof fetch
+		});
+
+		const [geminiUrl] = mockFetch.mock.calls[0];
+		expect(geminiUrl).toContain('custom-gemini-model');
 	});
 
 	it('safely handles markdown codeblocks and plain text fallbacks', () => {

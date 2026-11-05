@@ -21,6 +21,8 @@ export interface AiAggregateData {
 export interface AiEnvConfig {
 	groqApiKey?: string;
 	geminiApiKey?: string;
+	groqModel?: string;
+	geminiModel?: string;
 	fetchFn?: typeof fetch;
 }
 
@@ -113,125 +115,157 @@ export function cleanAndParseAiSummary(raw: string | undefined): string {
 	});
 }
 
+export const DEFAULT_GROQ_MODELS = ['qwen/qwen3.8-27b', 'openai/gpt-oss-20b'];
+export const DEFAULT_GEMINI_MODELS = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+
 /**
- * Calls Groq API using Llama 3.3 70B model.
+ * Calls Groq API using modern chat models (e.g. Qwen 3.8 27B / GPT OSS 20B).
  */
 export async function callGroq(
 	data: AiAggregateData,
 	apiKey: string,
-	fetchFn: typeof fetch = fetch
+	fetchFn: typeof fetch = fetch,
+	modelOverride?: string
 ): Promise<string> {
 	const prompt = formatAggregatePrompt(data);
+	const modelsToTry = modelOverride ? [modelOverride, ...DEFAULT_GROQ_MODELS] : DEFAULT_GROQ_MODELS;
+	const uniqueModels = [...new Set(modelsToTry)];
 
-	const response = await fetchFn('https://api.groq.com/openai/v1/chat/completions', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${apiKey}`
-		},
-		body: JSON.stringify({
-			model: 'llama-3.3-70b-versatile',
-			messages: [
-				{ role: 'system', content: SYSTEM_INSTRUCTION },
-				{ role: 'user', content: prompt }
-			],
-			temperature: 0.7,
-			max_tokens: 300
-		}),
-		signal: AbortSignal.timeout(8000)
-	});
+	let lastError: Error | null = null;
+	for (const model of uniqueModels) {
+		try {
+			const response = await fetchFn('https://api.groq.com/openai/v1/chat/completions', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${apiKey}`
+				},
+				body: JSON.stringify({
+					model,
+					messages: [
+						{ role: 'system', content: SYSTEM_INSTRUCTION },
+						{ role: 'user', content: prompt }
+					],
+					temperature: 0.7,
+					max_tokens: 300
+				}),
+				signal: AbortSignal.timeout(8000)
+			});
 
-	if (!response.ok) {
-		const errText = await response.text();
-		throw new Error(`Groq API error (${response.status}): ${errText}`);
-	}
+			if (!response.ok) {
+				const errText = await response.text();
+				throw new Error(`Groq API error (${response.status}) [${model}]: ${errText}`);
+			}
 
-	const result = (await response.json()) as {
-		choices?: Array<{
-			message?: {
-				content?: string;
-				reasoning_content?: string;
-				reasoning?: string;
+			const result = (await response.json()) as {
+				choices?: Array<{
+					message?: {
+						content?: string;
+						reasoning_content?: string;
+						reasoning?: string;
+					};
+				}>;
 			};
-		}>;
-	};
 
-	const message = result.choices?.[0]?.message;
-	const text = message?.content || message?.reasoning_content || message?.reasoning;
-	if (!text) {
-		throw new Error('Groq returned empty response');
+			const message = result.choices?.[0]?.message;
+			const text = message?.content || message?.reasoning_content || message?.reasoning;
+			if (!text) {
+				throw new Error(`Groq returned empty response for ${model}`);
+			}
+
+			return cleanAndParseAiSummary(text);
+		} catch (err) {
+			lastError = err instanceof Error ? err : new Error(String(err));
+			console.warn(`[AI Summary] Groq model ${model} failed:`, lastError.message);
+		}
 	}
 
-	return cleanAndParseAiSummary(text);
+	throw lastError ?? new Error('Semua model Groq gagal dieksekusi.');
 }
 
 /**
- * Calls Google Gemini Flash API as fallback.
+ * Calls Google Gemini Flash API as fallback using latest supported flash models.
  */
 export async function callGemini(
 	data: AiAggregateData,
 	apiKey: string,
-	fetchFn: typeof fetch = fetch
+	fetchFn: typeof fetch = fetch,
+	modelOverride?: string
 ): Promise<string> {
 	const prompt = formatAggregatePrompt(data);
-	const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
+	const modelsToTry = modelOverride
+		? [modelOverride, ...DEFAULT_GEMINI_MODELS]
+		: DEFAULT_GEMINI_MODELS;
+	const uniqueModels = [...new Set(modelsToTry)];
 
-	const response = await fetchFn(url, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'x-goog-api-key': apiKey
-		},
-		body: JSON.stringify({
-			systemInstruction: {
-				parts: [{ text: SYSTEM_INSTRUCTION }]
-			},
-			contents: [
-				{
-					role: 'user',
-					parts: [{ text: prompt }]
-				}
-			],
-			generationConfig: {
-				temperature: 0.7,
-				maxOutputTokens: 200
+	let lastError: Error | null = null;
+	for (const model of uniqueModels) {
+		try {
+			const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+			const response = await fetchFn(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-goog-api-key': apiKey
+				},
+				body: JSON.stringify({
+					systemInstruction: {
+						parts: [{ text: SYSTEM_INSTRUCTION }]
+					},
+					contents: [
+						{
+							role: 'user',
+							parts: [{ text: prompt }]
+						}
+					],
+					generationConfig: {
+						temperature: 0.7,
+						maxOutputTokens: 200
+					}
+				}),
+				signal: AbortSignal.timeout(8000)
+			});
+
+			if (!response.ok) {
+				const errText = await response.text();
+				throw new Error(`Gemini API error (${response.status}) [${model}]: ${errText}`);
 			}
-		}),
-		signal: AbortSignal.timeout(8000)
-	});
 
-	if (!response.ok) {
-		const errText = await response.text();
-		throw new Error(`Gemini API error (${response.status}): ${errText}`);
-	}
-
-	const result = (await response.json()) as {
-		candidates?: Array<{
-			content?: {
-				parts?: Array<{ text?: string }>;
+			const result = (await response.json()) as {
+				candidates?: Array<{
+					content?: {
+						parts?: Array<{ text?: string }>;
+					};
+				}>;
 			};
-		}>;
-	};
 
-	const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-	if (!text) {
-		throw new Error('Gemini returned empty response');
+			const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+			if (!text) {
+				throw new Error(`Gemini returned empty response for ${model}`);
+			}
+
+			return cleanAndParseAiSummary(text);
+		} catch (err) {
+			lastError = err instanceof Error ? err : new Error(String(err));
+			console.warn(`[AI Summary] Gemini model ${model} failed:`, lastError.message);
+		}
 	}
 
-	return cleanAndParseAiSummary(text);
+	throw lastError ?? new Error('Semua model Gemini gagal dieksekusi.');
 }
 
 /**
  * Generates an AI summary phrase based on aggregate financial data.
- * Tries Groq Llama 3.3 70B first, falls back to Gemini Flash if Groq fails.
+ * Tries Groq first, falls back to Gemini Flash if Groq fails.
  */
 export async function generateAiSummary(data: AiAggregateData, env: AiEnvConfig): Promise<string> {
 	const fetchFn = env.fetchFn ?? fetch;
 
-	// 1. Primary: Groq API (Llama 3.3 70B)
+	// 1. Primary: Groq API
 	if (env.groqApiKey) {
 		try {
-			return await callGroq(data, env.groqApiKey, fetchFn);
+			return await callGroq(data, env.groqApiKey, fetchFn, env.groqModel);
 		} catch (error) {
 			console.warn('[AI Summary] Groq API failed, falling back to Gemini Flash:', error);
 		}
@@ -240,7 +274,7 @@ export async function generateAiSummary(data: AiAggregateData, env: AiEnvConfig)
 	// 2. Fallback: Google Gemini Flash
 	if (env.geminiApiKey) {
 		try {
-			return await callGemini(data, env.geminiApiKey, fetchFn);
+			return await callGemini(data, env.geminiApiKey, fetchFn, env.geminiModel);
 		} catch (error) {
 			console.warn('[AI Summary] Gemini Flash API failed:', error);
 		}

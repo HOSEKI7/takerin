@@ -200,7 +200,7 @@
 			>
 				<div class="flex items-center justify-between">
 					<h3 class="font-bold text-obsidian dark:text-paper">{t('admin.health.groqTitle')}</h3>
-					<Badge variant="lime">Llama 3.3 70B</Badge>
+					<Badge variant="lime">Qwen 3.8 / GPT OSS</Badge>
 				</div>
 				<ul class="mt-3 space-y-1 text-xs text-slate dark:text-pebble">
 					<li>• {t('admin.health.groqLimit')}</li>
@@ -215,7 +215,7 @@
 			>
 				<div class="flex items-center justify-between">
 					<h3 class="font-bold text-obsidian dark:text-paper">{t('admin.health.geminiTitle')}</h3>
-					<Badge variant="neutral">Gemini 1.5 Flash</Badge>
+					<Badge variant="neutral">Gemini Flash</Badge>
 				</div>
 				<ul class="mt-3 space-y-1 text-xs text-slate dark:text-pebble">
 					<li>• {t('admin.health.geminiLimit')}</li>

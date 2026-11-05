@@ -52,8 +52,7 @@
 			);
 
 			if (!res.ok) {
-				const errData = (await res.json().catch(() => null)) as { error?: string } | null;
-				aiError = errData?.error ?? t('history.aiFailed');
+				aiError = t('history.aiFailed');
 				return;
 			}
 
@@ -241,9 +240,13 @@
 		</div>
 
 		<Card variant="default" class="p-5 sm:p-6">
-			<div class="mb-4 flex items-center justify-between border-b border-fog pb-4 dark:border-dark-border">
+			<div
+				class="mb-4 flex items-center justify-between border-b border-fog pb-4 dark:border-dark-border"
+			>
 				<div class="flex items-center gap-2.5">
-					<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-voltage/20 text-forest-ink dark:text-lime-voltage">
+					<div
+						class="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-voltage/20 text-forest-ink dark:text-lime-voltage"
+					>
 						<HugeiconsIcon icon={Coins01Icon} class="h-4 w-4" />
 					</div>
 					<span class="text-sm font-bold text-obsidian dark:text-paper">
@@ -264,7 +267,9 @@
 					{#each data.incomeSources as source, index (source.id ?? index)}
 						<li class="flex items-center justify-between py-3.5 first:pt-0 last:pb-0">
 							<div class="flex items-center gap-3">
-								<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-fog text-slate dark:bg-dark-surface dark:text-pebble">
+								<div
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-fog text-slate dark:bg-dark-surface dark:text-pebble"
+								>
 									<HugeiconsIcon icon={Coins01Icon} class="h-4 w-4" />
 								</div>
 								<div>
@@ -277,7 +282,9 @@
 								</div>
 							</div>
 							<div class="text-right">
-								<span class="font-heading text-base font-bold text-forest-ink dark:text-lime-voltage">
+								<span
+									class="font-heading text-base font-bold text-forest-ink dark:text-lime-voltage"
+								>
 									{formatRupiah(source.amount)}
 								</span>
 							</div>

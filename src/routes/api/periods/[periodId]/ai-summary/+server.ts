@@ -33,11 +33,21 @@ export const POST: RequestHandler = async ({ locals, platform, params }) => {
 
 	const groqApiKey = getRuntimeEnv('GROQ_API_KEY', platform?.env);
 	const geminiApiKey = getRuntimeEnv('GEMINI_API_KEY', platform?.env);
+	const groqModel = getRuntimeEnv('GROQ_MODEL', platform?.env);
+	const geminiModel = getRuntimeEnv('GEMINI_MODEL', platform?.env);
+
+	if (!groqApiKey && !geminiApiKey) {
+		console.warn(
+			'[AI Summary] Warning: Neither GROQ_API_KEY nor GEMINI_API_KEY is configured in runtime environment.'
+		);
+	}
 
 	try {
 		const aiSummary = await generateAiSummary(detail.aiAggregateData, {
 			groqApiKey,
-			geminiApiKey
+			geminiApiKey,
+			groqModel,
+			geminiModel
 		});
 
 		await savePeriodAiSummary(platform.env.DB, periodId, locals.user.id, aiSummary);

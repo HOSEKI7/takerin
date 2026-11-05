@@ -15,6 +15,12 @@ Dokumen ini menjelaskan konfigurasi deployment otomatis untuk aplikasi Takerin p
    - `NODE_VERSION`: `22`
    - `PNPM_VERSION`: `11.25.0` (atau biarkan default corepack)
    - `ADMIN_EMAILS`: Daftar email administrator pertama/sistem yang dipisahkan koma (misal: `owner@takerin.my.id,admin@takerin.my.id`). Akun yang mendaftar atau login dengan email ini otomatis mendapatkan role `admin`.
+   - `BETTER_AUTH_SECRET`: Kunci rahasia minimal 32 karakter untuk sesi pengguna (`openssl rand -base64 32`).
+   - `BETTER_AUTH_URL`: Origin production, contoh: `https://takerin.my.id`.
+   - `RESEND_API_KEY`: API Key Resend untuk pengiriman email OTP verifikasi dan reset password.
+   - `EMAIL_FROM`: Pengirim email, contoh: `Takerin <onboarding@resend.dev>` atau `Takerin <noreply@takerin.my.id>`.
+   - `GROQ_API_KEY`: API key Groq untuk inferensi frasa ringkasan AI bulanan (opsional `GROQ_MODEL`).
+   - `GEMINI_API_KEY`: API key Google AI Studio sebagai failover fallback inferensi AI (opsional `GEMINI_MODEL`).
 5. Hubungkan D1 Database Binding:
    - Buka **Settings** > **Functions** > **D1 database bindings**.
    - Tambahkan binding:
