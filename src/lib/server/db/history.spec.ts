@@ -295,6 +295,11 @@ describe('History D1 Database Operations (Seam 2)', () => {
 		expect(detail?.aiAggregateData.categories).toHaveLength(3);
 		expect(detail?.aiAggregateData.totalIncome).toBe(10000000);
 		expect(detail?.aiAggregateData.totalSpent).toBe(2000000);
+		expect(detail?.aiAggregateData.topExpenses).toBeDefined();
+		expect(detail?.aiAggregateData.topExpenses).toHaveLength(2);
+		expect(detail?.aiAggregateData.topExpenses?.[0].name).toBe('Restoran');
+		expect(detail?.aiAggregateData.topExpenses?.[0].amount).toBe(1500000);
+		expect(detail?.aiAggregateData.topExpenses?.[0].categoryName).toBe('Makanan');
 	});
 
 	it('includes historical income sources bound to the completed period', async () => {

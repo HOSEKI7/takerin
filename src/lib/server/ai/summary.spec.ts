@@ -47,8 +47,25 @@ describe('AI Summary Generator (Seam 1)', () => {
 		vi.restoreAllMocks();
 	});
 
-	it('formats prompt containing ONLY aggregate metrics, without individual expense items', () => {
-		const prompt = formatAggregatePrompt(sampleData);
+	it('formats prompt containing aggregate metrics and curated top/recurring expense items', () => {
+		const dataWithExpenses: AiAggregateData = {
+			...sampleData,
+			topExpenses: [
+				{
+					name: 'Kopi Kenangan',
+					amount: 250000,
+					categoryName: 'Kebutuhan',
+					count: 10
+				},
+				{
+					name: 'Sepatu Lari',
+					amount: 1200000,
+					categoryName: 'Hobi Lama'
+				}
+			]
+		};
+
+		const prompt = formatAggregatePrompt(dataWithExpenses);
 
 		expect(prompt).toContain('10.000.000');
 		expect(prompt).toContain('6.500.000');
@@ -58,10 +75,18 @@ describe('AI Summary Generator (Seam 1)', () => {
 		expect(prompt).toContain('Hobi Lama');
 		expect(prompt).toContain('Dibekukan');
 
-		// Sensitive / non-aggregate transaction items should NOT exist
-		expect(prompt).not.toContain('Kopi Kenangan');
-		expect(prompt).not.toContain('Indomaret');
-		expect(prompt).not.toContain('Gojek');
+		// Curated top/recurring expense items should be included
+		expect(prompt).toContain('Kopi Kenangan');
+		expect(prompt).toContain('250.000');
+		expect(prompt).toContain('muncul 10x');
+		expect(prompt).toContain('Sepatu Lari');
+		expect(prompt).toContain('1.200.000');
+	});
+
+	it('formats prompt cleanly when topExpenses is empty or undefined', () => {
+		const prompt = formatAggregatePrompt(sampleData);
+		expect(prompt).toContain('10.000.000');
+		expect(prompt).not.toContain('Daftar Pengeluaran Dominan');
 	});
 
 	it('successfully calls Groq API when Groq key is present and returns bilingual json', async () => {
@@ -97,6 +122,8 @@ describe('AI Summary Generator (Seam 1)', () => {
 		expect(options.headers['Authorization']).toBe('Bearer gsk_mock_test');
 		const body = JSON.parse(options.body);
 		expect(body.model).toBe('qwen/qwen3.8-27b');
+		expect(body.temperature).toBe(0.8);
+		expect(body.max_tokens).toBe(500);
 	});
 
 	it('tries secondary Groq model if primary Groq model fails', async () => {

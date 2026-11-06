@@ -2,7 +2,7 @@ import { eq, and, desc, inArray, sql } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
 import { getIncomeSources } from './onboarding.js';
-import type { AiAggregateData } from '#lib/server/ai/summary.js';
+import type { AiAggregateData, AiExpenseItem } from '#lib/server/ai/summary.js';
 
 export interface PeriodFinancialMetrics {
 	totalIncome: number;
@@ -201,6 +201,62 @@ export async function getCompletedPeriodDetail(
 		spentPercentage
 	};
 
+	// 4. Fetch curated top and recurring expenses for AI context
+	const catNameMap = new Map(categories.map((c) => [c.id, c.name]));
+
+	// A. Top recurring expenses (frequency >= 2)
+	const recurringRows = await db
+		.select({
+			name: schema.expense.name,
+			categoryId: schema.expense.categoryId,
+			totalAmount: sql<number>`cast(coalesce(sum(${schema.expense.amount}), 0) as int)`,
+			count: sql<number>`cast(count(${schema.expense.id}) as int)`
+		})
+		.from(schema.expense)
+		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, periodId)))
+		.groupBy(schema.expense.name, schema.expense.categoryId)
+		.having(sql`count(${schema.expense.id}) >= 2`)
+		.orderBy(desc(sql`count(${schema.expense.id})`), desc(sql`sum(${schema.expense.amount})`))
+		.limit(5);
+
+	// B. Top 10 nominal expenses
+	const topNominalRows = await db
+		.select({
+			name: schema.expense.name,
+			amount: schema.expense.amount,
+			categoryId: schema.expense.categoryId
+		})
+		.from(schema.expense)
+		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, periodId)))
+		.orderBy(desc(schema.expense.amount))
+		.limit(10);
+
+	const topExpenses: AiExpenseItem[] = [];
+	const seenNames = new Set<string>();
+
+	for (const row of recurringRows) {
+		topExpenses.push({
+			name: row.name,
+			amount: row.totalAmount,
+			categoryName: catNameMap.get(row.categoryId) ?? 'Lainnya',
+			count: row.count
+		});
+		seenNames.add(row.name.toLowerCase().trim());
+	}
+
+	for (const row of topNominalRows) {
+		if (topExpenses.length >= 15) break;
+		const norm = row.name.toLowerCase().trim();
+		if (!seenNames.has(norm)) {
+			topExpenses.push({
+				name: row.name,
+				amount: row.amount,
+				categoryName: catNameMap.get(row.categoryId) ?? 'Lainnya'
+			});
+			seenNames.add(norm);
+		}
+	}
+
 	const aiAggregateData: AiAggregateData = {
 		totalIncome: period.totalIncome,
 		totalSpent,
@@ -214,10 +270,11 @@ export async function getCompletedPeriodDetail(
 			spentPercentage: c.spentPercentage,
 			isSavings: c.isSavings,
 			status: c.status
-		}))
+		})),
+		topExpenses
 	};
 
-	// 4. Fetch income sources for this period (scoped to periodId with fallback to legacy)
+	// 5. Fetch income sources for this period (scoped to periodId with fallback to legacy)
 	const rawSources = await getIncomeSources(d1, userId, periodId);
 	const detailedIncomeSources: CompletedIncomeSourceDetail[] = rawSources.map((s) => ({
 		id: s.id,

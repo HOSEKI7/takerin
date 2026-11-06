@@ -1,5 +1,12 @@
 import { formatRupiah } from '#lib/validation/onboarding.js';
 
+export interface AiExpenseItem {
+	name: string;
+	amount: number;
+	categoryName?: string;
+	count?: number;
+}
+
 export interface AiCategoryAggregate {
 	name: string;
 	percentage: number;
@@ -16,6 +23,7 @@ export interface AiAggregateData {
 	remaining: number;
 	spentPercentage: number;
 	categories: AiCategoryAggregate[];
+	topExpenses?: AiExpenseItem[];
 }
 
 export interface AiEnvConfig {
@@ -26,24 +34,27 @@ export interface AiEnvConfig {
 	fetchFn?: typeof fetch;
 }
 
-const SYSTEM_INSTRUCTION = `Kamu adalah asisten analisis keuangan pribadi yang santai, suportif, dan cerdas untuk aplikasi Takerin.
-Tugasmu adalah memberikan 1 hingga 2 kalimat frasa ringkas (maksimal 35 kata per bahasa) yang mengomentari kebiasaan pengeluaran dan tabungan pengguna pada periode bulan yang baru saja selesai dalam DUA bahasa sekaligus: Bahasa Indonesia dan English.
+const SYSTEM_INSTRUCTION = `Kamu adalah asisten analisis keuangan pribadi yang santai, asyik, sedikit sarkas (playful financial bestie), namun tetap bijak dan suportif untuk aplikasi Takerin.
+Tugasmu adalah memberikan 2 hingga 4 kalimat frasa ringkas (panjang sekitar 50 hingga 80 kata per bahasa) yang mengomentari kebiasaan pengeluaran dan capaian tabungan pengguna pada periode bulan yang baru saja selesai dalam DUA bahasa sekaligus: Bahasa Indonesia dan English.
 Format keluaran HARUS berupa objek JSON valid dengan struktur persis seperti ini:
 {
-  "id": "1-2 kalimat ringkas dalam Bahasa Indonesia santai (bisa pakai 1-2 emoji)",
-  "en": "1-2 concise sentences in casual English (can include 1-2 emojis)"
+  "id": "2-4 kalimat dalam Bahasa Indonesia santai & asyik (sedikit sarkas lucu menyinggung pengeluaran spesifik jika relevan, lalu apresiasi tabungan & saran bijak, 1-2 emoji)",
+  "en": "2-4 sentences in casual English (witty & playful teasing on top expenses, appreciative of savings, ending with wise advice, 1-2 emojis)"
 }
 
 Aturan penting:
 - Output HANYA berupa JSON murni, tanpa markdown formatting (tanpa codeblock \`\`\`json), tanpa pengantar ("Tentu", "Here is"), dan tanpa penutup.
-- Jangan sebutkan ID atau teknis data internal.
-- Jika pengguna sangat hemat atau tabungannya terisi penuh/bagus, beri apresiasi positif (contoh id: "Bulan ini kamu hemat banget! Tabunganmu on fire! 🔥", en: "You were so frugal this month! Your savings are on fire! 🔥").
-- Jika ada kategori yang melebihi budget namun tabungan aman, sebutkan secara suportif (contoh id: "Kategori Makanan kebablasan nih, tapi tabunganmu aman kok 💪", en: "Dining out went a bit over budget, but your savings are well protected! 💪").
-- Jika banyak kategori over-budget, beri dorongan semangat yang konstruktif (contoh id: "Bulan ini pengeluaran cukup menantang, yuk atur strategi lebih rapi di periode baru! 🎯", en: "This month was quite challenging, let's reset and strategize for the new period! 🎯").`;
+- Jangan sebutkan ID internal database.
+- Bicaralah seperti sahabat akrab yang blak-blakan tapi peduli (playful financial bestie).
+- Jika ada daftar pengeluaran dominan atau berulang (misal: jajan kopi, belanja online, makan di luar), singgung namanya secara jenaka/sarkas santai jika relevan untuk mengilustrasikan kebiasaan belanja pengguna.
+- Selalu beri apresiasi tinggi jika Kategori Tabungan terisi penuh (100%) atau pengguna berhasil hemat.
+- Jika ada kategori yang over-budget, beri teguran santai yang lucu namun jangan sampai merendahkan atau membuat putus asa.
+- Wajib tutup dengan 1 saran atau nasihat finansial yang bijak dan taktis untuk periode berikutnya.
+- Pastikan paritas makna antara 'id' dan 'en' selaras secara alami.`;
 
 /**
- * Formats aggregate financial metrics into a concise prompt for the AI model.
- * Strict privacy: NO individual expense transactions or vendor names are included.
+ * Formats aggregate financial metrics into a prompt for the AI model.
+ * Includes curated top/recurring expense items with strict field sanitization (names & amounts only, no personal notes).
  */
 export function formatAggregatePrompt(data: AiAggregateData): string {
 	const lines: string[] = [
@@ -63,9 +74,18 @@ export function formatAggregatePrompt(data: AiAggregateData): string {
 		);
 	}
 
+	if (data.topExpenses && data.topExpenses.length > 0) {
+		lines.push('', 'Daftar Pengeluaran Dominan & Berulang Bulan Ini:');
+		for (const exp of data.topExpenses) {
+			const catLabel = exp.categoryName ? ` [${exp.categoryName}]` : '';
+			const recurringLabel = exp.count && exp.count > 1 ? ` (muncul ${exp.count}x)` : '';
+			lines.push(`- ${exp.name}${catLabel}: Total ${formatRupiah(exp.amount)}${recurringLabel}`);
+		}
+	}
+
 	lines.push(
 		'',
-		'Berikan 1-2 kalimat frasa ringkas (maksimal 35 kata per bahasa) mengomentari kebiasaan pengeluaran dan tabungan bulan ini dalam JSON {"id": "...", "en": "..."}.'
+		'Berikan ringkasan 2-4 kalimat (sekitar 50-80 kata per bahasa) dengan gaya asyik, sedikit sarkas santai pada pengeluaran dominan, apresiatif pada tabungan, dan ditutup saran bijak dalam format JSON {"id": "...", "en": "..."}.'
 	);
 
 	return lines.join('\n');
@@ -146,8 +166,8 @@ export async function callGroq(
 						{ role: 'system', content: SYSTEM_INSTRUCTION },
 						{ role: 'user', content: prompt }
 					],
-					temperature: 0.7,
-					max_tokens: 300
+					temperature: 0.8,
+					max_tokens: 500
 				}),
 				signal: AbortSignal.timeout(8000)
 			});
@@ -220,8 +240,8 @@ export async function callGemini(
 						}
 					],
 					generationConfig: {
-						temperature: 0.7,
-						maxOutputTokens: 200
+						temperature: 0.8,
+						maxOutputTokens: 500
 					}
 				}),
 				signal: AbortSignal.timeout(8000)

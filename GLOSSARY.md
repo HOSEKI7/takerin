@@ -45,7 +45,7 @@ Sisa budget per Kategori = alokasi nominal − total Pengeluaran di Kategori ter
 _Avoid_: Remaining budget, leftover
 
 **Ringkasan Bulanan (Monthly Summary)**:
-Snapshot data keuangan satu Periode Bulan yang sudah berakhir, termasuk frasa AI yang mengomentari kebiasaan spending user. Di-generate on-demand saat user membuka history, lalu di-cache permanen.
+Snapshot data keuangan satu Periode Bulan yang sudah berakhir, termasuk analisis cerdas dan frasa AI yang mengomentari kebiasaan pengeluaran serta capaian tabungan pengguna dengan konteks pos Pengeluaran dominan dan berulang. Di-generate on-demand saat pengguna membuka riwayat, lalu di-cache permanen.
 _Avoid_: Report, monthly report, recap
 
 **Template Kategori (Category Template)**:
