@@ -2,9 +2,6 @@ import { describe, it, expect, vi } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as periodDb from '#lib/server/db/period.js';
-import * as feedbackDb from '#lib/server/db/feedback.js';
-import * as expenseDb from '#lib/server/db/expense.js';
-import * as onboardingDb from '#lib/server/db/onboarding.js';
 
 describe('App Route Group & Centralized Layout (Issue #26)', () => {
 	const appDir = path.resolve('src/routes/(app)');
@@ -380,7 +377,7 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		});
 	});
 
-	it('integrates ReviewFeedbackModal in (app)/+layout.svelte (Issue #55)', () => {
+	it('integrates ReviewFeedbackModal with clean URL param handling and session deferral in (app)/+layout.svelte (Issue #55)', () => {
 		const layoutPath = path.join(appDir, '+layout.svelte');
 		const content = fs.readFileSync(layoutPath, 'utf-8');
 
@@ -388,112 +385,11 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		expect(content).toContain('<ReviewFeedbackModal');
 		expect(content).toContain('showSessionDeferCheckbox');
 		expect(content).toContain('storageKey={feedbackStorageKey}');
-		expect(content).toContain('takerin_feedback_deferred');
+		expect(content).toContain('takerin_feedback_deferred_');
 		expect(content).toContain('!isExpenseFormRoute');
 		expect(content).toContain('reviewPrompt');
-		expect(content).toContain('sessionStorage.removeItem');
-	});
-
-	describe('Automated 5-expense trigger gate in +layout.server.ts (Issue #55)', () => {
-		it('evaluates shouldPromptFeedback as false if user has under 5 expenses', async () => {
-			const { load } = await import('./+layout.server.js');
-			vi.spyOn(onboardingDb, 'getIncomeSources').mockResolvedValueOnce([]);
-			vi.spyOn(feedbackDb, 'hasUserSubmittedFeedback').mockResolvedValueOnce(false);
-			vi.spyOn(expenseDb, 'countExpenses').mockResolvedValueOnce(4);
-
-			const result = await load({
-				locals: {
-					user: { id: 'u-1', name: 'Tester', email: 'test@example.com' },
-					activePeriod: {
-						id: 'p-1',
-						startDate: '2026-10-25',
-						endDate: '2026-11-24',
-						payDay: 25,
-						totalIncome: 10000000,
-						status: 'active',
-						aiSummary: null,
-						incomeConfirmedAt: new Date(),
-						createdAt: new Date()
-					}
-				},
-				platform: {
-					env: {
-						DB: {} as unknown as D1Database
-					}
-				}
-			} as unknown as Parameters<typeof load>[0]);
-
-			expect(result).toBeDefined();
-			expect(result?.shouldPromptFeedback).toBe(false);
-			expect(result?.hasSubmittedFeedback).toBe(false);
-		});
-
-		it('evaluates shouldPromptFeedback as true when user reaches 5 or more expenses and has not submitted feedback', async () => {
-			const { load } = await import('./+layout.server.js');
-			vi.spyOn(onboardingDb, 'getIncomeSources').mockResolvedValueOnce([]);
-			vi.spyOn(feedbackDb, 'hasUserSubmittedFeedback').mockResolvedValueOnce(false);
-			vi.spyOn(expenseDb, 'countExpenses').mockResolvedValueOnce(5);
-
-			const result = await load({
-				locals: {
-					user: { id: 'u-1', name: 'Tester', email: 'test@example.com' },
-					activePeriod: {
-						id: 'p-1',
-						startDate: '2026-10-25',
-						endDate: '2026-11-24',
-						payDay: 25,
-						totalIncome: 10000000,
-						status: 'active',
-						aiSummary: null,
-						incomeConfirmedAt: new Date(),
-						createdAt: new Date()
-					}
-				},
-				platform: {
-					env: {
-						DB: {} as unknown as D1Database
-					}
-				}
-			} as unknown as Parameters<typeof load>[0]);
-
-			expect(result).toBeDefined();
-			expect(result?.shouldPromptFeedback).toBe(true);
-			expect(result?.hasSubmittedFeedback).toBe(false);
-		});
-
-		it('permanently deactivates shouldPromptFeedback if user has previously submitted review or feedback', async () => {
-			const { load } = await import('./+layout.server.js');
-			vi.spyOn(onboardingDb, 'getIncomeSources').mockResolvedValueOnce([]);
-			vi.spyOn(feedbackDb, 'hasUserSubmittedFeedback').mockResolvedValueOnce(true);
-			const countSpy = vi.spyOn(expenseDb, 'countExpenses');
-			countSpy.mockClear();
-
-			const result = await load({
-				locals: {
-					user: { id: 'u-1', name: 'Tester', email: 'test@example.com' },
-					activePeriod: {
-						id: 'p-1',
-						startDate: '2026-10-25',
-						endDate: '2026-11-24',
-						payDay: 25,
-						totalIncome: 10000000,
-						status: 'active',
-						aiSummary: null,
-						incomeConfirmedAt: new Date(),
-						createdAt: new Date()
-					}
-				},
-				platform: {
-					env: {
-						DB: {} as unknown as D1Database
-					}
-				}
-			} as unknown as Parameters<typeof load>[0]);
-
-			expect(result).toBeDefined();
-			expect(result?.shouldPromptFeedback).toBe(false);
-			expect(result?.hasSubmittedFeedback).toBe(true);
-			expect(countSpy).not.toHaveBeenCalled();
-		});
+		expect(content).toContain('cleanUrl.searchParams.delete');
+		expect(content).toContain('window.history.replaceState');
+		expect(content).toContain('sessionStorage.removeItem(feedbackStorageKey)');
 	});
 });

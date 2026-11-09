@@ -30,21 +30,26 @@
 
 	$effect(() => {
 		if (
-			(hasReviewPromptParam || data.shouldPromptFeedback) &&
+			hasReviewPromptParam &&
 			!isExpenseFormRoute &&
 			!hasSubmittedFeedbackLocally &&
-			!data.hasSubmittedFeedback &&
 			!showIncomeGate &&
 			!hasDismissedThisSession &&
 			!isFeedbackModalOpen
 		) {
 			if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
-				const isDeferred =
-					sessionStorage.getItem(feedbackStorageKey) === 'true' ||
-					sessionStorage.getItem('takerin_feedback_deferred') === 'true';
+				const isDeferred = sessionStorage.getItem(feedbackStorageKey) === 'true';
 				if (!isDeferred) {
 					isFeedbackModalOpen = true;
 				}
+				// Clean up reviewPrompt query param from URL so refresh does not re-trigger
+				const cleanUrl = new URL(window.location.href);
+				cleanUrl.searchParams.delete('reviewPrompt');
+				window.history.replaceState(
+					{},
+					'',
+					cleanUrl.pathname + (cleanUrl.search ? cleanUrl.search : '')
+				);
 			}
 		}
 	});
@@ -70,7 +75,6 @@
 		try {
 			if (typeof sessionStorage !== 'undefined') {
 				sessionStorage.removeItem(feedbackStorageKey);
-				sessionStorage.removeItem('takerin_feedback_deferred');
 			}
 			await authClient.signOut();
 			goto(resolve('/auth/login'));

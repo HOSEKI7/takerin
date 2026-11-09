@@ -2,7 +2,10 @@ import type { PageServerLoad, Actions } from './$types.js';
 import { redirect, fail } from '@sveltejs/kit';
 import { getDashboardData } from '#lib/server/db/dashboard.js';
 import { getActivePeriodCategories, createExpense, countExpenses } from '#lib/server/db/expense.js';
-import { hasUserSubmittedFeedback } from '#lib/server/db/feedback.js';
+import {
+	hasUserSubmittedFeedback,
+	FEEDBACK_PROMPT_EXPENSE_THRESHOLD
+} from '#lib/server/db/feedback.js';
 import { validateExpenseInput } from '#lib/validation/expense.js';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
@@ -88,7 +91,7 @@ export const actions: Actions = {
 				userId: locals.user.id,
 				periodId: dashboardData.period.id
 			});
-			if (count === 5) {
+			if (count === FEEDBACK_PROMPT_EXPENSE_THRESHOLD) {
 				const hasSubmitted = await hasUserSubmittedFeedback(platform.env.DB, locals.user.id);
 				if (!hasSubmitted) {
 					throw redirect(303, '/expenses?reviewPrompt=true');

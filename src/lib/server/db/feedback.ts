@@ -2,6 +2,11 @@ import { eq, sql } from 'drizzle-orm';
 import { getDb } from './index.js';
 import { appFeedback, type AppFeedback } from './schema.js';
 
+/**
+ * Threshold count of recorded expenses in active monthly period that triggers automated review prompt.
+ */
+export const FEEDBACK_PROMPT_EXPENSE_THRESHOLD = 5;
+
 export interface CreateFeedbackInput {
 	userId: string;
 	type: 'review' | 'feedback';

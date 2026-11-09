@@ -15,6 +15,7 @@ vi.mock('#lib/server/db/dashboard.js', () => ({
 }));
 
 vi.mock('#lib/server/db/feedback.js', () => ({
+	FEEDBACK_PROMPT_EXPENSE_THRESHOLD: 5,
 	hasUserSubmittedFeedback: (...args: unknown[]) => mockHasUserSubmittedFeedback(...args)
 }));
 
@@ -184,6 +185,64 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 			await expect(actionsNew.default(mockEvent)).rejects.toMatchObject({
 				status: 303,
 				location: '/expenses?reviewPrompt=true'
+			});
+		});
+
+		it('redirects to /expenses without prompt when 5th expense is created but user has already submitted review', async () => {
+			mockGetDashboardData.mockResolvedValue({
+				period: { id: 'p-1' },
+				categories: [{ id: 'c-1', status: 'active' }]
+			});
+			mockCreateExpense.mockResolvedValue({ id: 'exp-5', success: true });
+			mockCountExpenses.mockResolvedValue(5);
+			mockHasUserSubmittedFeedback.mockResolvedValue(true);
+
+			const formData = new FormData();
+			formData.set('name', 'Buku Catatan');
+			formData.set('amount', '25000');
+			formData.set('categoryId', 'c-1');
+			formData.set('date', '2026-10-21');
+
+			const mockEvent = {
+				locals: { user: { id: 'u-1' } },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: {
+					formData: async () => formData
+				}
+			} as unknown as Parameters<typeof actionsNew.default>[0];
+
+			await expect(actionsNew.default(mockEvent)).rejects.toMatchObject({
+				status: 303,
+				location: '/expenses'
+			});
+		});
+
+		it('redirects to /expenses without prompt when expense count is not 5', async () => {
+			mockGetDashboardData.mockResolvedValue({
+				period: { id: 'p-1' },
+				categories: [{ id: 'c-1', status: 'active' }]
+			});
+			mockCreateExpense.mockResolvedValue({ id: 'exp-6', success: true });
+			mockCountExpenses.mockResolvedValue(6);
+			mockHasUserSubmittedFeedback.mockResolvedValue(false);
+
+			const formData = new FormData();
+			formData.set('name', 'Buku Catatan');
+			formData.set('amount', '25000');
+			formData.set('categoryId', 'c-1');
+			formData.set('date', '2026-10-21');
+
+			const mockEvent = {
+				locals: { user: { id: 'u-1' } },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: {
+					formData: async () => formData
+				}
+			} as unknown as Parameters<typeof actionsNew.default>[0];
+
+			await expect(actionsNew.default(mockEvent)).rejects.toMatchObject({
+				status: 303,
+				location: '/expenses'
 			});
 		});
 	});
