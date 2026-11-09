@@ -40,4 +40,20 @@ describe('Admin Layout Modernization & Strict Isolation (Issue #30)', () => {
 		expect(content).not.toContain('toApp');
 		expect(content).not.toContain('Ke Aplikasi');
 	});
+
+	it('includes /admin/feedback link in both AdminDesktopSidebar and AdminMobileNav (Issue #56)', () => {
+		const desktopSidebarPath = path.resolve('src/lib/components/AdminDesktopSidebar.svelte');
+		const mobileNavPath = path.resolve('src/lib/components/AdminMobileNav.svelte');
+
+		const desktopContent = fs.readFileSync(desktopSidebarPath, 'utf-8');
+		const mobileContent = fs.readFileSync(mobileNavPath, 'utf-8');
+
+		expect(desktopContent).toContain("resolve('/admin/feedback')");
+		expect(desktopContent).toContain("t('admin.navFeedback')");
+		expect(desktopContent).toContain('Comment01Icon');
+
+		expect(mobileContent).toContain("resolve('/admin/feedback')");
+		expect(mobileContent).toContain("t('admin.navFeedback')");
+		expect(mobileContent).toContain('Comment01Icon');
+	});
 });

@@ -18,7 +18,8 @@
 		Activity01Icon,
 		Logout01Icon,
 		Menu01Icon,
-		Cancel01Icon
+		Cancel01Icon,
+		Comment01Icon
 	} from '@hugeicons/core-free-icons';
 
 	interface Props {
@@ -108,6 +109,12 @@
 			href: resolve('/admin/templates'),
 			label: t('admin.navTemplates'),
 			icon: Layers01Icon,
+			exact: false
+		},
+		{
+			href: resolve('/admin/feedback'),
+			label: t('admin.navFeedback'),
+			icon: Comment01Icon,
 			exact: false
 		},
 		{

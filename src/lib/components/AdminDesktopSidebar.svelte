@@ -20,7 +20,8 @@
 		Activity01Icon,
 		Logout01Icon,
 		ArrowLeft02Icon,
-		ArrowRight02Icon
+		ArrowRight02Icon,
+		Comment01Icon
 	} from '@hugeicons/core-free-icons';
 
 	const STORAGE_KEY = 'takerin_admin_sidebar_collapsed';
@@ -109,6 +110,12 @@
 			href: resolve('/admin/templates'),
 			label: t('admin.navTemplates'),
 			icon: Layers01Icon,
+			exact: false
+		},
+		{
+			href: resolve('/admin/feedback'),
+			label: t('admin.navFeedback'),
+			icon: Comment01Icon,
 			exact: false
 		},
 		{

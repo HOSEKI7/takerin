@@ -5,7 +5,9 @@ import { load as usersLoad } from './users/+page.server.js';
 import { load as templatesLoad, actions as templateActions } from './templates/+page.server.js';
 import { load as healthLoad } from './health/+page.server.js';
 import { load as adminsLoad, actions as adminActions } from './admins/+page.server.js';
+import { load as feedbackLoad, actions as feedbackActions } from './feedback/+page.server.js';
 import * as adminDb from '#lib/server/db/admin.js';
+import * as feedbackDb from '#lib/server/db/feedback.js';
 import * as emailModule from '#lib/server/email/index.js';
 
 describe('Admin Routes Server Logic (Seam 4)', () => {
@@ -543,6 +545,183 @@ describe('Admin Routes Server Logic (Seam 4)', () => {
 				success: true,
 				revokedId: 'inv-to-revoke',
 				message: 'Undangan berhasil dibatalkan.'
+			});
+		});
+	});
+
+	describe('/admin/feedback (+page.server.ts)', () => {
+		it('redirects unauthenticated users to /auth/login', async () => {
+			await expect(
+				feedbackLoad({
+					locals: { user: null },
+					platform: { env: { DB: {} as unknown as D1Database } }
+				} as unknown as Parameters<typeof feedbackLoad>[0])
+			).rejects.toMatchObject({
+				status: 303,
+				location: '/auth/login'
+			});
+		});
+
+		it('redirects non-admin users to /dashboard', async () => {
+			await expect(
+				feedbackLoad({
+					locals: { user: regularUser },
+					platform: { env: { DB: {} as unknown as D1Database } }
+				} as unknown as Parameters<typeof feedbackLoad>[0])
+			).rejects.toMatchObject({
+				status: 303,
+				location: '/dashboard'
+			});
+		});
+
+		it('loads feedback entries and metrics for admin users', async () => {
+			const mockFeedbackList: feedbackDb.AdminFeedbackRecord[] = [
+				{
+					id: 'fb-1',
+					userId: 'u1',
+					userName: 'User Satu',
+					userEmail: 'user1@example.com',
+					userImage: null,
+					type: 'review',
+					rating: 5,
+					category: null,
+					content: 'Aplikasi luar biasa',
+					currentRoute: '/dashboard',
+					deviceInfo: 'Chrome on macOS',
+					status: 'pending',
+					isFeatured: false,
+					createdAt: new Date(),
+					updatedAt: new Date()
+				}
+			];
+
+			const mockMetrics: feedbackDb.AdminFeedbackMetrics = {
+				averageRating: 5.0,
+				totalReviews: 1,
+				pendingCount: 1,
+				totalFeedback: 0,
+				totalAll: 1
+			};
+
+			vi.spyOn(feedbackDb, 'getAllFeedbackForAdmin').mockResolvedValueOnce(mockFeedbackList);
+			vi.spyOn(feedbackDb, 'getFeedbackMetrics').mockResolvedValueOnce(mockMetrics);
+
+			const result = (await feedbackLoad({
+				locals: { user: adminUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof feedbackLoad>[0])) as {
+				feedbackList: feedbackDb.AdminFeedbackRecord[];
+				metrics: feedbackDb.AdminFeedbackMetrics;
+			};
+
+			expect(result.feedbackList).toEqual(mockFeedbackList);
+			expect(result.metrics).toEqual(mockMetrics);
+		});
+
+		it('updates feedback status via updateStatus action', async () => {
+			const updateSpy = vi.spyOn(feedbackDb, 'updateFeedbackStatus').mockResolvedValueOnce({
+				id: 'fb-1',
+				userId: 'u1',
+				type: 'feedback',
+				rating: null,
+				category: 'bug',
+				content: 'Perbaikan bug',
+				currentRoute: null,
+				deviceInfo: null,
+				status: 'reviewed',
+				isFeatured: false,
+				createdAt: new Date(),
+				updatedAt: new Date()
+			});
+
+			const formData = new FormData();
+			formData.append('id', 'fb-1');
+			formData.append('status', 'reviewed');
+
+			const mockRequest = {
+				formData: vi.fn().mockResolvedValue(formData)
+			} as unknown as Request;
+
+			const actionResult = await feedbackActions.updateStatus({
+				request: mockRequest,
+				locals: { user: adminUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof feedbackActions.updateStatus>[0]);
+
+			expect(updateSpy).toHaveBeenCalledWith(expect.anything(), 'fb-1', 'reviewed');
+			expect(actionResult).toEqual({ success: true, message: 'Status berhasil diperbarui.' });
+		});
+
+		it('validates input in updateStatus action', async () => {
+			// Missing ID
+			const formData1 = new FormData();
+			formData1.append('status', 'reviewed');
+			const req1 = { formData: vi.fn().mockResolvedValue(formData1) } as unknown as Request;
+			const res1 = await feedbackActions.updateStatus({
+				request: req1,
+				locals: { user: adminUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof feedbackActions.updateStatus>[0]);
+			expect(res1).toMatchObject({ status: 400, data: { error: 'ID masukan wajib diisi.' } });
+
+			// Invalid status
+			const formData2 = new FormData();
+			formData2.append('id', 'fb-1');
+			formData2.append('status', 'invalid-status');
+			const req2 = { formData: vi.fn().mockResolvedValue(formData2) } as unknown as Request;
+			const res2 = await feedbackActions.updateStatus({
+				request: req2,
+				locals: { user: adminUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof feedbackActions.updateStatus>[0]);
+			expect(res2).toMatchObject({ status: 400, data: { error: 'Status tidak valid.' } });
+		});
+
+		it('deletes feedback via deleteFeedback action', async () => {
+			const deleteSpy = vi.spyOn(feedbackDb, 'deleteFeedback').mockResolvedValueOnce(true);
+
+			const formData = new FormData();
+			formData.append('id', 'fb-to-delete');
+
+			const mockRequest = {
+				formData: vi.fn().mockResolvedValue(formData)
+			} as unknown as Request;
+
+			const actionResult = await feedbackActions.deleteFeedback({
+				request: mockRequest,
+				locals: { user: adminUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof feedbackActions.deleteFeedback>[0]);
+
+			expect(deleteSpy).toHaveBeenCalledWith(expect.anything(), 'fb-to-delete');
+			expect(actionResult).toEqual({ success: true, message: 'Entri berhasil dihapus.' });
+		});
+
+		it('rejects non-admin users attempting feedback actions with 403', async () => {
+			const mockRequest = {
+				formData: vi.fn().mockResolvedValue(new FormData())
+			} as unknown as Request;
+
+			const updateRes = await feedbackActions.updateStatus({
+				request: mockRequest,
+				locals: { user: regularUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof feedbackActions.updateStatus>[0]);
+
+			expect(updateRes).toMatchObject({
+				status: 403,
+				data: { error: 'Akses ditolak. Hanya administrator yang diizinkan.' }
+			});
+
+			const deleteRes = await feedbackActions.deleteFeedback({
+				request: mockRequest,
+				locals: { user: regularUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof feedbackActions.deleteFeedback>[0]);
+
+			expect(deleteRes).toMatchObject({
+				status: 403,
+				data: { error: 'Akses ditolak. Hanya administrator yang diizinkan.' }
 			});
 		});
 	});

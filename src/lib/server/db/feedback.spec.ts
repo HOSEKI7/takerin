@@ -2,7 +2,15 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index.js';
 import { user, appFeedback } from './schema.js';
-import { createFeedback, getFeedbackById, hasUserSubmittedFeedback } from './feedback.js';
+import {
+	createFeedback,
+	getFeedbackById,
+	hasUserSubmittedFeedback,
+	getAllFeedbackForAdmin,
+	getFeedbackMetrics,
+	updateFeedbackStatus,
+	deleteFeedback
+} from './feedback.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { eq } from 'drizzle-orm';
@@ -202,5 +210,124 @@ describe('Feedback D1 Database Operations (Seam 1)', () => {
 		// Both now return true
 		expect(await hasUserSubmittedFeedback(proxy.env.DB, testUserId)).toBe(true);
 		expect(await hasUserSubmittedFeedback(proxy.env.DB, testUser2Id)).toBe(true);
+	});
+
+	it('getAllFeedbackForAdmin returns joined feedback entries with user information', async () => {
+		await createFeedback(proxy.env.DB, {
+			userId: testUserId,
+			type: 'review',
+			rating: 5,
+			content: 'Ulasan bintang lima',
+			currentRoute: '/dashboard',
+			deviceInfo: 'Mac OS Chrome'
+		});
+
+		await createFeedback(proxy.env.DB, {
+			userId: testUser2Id,
+			type: 'feedback',
+			category: 'feature',
+			content: 'Permintaan fitur export Excel',
+			currentRoute: '/history'
+		});
+
+		const items = await getAllFeedbackForAdmin(proxy.env.DB);
+		expect(items).toHaveLength(2);
+
+		const reviewItem = items.find((i) => i.type === 'review');
+		expect(reviewItem).toBeDefined();
+		expect(reviewItem?.userName).toBe('Test Feedback User');
+		expect(reviewItem?.userEmail).toBe('feedback-tester@example.com');
+		expect(reviewItem?.rating).toBe(5);
+		expect(reviewItem?.currentRoute).toBe('/dashboard');
+		expect(reviewItem?.deviceInfo).toBe('Mac OS Chrome');
+		expect(reviewItem?.status).toBe('pending');
+
+		const feedbackItem = items.find((i) => i.type === 'feedback');
+		expect(feedbackItem).toBeDefined();
+		expect(feedbackItem?.userName).toBe('Test Second User');
+		expect(feedbackItem?.category).toBe('feature');
+	});
+
+	it('getFeedbackMetrics calculates average rating, total reviews, and pending feedback counts accurately', async () => {
+		// Empty metrics check
+		const initialMetrics = await getFeedbackMetrics(proxy.env.DB);
+		expect(initialMetrics.averageRating).toBe(0);
+		expect(initialMetrics.totalReviews).toBe(0);
+		expect(initialMetrics.pendingCount).toBe(0);
+		expect(initialMetrics.totalFeedback).toBe(0);
+
+		// Add 2 reviews (rating 5 and 4) and 1 feedback
+		const r1 = await createFeedback(proxy.env.DB, {
+			userId: testUserId,
+			type: 'review',
+			rating: 5,
+			content: 'Sangat bagus!'
+		});
+
+		await createFeedback(proxy.env.DB, {
+			userId: testUser2Id,
+			type: 'review',
+			rating: 4,
+			content: 'Bagus tapi bisa lebih cepat'
+		});
+
+		await createFeedback(proxy.env.DB, {
+			userId: testUserId,
+			type: 'feedback',
+			category: 'bug',
+			content: 'Ada typo di dashboard'
+		});
+
+		let metrics = await getFeedbackMetrics(proxy.env.DB);
+		expect(metrics.totalReviews).toBe(2);
+		expect(metrics.totalFeedback).toBe(1);
+		expect(metrics.averageRating).toBe(4.5); // (5 + 4) / 2 = 4.5
+		expect(metrics.pendingCount).toBe(3);
+
+		// Resolve one item
+		await updateFeedbackStatus(proxy.env.DB, r1.id, 'resolved');
+		metrics = await getFeedbackMetrics(proxy.env.DB);
+		expect(metrics.pendingCount).toBe(2);
+	});
+
+	it('updateFeedbackStatus updates status and updatedAt timestamp', async () => {
+		const created = await createFeedback(proxy.env.DB, {
+			userId: testUserId,
+			type: 'feedback',
+			category: 'bug',
+			content: 'Bug deskripsi'
+		});
+
+		expect(created.status).toBe('pending');
+
+		const updated = await updateFeedbackStatus(proxy.env.DB, created.id, 'reviewed');
+		expect(updated).not.toBeNull();
+		expect(updated?.status).toBe('reviewed');
+
+		const fromDb = await getFeedbackById(proxy.env.DB, created.id);
+		expect(fromDb?.status).toBe('reviewed');
+
+		// Returns null for non-existent id
+		const notFound = await updateFeedbackStatus(proxy.env.DB, 'non-existent', 'resolved');
+		expect(notFound).toBeNull();
+	});
+
+	it('deleteFeedback removes entry safely from database', async () => {
+		const created = await createFeedback(proxy.env.DB, {
+			userId: testUserId,
+			type: 'feedback',
+			category: 'general',
+			content: 'Spam masukan yang harus dihapus'
+		});
+
+		const deleted = await deleteFeedback(proxy.env.DB, created.id);
+		expect(deleted).toBe(true);
+
+		const fromDb = await getFeedbackById(proxy.env.DB, created.id);
+		expect(fromDb).toBeNull();
+
+		// Deleting again returns false
+		const deletedAgain = await deleteFeedback(proxy.env.DB, created.id);
+		expect(deletedAgain).toBe(false);
 	});
 });
