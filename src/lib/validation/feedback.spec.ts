@@ -163,4 +163,30 @@ describe('Feedback Input Validation (Seam 2)', () => {
 			expect(result.data.deviceInfo).toBe('Mac / Chrome');
 		}
 	});
+
+	it('returns localized error messages for id and en locales', () => {
+		const resId = validateFeedbackInput({ type: 'review', rating: 0, content: 'test' }, 'id');
+		expect(resId.valid).toBe(false);
+		expect(resId.error).toBe('Skor bintang ulasan harus berupa angka bulat 1 hingga 5.');
+
+		const resEn = validateFeedbackInput({ type: 'review', rating: 0, content: 'test' }, 'en');
+		expect(resEn.valid).toBe(false);
+		expect(resEn.error).toBe('Star rating must be an integer between 1 and 5.');
+
+		const missingCatId = validateFeedbackInput({ type: 'feedback', content: 'test' }, 'id');
+		expect(missingCatId.valid).toBe(false);
+		expect(missingCatId.error).toBe(
+			'Kategori umpan balik wajib dipilih (kendala sistem, saran fitur, atau umum).'
+		);
+
+		const missingCatEn = validateFeedbackInput({ type: 'feedback', content: 'test' }, 'en');
+		expect(missingCatEn.valid).toBe(false);
+		expect(missingCatEn.error).toBe(
+			'Feedback category is required (system bug, feature request, or general).'
+		);
+
+		const shortEn = validateFeedbackInput({ type: 'review', rating: 5, content: 'a' }, 'en');
+		expect(shortEn.valid).toBe(false);
+		expect(shortEn.error).toBe('Content must be at least 3 characters.');
+	});
 });

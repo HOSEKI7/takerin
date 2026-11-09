@@ -33,10 +33,33 @@
 		onSuccess
 	}: Props = $props();
 
+	type FeedbackCategory = 'bug' | 'feature' | 'general';
+
+	const FEEDBACK_CATEGORIES = [
+		{
+			id: 'bug' as FeedbackCategory,
+			icon: Bug01Icon,
+			labelKey: 'feedback.categoryBug',
+			descKey: 'feedback.categoryBugDesc'
+		},
+		{
+			id: 'feature' as FeedbackCategory,
+			icon: Idea01Icon,
+			labelKey: 'feedback.categoryFeature',
+			descKey: 'feedback.categoryFeatureDesc'
+		},
+		{
+			id: 'general' as FeedbackCategory,
+			icon: Comment01Icon,
+			labelKey: 'feedback.categoryGeneral',
+			descKey: 'feedback.categoryGeneralDesc'
+		}
+	] as const;
+
 	let activeTab = $state<'review' | 'feedback'>(untrack(() => initialType));
 	let rating = $state<number>(0);
 	let hoveredRating = $state<number>(0);
-	let category = $state<'bug' | 'feature' | 'general'>('bug');
+	let category = $state<FeedbackCategory>('bug');
 	let content = $state<string>('');
 	let isSubmitting = $state<boolean>(false);
 	let formError = $state<string | null>(null);
@@ -47,9 +70,15 @@
 	let detectedCurrentRoute = $state<string>('');
 	let detectedDeviceInfo = $state<string>('');
 
-	// Active route and device info computation (SSR safe)
-	let resolvedCurrentRoute = $derived(propCurrentRoute || detectedCurrentRoute || '/settings');
+	// Active route and device info computation (universal fallback, SSR safe)
+	let resolvedCurrentRoute = $derived(propCurrentRoute || detectedCurrentRoute || '');
 	let resolvedDeviceInfo = $derived(propDeviceInfo || detectedDeviceInfo || '');
+
+	// Keyboard navigation element references
+	let reviewTabBtn = $state<HTMLButtonElement | undefined>();
+	let feedbackTabBtn = $state<HTMLButtonElement | undefined>();
+	let starButtons = $state<HTMLButtonElement[]>([]);
+	let categoryButtons = $state<HTMLButtonElement[]>([]);
 
 	function closeModal() {
 		isOpen = false;
@@ -120,23 +149,80 @@
 	}
 
 	function handleRatingKeyDown(e: KeyboardEvent, currentStar: number) {
+		let targetStar: number | null = null;
 		if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
 			e.preventDefault();
-			rating = Math.min(5, (rating || currentStar) + 1);
+			targetStar = Math.min(5, (rating || currentStar) + 1);
 		} else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
 			e.preventDefault();
-			rating = Math.max(1, (rating || currentStar) - 1);
+			targetStar = Math.max(1, (rating || currentStar) - 1);
+		} else if (e.key === 'Home') {
+			e.preventDefault();
+			targetStar = 1;
+		} else if (e.key === 'End') {
+			e.preventDefault();
+			targetStar = 5;
 		} else if (['1', '2', '3', '4', '5'].includes(e.key)) {
 			e.preventDefault();
-			rating = Number(e.key);
+			targetStar = Number(e.key);
+		}
+
+		if (targetStar !== null) {
+			rating = targetStar;
+			formError = null;
+			starButtons[targetStar - 1]?.focus();
 		}
 	}
 
 	function handleTabKeyDown(e: KeyboardEvent) {
-		if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+		if (
+			e.key === 'ArrowRight' ||
+			e.key === 'ArrowLeft' ||
+			e.key === 'ArrowDown' ||
+			e.key === 'ArrowUp'
+		) {
 			e.preventDefault();
-			activeTab = activeTab === 'review' ? 'feedback' : 'review';
+			if (activeTab === 'review') {
+				activeTab = 'feedback';
+				feedbackTabBtn?.focus();
+			} else {
+				activeTab = 'review';
+				reviewTabBtn?.focus();
+			}
 			formError = null;
+		} else if (e.key === 'Home') {
+			e.preventDefault();
+			activeTab = 'review';
+			reviewTabBtn?.focus();
+			formError = null;
+		} else if (e.key === 'End') {
+			e.preventDefault();
+			activeTab = 'feedback';
+			feedbackTabBtn?.focus();
+			formError = null;
+		}
+	}
+
+	function handleCategoryKeyDown(e: KeyboardEvent, currentIndex: number) {
+		let targetIdx: number | null = null;
+		if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+			e.preventDefault();
+			targetIdx = (currentIndex + 1) % FEEDBACK_CATEGORIES.length;
+		} else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+			e.preventDefault();
+			targetIdx = (currentIndex - 1 + FEEDBACK_CATEGORIES.length) % FEEDBACK_CATEGORIES.length;
+		} else if (e.key === 'Home') {
+			e.preventDefault();
+			targetIdx = 0;
+		} else if (e.key === 'End') {
+			e.preventDefault();
+			targetIdx = FEEDBACK_CATEGORIES.length - 1;
+		}
+
+		if (targetIdx !== null) {
+			category = FEEDBACK_CATEGORIES[targetIdx].id;
+			formError = null;
+			categoryButtons[targetIdx]?.focus();
 		}
 	}
 </script>
@@ -215,25 +301,26 @@
 					</button>
 				</div>
 			{:else}
-				<!-- Segmented Control Tab Switcher -->
+				<!-- Segmented Control Tab Switcher (ARIA conformant: no tabindex on tablist) -->
 				<div class="px-6 pt-5">
 					<div
 						role="tablist"
-						tabindex="0"
 						aria-label={t('feedback.title')}
-						onkeydown={handleTabKeyDown}
 						class="grid w-full grid-cols-2 rounded-2xl bg-fog/80 p-1.5 dark:bg-dark-card"
 					>
 						<button
+							bind:this={reviewTabBtn}
 							type="button"
 							role="tab"
 							id="tab-review"
 							aria-controls="panel-review"
 							aria-selected={activeTab === 'review'}
+							tabindex={activeTab === 'review' ? 0 : -1}
 							onclick={() => {
 								activeTab = 'review';
 								formError = null;
 							}}
+							onkeydown={handleTabKeyDown}
 							class="flex h-10 cursor-pointer items-center justify-center rounded-xl text-sm font-semibold transition-all focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:focus-visible:ring-lime-voltage {activeTab ===
 							'review'
 								? 'bg-paper text-forest-ink shadow-sm dark:bg-dark-surface dark:text-lime-voltage'
@@ -243,15 +330,18 @@
 							{t('feedback.tabReview')}
 						</button>
 						<button
+							bind:this={feedbackTabBtn}
 							type="button"
 							role="tab"
 							id="tab-feedback"
 							aria-controls="panel-feedback"
 							aria-selected={activeTab === 'feedback'}
+							tabindex={activeTab === 'feedback' ? 0 : -1}
 							onclick={() => {
 								activeTab = 'feedback';
 								formError = null;
 							}}
+							onkeydown={handleTabKeyDown}
 							class="flex h-10 cursor-pointer items-center justify-center rounded-xl text-sm font-semibold transition-all focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:focus-visible:ring-lime-voltage {activeTab ===
 							'feedback'
 								? 'bg-paper text-forest-ink shadow-sm dark:bg-dark-surface dark:text-lime-voltage'
@@ -351,7 +441,7 @@
 							<div>
 								<span
 									id="rating-group-label"
-									class="dark:text-pebble-light block text-sm font-semibold text-charcoal"
+									class="block text-sm font-semibold text-charcoal dark:text-paper"
 								>
 									{t('feedback.ratingLabel')}
 									<span class="text-alarm-red">*</span>
@@ -360,18 +450,20 @@
 									{t('feedback.ratingDescription')}
 								</p>
 
-								<!-- Star Rating Selector -->
+								<!-- Star Rating Selector (WAI-ARIA roving tabindex) -->
 								<div
 									role="radiogroup"
 									aria-labelledby="rating-group-label"
 									class="mt-3 flex items-center space-x-1.5"
 								>
-									{#each [1, 2, 3, 4, 5] as star (star)}
+									{#each [1, 2, 3, 4, 5] as star, idx (star)}
 										{@const isHighlighted = hoveredRating ? star <= hoveredRating : star <= rating}
 										<button
+											bind:this={starButtons[idx]}
 											type="button"
 											role="radio"
 											aria-checked={rating === star}
+											tabindex={rating === star || (!rating && star === 1) ? 0 : -1}
 											aria-label={t('feedback.starRatingAria', {
 												rating: star,
 												label: getRatingLabel(star)
@@ -389,7 +481,7 @@
 												icon={StarIcon}
 												size={28}
 												class="transition-colors {isHighlighted
-													? 'fill-amber-400 text-amber-400 dark:fill-lime-voltage dark:text-lime-voltage'
+													? 'fill-lime-voltage text-lime-voltage'
 													: 'text-fog dark:text-dark-border'}"
 											/>
 										</button>
@@ -413,7 +505,7 @@
 							<div>
 								<label
 									for="review-content"
-									class="dark:text-pebble-light block text-sm font-semibold text-charcoal"
+									class="block text-sm font-semibold text-charcoal dark:text-paper"
 								>
 									{t('feedback.contentReviewLabel')}
 									<span class="text-alarm-red">*</span>
@@ -447,119 +539,55 @@
 							<div>
 								<span
 									id="category-group-label"
-									class="dark:text-pebble-light block text-sm font-semibold text-charcoal"
+									class="block text-sm font-semibold text-charcoal dark:text-paper"
 								>
 									{t('feedback.categoryLabel')}
 									<span class="text-alarm-red">*</span>
 								</span>
 
-								<!-- Feedback Category Radio Chips -->
+								<!-- Feedback Category Radio Chips (DRY configuration loop with roving tabindex) -->
 								<div
 									role="radiogroup"
 									aria-labelledby="category-group-label"
 									class="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-3"
 								>
-									<!-- Bug Category -->
-									<button
-										type="button"
-										role="radio"
-										aria-checked={category === 'bug'}
-										onclick={() => {
-											category = 'bug';
-											formError = null;
-										}}
-										class="flex cursor-pointer flex-col items-start rounded-2xl border p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:focus-visible:ring-lime-voltage {category ===
-										'bug'
-											? 'border-forest-ink bg-linen-mist/50 dark:border-lime-voltage dark:bg-dark-card'
-											: 'border-fog bg-paper hover:bg-fog/40 dark:border-dark-border dark:bg-dark-card/40 dark:hover:bg-dark-card'}"
-									>
-										<div
-											class="mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg {category ===
-											'bug'
-												? 'bg-forest-ink text-paper dark:bg-lime-voltage dark:text-dark-canvas'
-												: 'bg-fog text-slate dark:bg-dark-border dark:text-pebble'}"
+									{#each FEEDBACK_CATEGORIES as cat, idx (cat.id)}
+										<button
+											bind:this={categoryButtons[idx]}
+											type="button"
+											role="radio"
+											aria-checked={category === cat.id}
+											tabindex={category === cat.id ? 0 : -1}
+											onclick={() => {
+												category = cat.id;
+												formError = null;
+											}}
+											onkeydown={(e) => handleCategoryKeyDown(e, idx)}
+											class="flex cursor-pointer flex-col items-start rounded-2xl border p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:focus-visible:ring-lime-voltage {category ===
+											cat.id
+												? 'border-forest-ink bg-linen-mist/50 dark:border-lime-voltage dark:bg-dark-card'
+												: 'border-fog bg-paper hover:bg-fog/40 dark:border-dark-border dark:bg-dark-card/40 dark:hover:bg-dark-card'}"
 										>
-											<HugeiconsIcon icon={Bug01Icon} size={15} />
-										</div>
-										<span
-											class="text-xs font-bold {category === 'bug'
-												? 'text-forest-ink dark:text-lime-voltage'
-												: 'dark:text-pebble-light text-charcoal'}"
-										>
-											{t('feedback.categoryBug')}
-										</span>
-										<span class="mt-0.5 line-clamp-1 text-[11px] text-slate dark:text-pebble">
-											{t('feedback.categoryBugDesc')}
-										</span>
-									</button>
-
-									<!-- Feature Category -->
-									<button
-										type="button"
-										role="radio"
-										aria-checked={category === 'feature'}
-										onclick={() => {
-											category = 'feature';
-											formError = null;
-										}}
-										class="flex cursor-pointer flex-col items-start rounded-2xl border p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:focus-visible:ring-lime-voltage {category ===
-										'feature'
-											? 'border-forest-ink bg-linen-mist/50 dark:border-lime-voltage dark:bg-dark-card'
-											: 'border-fog bg-paper hover:bg-fog/40 dark:border-dark-border dark:bg-dark-card/40 dark:hover:bg-dark-card'}"
-									>
-										<div
-											class="mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg {category ===
-											'feature'
-												? 'bg-forest-ink text-paper dark:bg-lime-voltage dark:text-dark-canvas'
-												: 'bg-fog text-slate dark:bg-dark-border dark:text-pebble'}"
-										>
-											<HugeiconsIcon icon={Idea01Icon} size={15} />
-										</div>
-										<span
-											class="text-xs font-bold {category === 'feature'
-												? 'text-forest-ink dark:text-lime-voltage'
-												: 'dark:text-pebble-light text-charcoal'}"
-										>
-											{t('feedback.categoryFeature')}
-										</span>
-										<span class="mt-0.5 line-clamp-1 text-[11px] text-slate dark:text-pebble">
-											{t('feedback.categoryFeatureDesc')}
-										</span>
-									</button>
-
-									<!-- General Category -->
-									<button
-										type="button"
-										role="radio"
-										aria-checked={category === 'general'}
-										onclick={() => {
-											category = 'general';
-											formError = null;
-										}}
-										class="flex cursor-pointer flex-col items-start rounded-2xl border p-3 text-left transition-all focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:focus-visible:ring-lime-voltage {category ===
-										'general'
-											? 'border-forest-ink bg-linen-mist/50 dark:border-lime-voltage dark:bg-dark-card'
-											: 'border-fog bg-paper hover:bg-fog/40 dark:border-dark-border dark:bg-dark-card/40 dark:hover:bg-dark-card'}"
-									>
-										<div
-											class="mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg {category ===
-											'general'
-												? 'bg-forest-ink text-paper dark:bg-lime-voltage dark:text-dark-canvas'
-												: 'bg-fog text-slate dark:bg-dark-border dark:text-pebble'}"
-										>
-											<HugeiconsIcon icon={Comment01Icon} size={15} />
-										</div>
-										<span
-											class="text-xs font-bold {category === 'general'
-												? 'text-forest-ink dark:text-lime-voltage'
-												: 'dark:text-pebble-light text-charcoal'}"
-										>
-											{t('feedback.categoryGeneral')}
-										</span>
-										<span class="mt-0.5 line-clamp-1 text-[11px] text-slate dark:text-pebble">
-											{t('feedback.categoryGeneralDesc')}
-										</span>
-									</button>
+											<div
+												class="mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg {category ===
+												cat.id
+													? 'bg-forest-ink text-paper dark:bg-lime-voltage dark:text-dark-canvas'
+													: 'bg-fog text-slate dark:bg-dark-border dark:text-pebble'}"
+											>
+												<HugeiconsIcon icon={cat.icon} size={15} />
+											</div>
+											<span
+												class="text-xs font-bold {category === cat.id
+													? 'text-forest-ink dark:text-lime-voltage'
+													: 'text-charcoal dark:text-pebble'}"
+											>
+												{t(cat.labelKey)}
+											</span>
+											<span class="mt-0.5 line-clamp-1 text-[11px] text-slate dark:text-pebble">
+												{t(cat.descKey)}
+											</span>
+										</button>
+									{/each}
 								</div>
 							</div>
 
@@ -567,7 +595,7 @@
 							<div>
 								<label
 									for="feedback-content"
-									class="dark:text-pebble-light block text-sm font-semibold text-charcoal"
+									class="block text-sm font-semibold text-charcoal dark:text-paper"
 								>
 									{t('feedback.contentFeedbackLabel')}
 									<span class="text-alarm-red">*</span>
@@ -597,7 +625,7 @@
 						<button
 							type="button"
 							onclick={closeModal}
-							class="dark:text-pebble-light inline-flex h-11 items-center justify-center rounded-full border border-fog bg-paper px-5 text-sm font-semibold text-charcoal transition-colors hover:bg-fog focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:border-dark-border dark:bg-dark-card dark:hover:bg-dark-muted dark:focus-visible:ring-lime-voltage"
+							class="inline-flex h-11 items-center justify-center rounded-full border border-fog bg-paper px-5 text-sm font-semibold text-charcoal transition-colors hover:bg-fog focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:border-dark-border dark:bg-dark-card dark:text-pebble dark:hover:bg-dark-muted dark:focus-visible:ring-lime-voltage"
 						>
 							{t('feedback.closeButton')}
 						</button>

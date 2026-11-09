@@ -354,6 +354,47 @@ describe('Settings Route Server Logic & Export Endpoints (Seam 4)', () => {
 				})
 			);
 			expect((result as { success?: boolean })?.success).toBe(true);
+			expect((result as { feedbackMessage?: string })?.feedbackMessage).toBe(
+				'Ulasan atau masukan Anda berhasil dikirimkan.'
+			);
+		});
+
+		it('supports English locale responses when takerin_lang cookie is en', async () => {
+			const spy = vi.spyOn(feedbackDb, 'createFeedback').mockResolvedValueOnce({
+				id: 'fb-test-en',
+				userId: mockUserId,
+				type: 'review',
+				rating: 5,
+				category: null,
+				content: 'Great personal finance application!',
+				currentRoute: '/settings',
+				deviceInfo: 'Mac / Chrome',
+				status: 'pending',
+				isFeatured: false,
+				createdAt: new Date(),
+				updatedAt: new Date()
+			});
+
+			const formData = new FormData();
+			formData.set('type', 'review');
+			formData.set('rating', '5');
+			formData.set('content', 'Great personal finance application!');
+
+			const result = await actions.submitFeedback({
+				request: new Request('http://localhost/settings?/submitFeedback', {
+					method: 'POST',
+					body: formData
+				}),
+				locals: { user: mockUser },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				cookies: { get: vi.fn((k: string) => (k === 'takerin_lang' ? 'en' : undefined)) }
+			} as unknown as Parameters<typeof actions.submitFeedback>[0]);
+
+			expect(spy).toHaveBeenCalled();
+			expect((result as { success?: boolean })?.success).toBe(true);
+			expect((result as { feedbackMessage?: string })?.feedbackMessage).toBe(
+				'Your review or feedback has been sent successfully.'
+			);
 		});
 	});
 

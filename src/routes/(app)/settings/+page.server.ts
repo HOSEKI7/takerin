@@ -167,14 +167,20 @@ export const actions: Actions = {
 		throw redirect(303, '/');
 	},
 
-	submitFeedback: async ({ request, locals, platform }) => {
+	submitFeedback: async ({ request, locals, platform, cookies }) => {
 		if (!locals.user) {
 			throw redirect(303, '/auth/login');
 		}
 
+		const rawLocale = cookies?.get?.('takerin_lang');
+		const locale: 'id' | 'en' = rawLocale === 'en' ? 'en' : 'id';
+
 		const d1 = platform?.env?.DB;
 		if (!d1) {
-			return fail(500, { feedbackError: 'Database tidak tersedia.' });
+			return fail(500, {
+				feedbackError:
+					locale === 'en' ? 'Database service unavailable.' : 'Database tidak tersedia.'
+			});
 		}
 
 		const formData = await request.formData();
@@ -185,14 +191,17 @@ export const actions: Actions = {
 		const currentRoute = formData.get('currentRoute');
 		const deviceInfo = formData.get('deviceInfo');
 
-		const validation = validateFeedbackInput({
-			type,
-			rating,
-			category,
-			content,
-			currentRoute,
-			deviceInfo
-		});
+		const validation = validateFeedbackInput(
+			{
+				type,
+				rating,
+				category,
+				content,
+				currentRoute,
+				deviceInfo
+			},
+			locale
+		);
 
 		if (!validation.valid || !validation.data) {
 			return fail(400, { feedbackError: validation.error });
@@ -210,7 +219,10 @@ export const actions: Actions = {
 
 		return {
 			success: true,
-			feedbackMessage: 'Ulasan atau masukan Anda berhasil dikirimkan.'
+			feedbackMessage:
+				locale === 'en'
+					? 'Your review or feedback has been sent successfully.'
+					: 'Ulasan atau masukan Anda berhasil dikirimkan.'
 		};
 	}
 };

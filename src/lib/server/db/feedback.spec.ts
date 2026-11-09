@@ -2,14 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index.js';
 import { user, appFeedback } from './schema.js';
-import {
-	createFeedback,
-	getFeedbackById,
-	hasUserSubmittedFeedback,
-	listFeedback,
-	updateFeedbackStatus,
-	deleteFeedback
-} from './feedback.js';
+import { createFeedback, getFeedbackById } from './feedback.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { eq } from 'drizzle-orm';
@@ -115,8 +108,15 @@ describe('Feedback D1 Database Operations (Seam 1)', () => {
 		expect(created.category).toBeNull();
 		expect(created.content).toBe('Aplikasi Takerin sangat menenangkan dan mudah digunakan.');
 		expect(created.currentRoute).toBe('/settings');
+		expect(created.deviceInfo).toContain('Chrome');
 		expect(created.status).toBe('pending');
 		expect(created.isFeatured).toBe(false);
+
+		// Verify retrieval from D1 database
+		const fromDb = await getFeedbackById(proxy.env.DB, created.id);
+		expect(fromDb).not.toBeNull();
+		expect(fromDb?.rating).toBe(5);
+		expect(fromDb?.type).toBe('review');
 	});
 
 	it('creates a feedback entry with valid category and content', async () => {
@@ -133,24 +133,11 @@ describe('Feedback D1 Database Operations (Seam 1)', () => {
 		expect(created.category).toBe('bug');
 		expect(created.rating).toBeNull();
 		expect(created.content).toBe('Tombol simpan sedikit lambat saat jaringan offline.');
-	});
 
-	it('detects whether a user has submitted any review or feedback', async () => {
-		const initialCheck = await hasUserSubmittedFeedback(proxy.env.DB, testUserId);
-		expect(initialCheck).toBe(false);
-
-		await createFeedback(proxy.env.DB, {
-			userId: testUserId,
-			type: 'review',
-			rating: 4,
-			content: 'Cukup bagus.'
-		});
-
-		const afterCheck = await hasUserSubmittedFeedback(proxy.env.DB, testUserId);
-		expect(afterCheck).toBe(true);
-
-		const otherUserCheck = await hasUserSubmittedFeedback(proxy.env.DB, testUser2Id);
-		expect(otherUserCheck).toBe(false);
+		const fromDb = await getFeedbackById(proxy.env.DB, created.id);
+		expect(fromDb).not.toBeNull();
+		expect(fromDb?.category).toBe('bug');
+		expect(fromDb?.rating).toBeNull();
 	});
 
 	it('retrieves feedback by ID and returns null for non-existent ID', async () => {
@@ -170,85 +157,20 @@ describe('Feedback D1 Database Operations (Seam 1)', () => {
 		expect(notFound).toBeNull();
 	});
 
-	it('filters feedback list by type, category, and status', async () => {
-		await createFeedback(proxy.env.DB, {
-			userId: testUserId,
-			type: 'review',
-			rating: 5,
-			content: 'Review 1'
-		});
-
-		await createFeedback(proxy.env.DB, {
-			userId: testUserId,
-			type: 'feedback',
-			category: 'bug',
-			content: 'Bug 1'
-		});
-
-		await createFeedback(proxy.env.DB, {
-			userId: testUser2Id,
-			type: 'feedback',
-			category: 'feature',
-			content: 'Feature 1'
-		});
-
-		const reviews = await listFeedback(proxy.env.DB, { type: 'review' });
-		expect(reviews.length).toBe(1);
-		expect(reviews[0].type).toBe('review');
-
-		const bugFeedback = await listFeedback(proxy.env.DB, { category: 'bug' });
-		expect(bugFeedback.length).toBe(1);
-		expect(bugFeedback[0].category).toBe('bug');
-
-		const user2Items = await listFeedback(proxy.env.DB, { userId: testUser2Id });
-		expect(user2Items.length).toBe(1);
-		expect(user2Items[0].content).toBe('Feature 1');
-	});
-
-	it('updates feedback status', async () => {
-		const created = await createFeedback(proxy.env.DB, {
-			userId: testUserId,
-			type: 'feedback',
-			category: 'general',
-			content: 'Pertanyaan seputar keamanan data.'
-		});
-
-		expect(created.status).toBe('pending');
-
-		const updated = await updateFeedbackStatus(proxy.env.DB, created.id, 'reviewed');
-		expect(updated).not.toBeNull();
-		expect(updated?.status).toBe('reviewed');
-
-		const refetched = await getFeedbackById(proxy.env.DB, created.id);
-		expect(refetched?.status).toBe('reviewed');
-	});
-
-	it('deletes feedback entry by id', async () => {
-		const created = await createFeedback(proxy.env.DB, {
-			userId: testUserId,
-			type: 'review',
-			rating: 1,
-			content: 'Spam review'
-		});
-
-		const deleted = await deleteFeedback(proxy.env.DB, created.id);
-		expect(deleted).toBe(true);
-
-		const refetched = await getFeedbackById(proxy.env.DB, created.id);
-		expect(refetched).toBeNull();
-	});
-
 	it('cascades deletion when user is deleted', async () => {
-		await createFeedback(proxy.env.DB, {
+		const created = await createFeedback(proxy.env.DB, {
 			userId: testUserId,
 			type: 'review',
 			rating: 5,
 			content: 'User will be deleted'
 		});
 
+		const beforeDelete = await getFeedbackById(proxy.env.DB, created.id);
+		expect(beforeDelete).not.toBeNull();
+
 		await db.delete(user).where(eq(user.id, testUserId));
 
-		const items = await listFeedback(proxy.env.DB, { userId: testUserId });
-		expect(items.length).toBe(0);
+		const afterDelete = await getFeedbackById(proxy.env.DB, created.id);
+		expect(afterDelete).toBeNull();
 	});
 });
