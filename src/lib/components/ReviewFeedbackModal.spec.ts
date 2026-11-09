@@ -131,4 +131,31 @@ describe('ReviewFeedbackModal Component (Seam 3)', () => {
 		expect(enHtml).toContain('id="feedback-defer-session"');
 		expect(enHtml).toContain('Do not show again for this session');
 	});
+
+	it('supports custom storageKey and checks sessionStorage for deferred state', () => {
+		const store = new Map<string, string>();
+		store.set('custom_user_key', 'true');
+		const originalSessionStorage = globalThis.sessionStorage;
+		globalThis.sessionStorage = {
+			getItem: (k: string) => store.get(k) ?? null,
+			setItem: (k: string, v: string) => store.set(k, v),
+			removeItem: (k: string) => store.delete(k),
+			clear: () => store.clear(),
+			key: () => null,
+			length: store.size
+		} as unknown as Storage;
+
+		const { html } = render(ReviewFeedbackModal, {
+			props: {
+				isOpen: true,
+				showSessionDeferCheckbox: true,
+				storageKey: 'custom_user_key'
+			}
+		});
+
+		expect(html).toContain('id="feedback-defer-session"');
+		expect(store.get('custom_user_key')).toBe('true');
+
+		globalThis.sessionStorage = originalSessionStorage;
+	});
 });

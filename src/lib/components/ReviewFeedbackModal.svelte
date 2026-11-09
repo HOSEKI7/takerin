@@ -20,9 +20,9 @@
 		currentRoute?: string;
 		deviceInfo?: string;
 		showSessionDeferCheckbox?: boolean;
+		storageKey?: string;
 		onClose?: () => void;
 		onSuccess?: (data?: unknown) => void;
-		onSessionDeferChange?: (deferred: boolean) => void;
 	}
 
 	let {
@@ -32,9 +32,9 @@
 		currentRoute: propCurrentRoute,
 		deviceInfo: propDeviceInfo,
 		showSessionDeferCheckbox = false,
+		storageKey = 'takerin_feedback_deferred',
 		onClose,
-		onSuccess,
-		onSessionDeferChange
+		onSuccess
 	}: Props = $props();
 
 	type FeedbackCategory = 'bug' | 'feature' | 'general';
@@ -74,7 +74,6 @@
 	let detectedCurrentRoute = $state<string>('');
 	let detectedDeviceInfo = $state<string>('');
 
-	const SESSION_DEFER_STORAGE_KEY = 'takerin_feedback_deferred';
 	let isSessionDeferred = $state<boolean>(false);
 
 	function handleSessionDeferToggle(e: Event) {
@@ -82,12 +81,11 @@
 		isSessionDeferred = target.checked;
 		if (typeof sessionStorage !== 'undefined') {
 			if (isSessionDeferred) {
-				sessionStorage.setItem(SESSION_DEFER_STORAGE_KEY, 'true');
+				sessionStorage.setItem(storageKey, 'true');
 			} else {
-				sessionStorage.removeItem(SESSION_DEFER_STORAGE_KEY);
+				sessionStorage.removeItem(storageKey);
 			}
 		}
-		onSessionDeferChange?.(isSessionDeferred);
 	}
 
 	// Active route and device info computation (universal fallback, SSR safe)
@@ -130,7 +128,7 @@
 
 					if (typeof window !== 'undefined') {
 						if (typeof sessionStorage !== 'undefined') {
-							isSessionDeferred = sessionStorage.getItem(SESSION_DEFER_STORAGE_KEY) === 'true';
+							isSessionDeferred = sessionStorage.getItem(storageKey) === 'true';
 						}
 						if (!propDeviceInfo) {
 							detectedDeviceInfo = JSON.stringify({

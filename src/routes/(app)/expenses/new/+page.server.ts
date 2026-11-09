@@ -1,7 +1,8 @@
 import type { PageServerLoad, Actions } from './$types.js';
 import { redirect, fail } from '@sveltejs/kit';
 import { getDashboardData } from '#lib/server/db/dashboard.js';
-import { getActivePeriodCategories, createExpense } from '#lib/server/db/expense.js';
+import { getActivePeriodCategories, createExpense, countExpenses } from '#lib/server/db/expense.js';
+import { hasUserSubmittedFeedback } from '#lib/server/db/feedback.js';
 import { validateExpenseInput } from '#lib/validation/expense.js';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
@@ -81,6 +82,29 @@ export const actions: Actions = {
 			time: validation.data.time,
 			notes: validation.data.notes
 		});
+
+		try {
+			const count = await countExpenses(platform.env.DB, {
+				userId: locals.user.id,
+				periodId: dashboardData.period.id
+			});
+			if (count === 5) {
+				const hasSubmitted = await hasUserSubmittedFeedback(platform.env.DB, locals.user.id);
+				if (!hasSubmitted) {
+					throw redirect(303, '/expenses?reviewPrompt=true');
+				}
+			}
+		} catch (err) {
+			if (
+				err &&
+				typeof err === 'object' &&
+				'status' in err &&
+				(err as { status: number }).status === 303
+			) {
+				throw err;
+			}
+			console.error('Error evaluating review trigger on new expense:', err);
+		}
 
 		throw redirect(303, '/expenses');
 	}

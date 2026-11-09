@@ -8,9 +8,14 @@ const mockCountExpenses = vi.fn();
 const mockGetExpenseById = vi.fn();
 const mockUpdateExpense = vi.fn();
 const mockDeleteExpense = vi.fn();
+const mockHasUserSubmittedFeedback = vi.fn();
 
 vi.mock('#lib/server/db/dashboard.js', () => ({
 	getDashboardData: (...args: unknown[]) => mockGetDashboardData(...args)
+}));
+
+vi.mock('#lib/server/db/feedback.js', () => ({
+	hasUserSubmittedFeedback: (...args: unknown[]) => mockHasUserSubmittedFeedback(...args)
 }));
 
 vi.mock('#lib/server/db/expense.js', () => ({
@@ -151,6 +156,35 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 				data: { error: 'Kategori tidak valid atau sudah dibekukan.' }
 			});
 			expect(mockCreateExpense).not.toHaveBeenCalled();
+		});
+
+		it('redirects to /expenses?reviewPrompt=true when 5th expense is created and user has not submitted review', async () => {
+			mockGetDashboardData.mockResolvedValue({
+				period: { id: 'p-1' },
+				categories: [{ id: 'c-1', status: 'active' }]
+			});
+			mockCreateExpense.mockResolvedValue({ id: 'exp-5', success: true });
+			mockCountExpenses.mockResolvedValue(5);
+			mockHasUserSubmittedFeedback.mockResolvedValue(false);
+
+			const formData = new FormData();
+			formData.set('name', 'Buku Catatan');
+			formData.set('amount', '25000');
+			formData.set('categoryId', 'c-1');
+			formData.set('date', '2026-10-21');
+
+			const mockEvent = {
+				locals: { user: { id: 'u-1' } },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				request: {
+					formData: async () => formData
+				}
+			} as unknown as Parameters<typeof actionsNew.default>[0];
+
+			await expect(actionsNew.default(mockEvent)).rejects.toMatchObject({
+				status: 303,
+				location: '/expenses?reviewPrompt=true'
+			});
 		});
 	});
 

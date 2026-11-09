@@ -387,7 +387,11 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		expect(content).toContain('ReviewFeedbackModal');
 		expect(content).toContain('<ReviewFeedbackModal');
 		expect(content).toContain('showSessionDeferCheckbox');
+		expect(content).toContain('storageKey={feedbackStorageKey}');
 		expect(content).toContain('takerin_feedback_deferred');
+		expect(content).toContain('!isExpenseFormRoute');
+		expect(content).toContain('reviewPrompt');
+		expect(content).toContain('sessionStorage.removeItem');
 	});
 
 	describe('Automated 5-expense trigger gate in +layout.server.ts (Issue #55)', () => {

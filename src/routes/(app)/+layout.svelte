@@ -8,6 +8,7 @@
 	import { authClient } from '#lib/auth-client.js';
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 
 	let { data, children }: LayoutProps = $props();
 
@@ -16,15 +17,21 @@
 
 	const showIncomeGate = $derived(Boolean(data.activePeriod && data.incomeConfirmedAt === null));
 
-	// Feedback auto-trigger gate & session deferral state (Issue #55)
-	const FEEDBACK_DEFERRED_STORAGE_KEY = 'takerin_feedback_deferred';
+	// Feedback auto-trigger gate & user-scoped session deferral (Issue #55)
+	const feedbackStorageKey = $derived('takerin_feedback_deferred_' + (data.user?.id || 'default'));
+	const isExpenseFormRoute = $derived(
+		page.url.pathname.endsWith('/expenses/new') || page.url.pathname.includes('/edit')
+	);
+	const hasReviewPromptParam = $derived(page.url.searchParams.get('reviewPrompt') === 'true');
+
 	let isFeedbackModalOpen = $state(false);
 	let hasDismissedThisSession = $state(false);
 	let hasSubmittedFeedbackLocally = $state(false);
 
 	$effect(() => {
 		if (
-			data.shouldPromptFeedback &&
+			(hasReviewPromptParam || data.shouldPromptFeedback) &&
+			!isExpenseFormRoute &&
 			!hasSubmittedFeedbackLocally &&
 			!data.hasSubmittedFeedback &&
 			!showIncomeGate &&
@@ -32,7 +39,9 @@
 			!isFeedbackModalOpen
 		) {
 			if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
-				const isDeferred = sessionStorage.getItem(FEEDBACK_DEFERRED_STORAGE_KEY) === 'true';
+				const isDeferred =
+					sessionStorage.getItem(feedbackStorageKey) === 'true' ||
+					sessionStorage.getItem('takerin_feedback_deferred') === 'true';
 				if (!isDeferred) {
 					isFeedbackModalOpen = true;
 				}
@@ -59,6 +68,10 @@
 	async function handleLogout() {
 		isLoggingOut = true;
 		try {
+			if (typeof sessionStorage !== 'undefined') {
+				sessionStorage.removeItem(feedbackStorageKey);
+				sessionStorage.removeItem('takerin_feedback_deferred');
+			}
 			await authClient.signOut();
 			goto(resolve('/auth/login'));
 		} catch (error) {
@@ -115,6 +128,7 @@
 	<ReviewFeedbackModal
 		bind:isOpen={isFeedbackModalOpen}
 		showSessionDeferCheckbox={true}
+		storageKey={feedbackStorageKey}
 		actionUrl="/settings?/submitFeedback"
 		onClose={handleFeedbackModalClose}
 		onSuccess={handleFeedbackSuccess}
