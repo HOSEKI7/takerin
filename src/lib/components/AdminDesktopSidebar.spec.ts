@@ -22,7 +22,7 @@ describe('AdminDesktopSidebar Component & Navigation Seam (Issue #30)', () => {
 		expect(idDict.admin.navTemplates).toBe('Template Kategori');
 		expect(enDict.admin.navTemplates).toBe('Category Templates');
 
-		expect(idDict.admin.navFeedback).toBe('Ulasan & Masukan');
+		expect(idDict.admin.navFeedback).toBe('Ulasan & Umpan Balik');
 		expect(enDict.admin.navFeedback).toBe('Reviews & Feedback');
 
 		expect(idDict.admin.navHealth).toBe('Kesehatan Sistem');

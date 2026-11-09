@@ -62,7 +62,7 @@ describe('Admin Feedback Console UI Component (+page.svelte) (Issue #56)', () =>
 			} as unknown as FeedbackPageProps
 		});
 
-		expect(html).toContain('Ulasan &amp; Masukan Pengguna');
+		expect(html).toContain('Ulasan &amp; Umpan Balik Pengguna');
 		expect(html).toContain('Moderasi &amp; Metrik');
 	});
 
@@ -152,6 +152,6 @@ describe('Admin Feedback Console UI Component (+page.svelte) (Issue #56)', () =>
 			} as unknown as FeedbackPageProps
 		});
 
-		expect(html).toContain('Belum ada masukan atau ulasan yang tercatat.');
+		expect(html).toContain('Belum ada ulasan atau umpan balik yang tercatat.');
 	});
 });

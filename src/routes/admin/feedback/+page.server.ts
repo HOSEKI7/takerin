@@ -61,7 +61,7 @@ export const actions: Actions = {
 		const status = String(formData.get('status') || '').trim();
 
 		if (!id) {
-			return fail(400, { error: 'ID masukan wajib diisi.' });
+			return fail(400, { error: 'ID entri wajib diisi.' });
 		}
 
 		if (status !== 'pending' && status !== 'reviewed' && status !== 'resolved') {
@@ -71,9 +71,9 @@ export const actions: Actions = {
 		try {
 			const updated = await updateFeedbackStatus(platform.env.DB, id, status);
 			if (!updated) {
-				return fail(404, { error: 'Entri masukan tidak ditemukan.' });
+				return fail(404, { error: 'Entri tidak ditemukan.' });
 			}
-			return { success: true, message: 'Status berhasil diperbarui.' };
+			return { success: true, action: 'updateStatus', message: 'Status berhasil diperbarui.' };
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : 'Gagal memperbarui status.';
 			return fail(400, { error: msg });
@@ -93,15 +93,15 @@ export const actions: Actions = {
 		const id = String(formData.get('id') || '').trim();
 
 		if (!id) {
-			return fail(400, { error: 'ID masukan wajib diisi.' });
+			return fail(400, { error: 'ID entri wajib diisi.' });
 		}
 
 		try {
 			const deleted = await deleteFeedback(platform.env.DB, id);
 			if (!deleted) {
-				return fail(404, { error: 'Entri masukan tidak ditemukan atau sudah dihapus.' });
+				return fail(404, { error: 'Entri tidak ditemukan atau sudah dihapus.' });
 			}
-			return { success: true, message: 'Entri berhasil dihapus.' };
+			return { success: true, action: 'deleteFeedback', message: 'Entri berhasil dihapus.' };
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : 'Gagal menghapus entri.';
 			return fail(400, { error: msg });

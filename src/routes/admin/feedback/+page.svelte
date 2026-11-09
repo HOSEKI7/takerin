@@ -58,10 +58,14 @@
 	}
 
 	$effect(() => {
-		if (form?.success && form?.message) {
-			showToast('success', form.message);
+		if (form?.success) {
+			const msg =
+				form.action === 'deleteFeedback'
+					? t('admin.feedback.toastDeleted')
+					: t('admin.feedback.toastStatusUpdated');
+			showToast('success', msg);
 		} else if (form?.error) {
-			showToast('error', form.error);
+			showToast('error', t('admin.feedback.toastError'));
 		}
 	});
 
@@ -392,14 +396,14 @@
 				class="flex items-center justify-between border-t border-fog pt-3 text-xs text-slate dark:border-dark-border dark:text-pebble"
 			>
 				<span>
-					{filteredFeedback.length} entri ditemukan
+					{t('admin.feedback.entriesFound', { count: filteredFeedback.length })}
 				</span>
 				<button
 					type="button"
 					onclick={resetFilters}
 					class="font-bold text-forest-ink underline hover:text-charcoal dark:text-lime-voltage dark:hover:text-paper"
 				>
-					Reset Semua Filter
+					{t('admin.feedback.resetFilter')}
 				</button>
 			</div>
 		{/if}
@@ -547,7 +551,7 @@
 										<button
 											type="button"
 											onclick={() => openDetailModal(item)}
-											class="inline-flex items-center gap-1 rounded-lg border border-fog bg-paper px-2.5 py-1 text-xs font-bold text-forest-ink shadow-2xs transition hover:bg-linen-mist dark:border-dark-border dark:bg-dark-card dark:text-lime-voltage dark:hover:bg-dark-surface"
+											class="inline-flex items-center gap-1 rounded-full border border-fog bg-paper px-2.5 py-1 text-xs font-bold text-forest-ink shadow-2xs transition hover:bg-linen-mist dark:border-dark-border dark:bg-dark-card dark:text-lime-voltage dark:hover:bg-dark-surface"
 											aria-label="{t('admin.feedback.actionDetail')} {item.id}"
 										>
 											<HugeiconsIcon icon={ViewIcon} size={14} />
@@ -557,7 +561,7 @@
 										<button
 											type="button"
 											onclick={() => openDeleteModal(item)}
-											class="inline-flex items-center rounded-lg p-1.5 text-slate transition hover:bg-red-50 hover:text-alarm-red dark:text-pebble dark:hover:bg-red-950/40 dark:hover:text-red-400"
+											class="inline-flex items-center rounded-full p-1.5 text-slate transition hover:bg-red-50 hover:text-alarm-red dark:text-pebble dark:hover:bg-red-950/40 dark:hover:text-red-400"
 											aria-label="{t('admin.feedback.actionDelete')} {item.id}"
 										>
 											<HugeiconsIcon icon={Delete02Icon} size={16} />
@@ -578,7 +582,7 @@
 									</p>
 									{#if hasActiveFilters}
 										<Button variant="secondary" size="sm" onclick={resetFilters}>
-											Reset Filter
+											{t('admin.feedback.resetFilter')}
 										</Button>
 									{/if}
 								</div>
@@ -777,7 +781,7 @@
 								{#if diag.screen}
 									<br />
 									<span class="font-sans font-bold text-forest-ink dark:text-lime-voltage"
-										>Viewport:</span
+										>{t('admin.feedback.labelViewport')}</span
 									>
 									{diag.screen}
 								{/if}

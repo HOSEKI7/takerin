@@ -649,7 +649,11 @@ describe('Admin Routes Server Logic (Seam 4)', () => {
 			} as unknown as Parameters<typeof feedbackActions.updateStatus>[0]);
 
 			expect(updateSpy).toHaveBeenCalledWith(expect.anything(), 'fb-1', 'reviewed');
-			expect(actionResult).toEqual({ success: true, message: 'Status berhasil diperbarui.' });
+			expect(actionResult).toEqual({
+				success: true,
+				action: 'updateStatus',
+				message: 'Status berhasil diperbarui.'
+			});
 		});
 
 		it('validates input in updateStatus action', async () => {
@@ -662,7 +666,7 @@ describe('Admin Routes Server Logic (Seam 4)', () => {
 				locals: { user: adminUser },
 				platform: { env: { DB: {} as unknown as D1Database } }
 			} as unknown as Parameters<typeof feedbackActions.updateStatus>[0]);
-			expect(res1).toMatchObject({ status: 400, data: { error: 'ID masukan wajib diisi.' } });
+			expect(res1).toMatchObject({ status: 400, data: { error: 'ID entri wajib diisi.' } });
 
 			// Invalid status
 			const formData2 = new FormData();
@@ -694,7 +698,11 @@ describe('Admin Routes Server Logic (Seam 4)', () => {
 			} as unknown as Parameters<typeof feedbackActions.deleteFeedback>[0]);
 
 			expect(deleteSpy).toHaveBeenCalledWith(expect.anything(), 'fb-to-delete');
-			expect(actionResult).toEqual({ success: true, message: 'Entri berhasil dihapus.' });
+			expect(actionResult).toEqual({
+				success: true,
+				action: 'deleteFeedback',
+				message: 'Entri berhasil dihapus.'
+			});
 		});
 
 		it('rejects non-admin users attempting feedback actions with 403', async () => {
