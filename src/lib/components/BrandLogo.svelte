@@ -66,6 +66,8 @@
 	}
 </script>
 
+<!-- eslint-disable svelte/no-navigation-without-resolve -->
+
 {#snippet logoBody()}
 	{#if variant === 'mark'}
 		<div

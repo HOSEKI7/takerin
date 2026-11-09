@@ -17,7 +17,14 @@ const PROTECTED_PREFIXES = [
 	'/admin'
 ];
 
-const USER_PREFIXES = ['/dashboard', '/expenses', '/incomes', '/categories', '/history', '/onboarding'];
+const USER_PREFIXES = [
+	'/dashboard',
+	'/expenses',
+	'/incomes',
+	'/categories',
+	'/history',
+	'/onboarding'
+];
 
 function tryGetEnv(): Record<string, unknown> | undefined {
 	try {

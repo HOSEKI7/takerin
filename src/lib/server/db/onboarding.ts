@@ -109,10 +109,7 @@ export async function getIncomeSources(d1: D1Database, userId: string, periodId?
 			.select()
 			.from(schema.incomeSource)
 			.where(
-				and(
-					eq(schema.incomeSource.userId, userId),
-					eq(schema.incomeSource.periodId, periodId)
-				)
+				and(eq(schema.incomeSource.userId, userId), eq(schema.incomeSource.periodId, periodId))
 			);
 		if (periodSources.length > 0) {
 			return periodSources;
@@ -122,12 +119,7 @@ export async function getIncomeSources(d1: D1Database, userId: string, periodId?
 		return db
 			.select()
 			.from(schema.incomeSource)
-			.where(
-				and(
-					eq(schema.incomeSource.userId, userId),
-					isNull(schema.incomeSource.periodId)
-				)
-			);
+			.where(and(eq(schema.incomeSource.userId, userId), isNull(schema.incomeSource.periodId)));
 	}
 	return db.select().from(schema.incomeSource).where(eq(schema.incomeSource.userId, userId));
 }

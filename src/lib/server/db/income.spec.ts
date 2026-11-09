@@ -2,16 +2,12 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index.js';
 import { user, monthlyPeriod, incomeSource, category, expense, userSettings } from './schema.js';
-import {
-	getPeriodIncomeSources,
-	confirmPeriodIncome,
-	ensureActivePeriod
-} from './period.js';
+import { getPeriodIncomeSources, confirmPeriodIncome, ensureActivePeriod } from './period.js';
 import { getIncomeSources } from './onboarding.js';
 import { getCompletedPeriodDetail } from './history.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 describe('Per-Period Income Source D1 Database Operations (Seam 1)', () => {
 	let proxy: Awaited<ReturnType<typeof getPlatformProxy<Env>>>;
@@ -23,6 +19,7 @@ describe('Per-Period Income Source D1 Database Operations (Seam 1)', () => {
 		db = getDb(proxy.env.DB);
 
 		// Clean up tables in correct dependency order
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS app_feedback;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS admin_invitations;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS expense;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
@@ -415,25 +412,17 @@ describe('Per-Period Income Source D1 Database Operations (Seam 1)', () => {
 
 		// 6. User mutates and saves income via confirmPeriodIncome:
 		// Gaji Pokok becomes 15.000.000 + Bonus Kinerja 5.000.000 = Total 20.000.000
-		const mutationResult = await confirmPeriodIncome(
-			proxy.env.DB,
-			testUserId,
-			periodId,
-			[
-				{ name: 'Gaji Pokok', amount: 15000000 },
-				{ name: 'Bonus Kinerja', amount: 5000000 }
-			]
-		);
+		const mutationResult = await confirmPeriodIncome(proxy.env.DB, testUserId, periodId, [
+			{ name: 'Gaji Pokok', amount: 15000000 },
+			{ name: 'Bonus Kinerja', amount: 5000000 }
+		]);
 
 		expect(mutationResult.success).toBe(true);
 		expect(mutationResult.totalIncome).toBe(20000000);
 
 		// Check that period totalIncome is updated in database
 		const updatedPeriod = (
-			await db
-				.select()
-				.from(monthlyPeriod)
-				.where(eq(monthlyPeriod.id, periodId))
+			await db.select().from(monthlyPeriod).where(eq(monthlyPeriod.id, periodId))
 		)[0];
 		expect(updatedPeriod.totalIncome).toBe(20000000);
 
@@ -484,15 +473,16 @@ describe('Per-Period Income Source D1 Database Operations (Seam 1)', () => {
 		);
 
 		// 9. Mutate New Period Income Sources (to ensure zero cross-period leakage):
-		await confirmPeriodIncome(
-			proxy.env.DB,
-			testUserId,
-			nextPeriod.id,
-			[{ name: 'Gaji Baru November', amount: 30000000 }]
-		);
+		await confirmPeriodIncome(proxy.env.DB, testUserId, nextPeriod.id, [
+			{ name: 'Gaji Baru November', amount: 30000000 }
+		]);
 
 		// 10. Re-verify Past Period Detail remains 100% intact and unchanged
-		const pastDetailAfterNovMutation = await getCompletedPeriodDetail(proxy.env.DB, testUserId, periodId);
+		const pastDetailAfterNovMutation = await getCompletedPeriodDetail(
+			proxy.env.DB,
+			testUserId,
+			periodId
+		);
 		expect(pastDetailAfterNovMutation).not.toBeNull();
 		expect(pastDetailAfterNovMutation?.summary.totalIncome).toBe(20000000);
 		const pastSources = pastDetailAfterNovMutation!.incomeSources;

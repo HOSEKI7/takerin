@@ -179,6 +179,7 @@ export async function getAllUserExpensesForExport(
  */
 export async function deleteUserData(d1: D1Database, userId: string): Promise<void> {
 	const batchStatements = [
+		d1.prepare('DELETE FROM app_feedback WHERE user_id = ?').bind(userId),
 		d1.prepare('DELETE FROM expense WHERE user_id = ?').bind(userId),
 		d1.prepare('DELETE FROM category WHERE user_id = ?').bind(userId),
 		d1.prepare('DELETE FROM monthly_period WHERE user_id = ?').bind(userId),

@@ -32,9 +32,7 @@ export function validateIncomeEditable(
 			isLocked: true,
 			reason: 'no_active_period',
 			error:
-				locale === 'en'
-					? 'No active Monthly Period found.'
-					: 'Periode Bulan aktif tidak ditemukan.'
+				locale === 'en' ? 'No active Monthly Period found.' : 'Periode Bulan aktif tidak ditemukan.'
 		};
 	}
 
@@ -104,9 +102,7 @@ export function validateIncomeSources(
 			return {
 				valid: false,
 				error:
-					locale === 'en'
-						? 'Invalid income source data.'
-						: 'Data Sumber Pemasukan tidak valid.'
+					locale === 'en' ? 'Invalid income source data.' : 'Data Sumber Pemasukan tidak valid.'
 			};
 		}
 

@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { load, actions } from './+page.server.js';
 import * as periodDb from '#lib/server/db/period.js';
 import * as onboardingDb from '#lib/server/db/onboarding.js';
-import * as incomeValidation from '#lib/validation/income.js';
 
 describe('Incomes Route Server Logic (Seam 3)', () => {
 	describe('load', () => {
@@ -65,7 +64,11 @@ describe('Incomes Route Server Logic (Seam 3)', () => {
 
 			expect(result.activePeriod).toEqual(activePeriod);
 			expect(result.incomeSources).toHaveLength(1);
-			expect(result.incomeSources[0]).toMatchObject({ id: 's1', name: 'Gaji Pokok', amount: 10000000 });
+			expect(result.incomeSources[0]).toMatchObject({
+				id: 's1',
+				name: 'Gaji Pokok',
+				amount: 10000000
+			});
 			expect(result.isLocked).toBe(false);
 		});
 
@@ -208,7 +211,8 @@ describe('Incomes Route Server Logic (Seam 3)', () => {
 			expect(result).toMatchObject({
 				status: 400,
 				data: expect.objectContaining({
-					error: 'Sumber Pemasukan hanya boleh diubah sebelum 1 hari sebelum Tanggal Gajian berikutnya.'
+					error:
+						'Sumber Pemasukan hanya boleh diubah sebelum 1 hari sebelum Tanggal Gajian berikutnya.'
 				})
 			});
 
@@ -354,15 +358,10 @@ describe('Incomes Route Server Logic (Seam 3)', () => {
 				cookies: { get: () => 'id' }
 			} as unknown as Parameters<typeof actions.saveIncomes>[0]);
 
-			expect(confirmSpy).toHaveBeenCalledWith(
-				expect.anything(),
-				'u1',
-				'p1',
-				[
-					{ name: 'Gaji Pokok', amount: 10000000 },
-					{ name: 'Bonus', amount: 2000000 }
-				]
-			);
+			expect(confirmSpy).toHaveBeenCalledWith(expect.anything(), 'u1', 'p1', [
+				{ name: 'Gaji Pokok', amount: 10000000 },
+				{ name: 'Bonus', amount: 2000000 }
+			]);
 			expect(result).toEqual({ success: true, totalIncome: 12000000 });
 		});
 	});

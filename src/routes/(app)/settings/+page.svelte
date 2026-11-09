@@ -17,9 +17,11 @@
 		Calendar01Icon,
 		Download01Icon,
 		Alert02Icon,
-		Coffee01Icon
+		Coffee01Icon,
+		Comment01Icon
 	} from '@hugeicons/core-free-icons';
 	import DonationModal from '#lib/components/DonationModal.svelte';
+	import ReviewFeedbackModal from '#lib/components/ReviewFeedbackModal.svelte';
 
 	let { data, form }: PageProps = $props();
 
@@ -45,6 +47,7 @@
 	let resendCooldown = $state(0);
 	let cooldownTimer: ReturnType<typeof setInterval> | null = null;
 	let isDonationModalOpen = $state(false);
+	let isFeedbackModalOpen = $state(false);
 
 	function openChangeEmailForm() {
 		changeEmailOpen = true;
@@ -1233,7 +1236,38 @@
 
 		<DonationModal bind:isOpen={isDonationModalOpen} />
 
-		<!-- SECTION 6: ZONA BAHAYA (HAPUS AKUN) -->
+		<!-- SECTION 6: ULASAN & UMPAN BALIK -->
+		<Card variant="default" padding="lg">
+			<div class="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+				<div
+					class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-linen-mist text-forest-ink dark:bg-dark-card dark:text-lime-voltage"
+				>
+					<HugeiconsIcon icon={Comment01Icon} size={28} />
+				</div>
+				<div class="min-w-0 flex-1">
+					<h2 class="text-base font-bold text-obsidian dark:text-paper">
+						{t('settings.feedbackTitle')}
+					</h2>
+					<p class="mt-1 text-xs leading-relaxed text-slate dark:text-linen-mist/80">
+						{t('settings.feedbackDesc')}
+					</p>
+					<div class="mt-4">
+						<button
+							type="button"
+							onclick={() => (isFeedbackModalOpen = true)}
+							class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-forest-ink px-5 py-2 text-xs font-bold text-paper shadow-xs transition hover:bg-spruce focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-95 dark:bg-lime-voltage dark:text-forest-ink dark:hover:brightness-95 dark:focus-visible:ring-lime-voltage"
+						>
+							<HugeiconsIcon icon={Comment01Icon} size={16} />
+							<span>{t('settings.feedbackButton')}</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</Card>
+
+		<ReviewFeedbackModal bind:isOpen={isFeedbackModalOpen} />
+
+		<!-- SECTION 7: ZONA BAHAYA (HAPUS AKUN) -->
 		<div
 			class="rounded-lg border border-alarm-red/40 bg-alarm-red/5 p-6 dark:border-alarm-red/30 dark:bg-alarm-red/10"
 		>

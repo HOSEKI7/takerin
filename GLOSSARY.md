@@ -80,4 +80,12 @@ _Avoid_: Admin default, auto-admin, admin tanpa verifikasi
 Kanal pemberian apresiasi atau tip sukarela dari pengguna kepada pengembang aplikasi (melalui QRIS universal atau platform pihak ketiga) untuk menjaga kelangsungan layanan gratis tanpa mengubah data anggaran pengguna.
 _Avoid_: Donasi wajib, langganan berbayar, paywall
 
+**Ulasan (Review)**:
+Pemberian penilaian skor bintang (1–5) dan deskripsi pengalaman pengguna atas kepuasan menggunakan aplikasi Takerin.
+_Avoid_: Rating toko, ulasan belanja, bintang app store
+
+**Umpan Balik (Feedback)**:
+Penyampaian masukan spesifik berdasarkan kategori (kendala sistem, usulan fitur, atau saran umum) untuk perbaikan dan pengembangan aplikasi.
+_Avoid_: Komplain, tiket bantuan, customer service, laporan insiden
+
 

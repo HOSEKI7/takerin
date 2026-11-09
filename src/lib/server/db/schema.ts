@@ -195,3 +195,34 @@ export const adminInvitations = sqliteTable('admin_invitations', {
 	revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
 	createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull()
 });
+
+export const appFeedback = sqliteTable(
+	'app_feedback',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		type: text('type', { enum: ['review', 'feedback'] }).notNull(),
+		rating: integer('rating'),
+		category: text('category', { enum: ['bug', 'feature', 'general'] }),
+		content: text('content').notNull(),
+		currentRoute: text('current_route'),
+		deviceInfo: text('device_info'),
+		status: text('status', { enum: ['pending', 'reviewed', 'resolved'] })
+			.notNull()
+			.default('pending'),
+		isFeatured: integer('is_featured', { mode: 'boolean' }).notNull().default(false),
+		createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
+	},
+	(table) => [
+		index('app_feedback_user_id_idx').on(table.userId),
+		index('app_feedback_type_idx').on(table.type),
+		index('app_feedback_status_idx').on(table.status),
+		index('app_feedback_created_at_idx').on(table.createdAt)
+	]
+);
+
+export type AppFeedback = typeof appFeedback.$inferSelect;
+export type NewAppFeedback = typeof appFeedback.$inferInsert;

@@ -74,10 +74,7 @@ export async function ensureActivePeriod(
 		.select()
 		.from(schema.incomeSource)
 		.where(
-			and(
-				eq(schema.incomeSource.userId, userId),
-				eq(schema.incomeSource.periodId, activePeriod.id)
-			)
+			and(eq(schema.incomeSource.userId, userId), eq(schema.incomeSource.periodId, activePeriod.id))
 		);
 
 	// Fallback for legacy records without periodId
@@ -85,12 +82,7 @@ export async function ensureActivePeriod(
 		incomeSources = await db
 			.select()
 			.from(schema.incomeSource)
-			.where(
-				and(
-					eq(schema.incomeSource.userId, userId),
-					isNull(schema.incomeSource.periodId)
-				)
-			);
+			.where(and(eq(schema.incomeSource.userId, userId), isNull(schema.incomeSource.periodId)));
 	}
 
 	const totalIncome =
@@ -241,10 +233,7 @@ export async function confirmPeriodIncome(
 		db
 			.delete(schema.incomeSource)
 			.where(
-				and(
-					eq(schema.incomeSource.userId, userId),
-					eq(schema.incomeSource.periodId, periodId)
-				)
+				and(eq(schema.incomeSource.userId, userId), eq(schema.incomeSource.periodId, periodId))
 			)
 	);
 
@@ -280,19 +269,10 @@ export async function confirmPeriodIncome(
 /**
  * Fetches all income sources belonging to a specific monthly period.
  */
-export async function getPeriodIncomeSources(
-	d1: D1Database,
-	userId: string,
-	periodId: string
-) {
+export async function getPeriodIncomeSources(d1: D1Database, userId: string, periodId: string) {
 	const db = getDb(d1);
 	return db
 		.select()
 		.from(schema.incomeSource)
-		.where(
-			and(
-				eq(schema.incomeSource.userId, userId),
-				eq(schema.incomeSource.periodId, periodId)
-			)
-		);
+		.where(and(eq(schema.incomeSource.userId, userId), eq(schema.incomeSource.periodId, periodId)));
 }

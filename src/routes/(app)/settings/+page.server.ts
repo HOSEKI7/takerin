@@ -7,12 +7,14 @@ import {
 	deleteUserData,
 	getAllUserPeriodsForExportSelection
 } from '#lib/server/db/settings.js';
+import { createFeedback } from '#lib/server/db/feedback.js';
 import {
 	validateDisplayName,
 	validatePayDate,
 	validateLanguage,
 	validateTheme
 } from '#lib/validation/settings.js';
+import { validateFeedbackInput } from '#lib/validation/feedback.js';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
 	if (!locals.user) {
@@ -163,5 +165,52 @@ export const actions: Actions = {
 		cookies.delete('better-auth.session_token', { path: '/' });
 
 		throw redirect(303, '/');
+	},
+
+	submitFeedback: async ({ request, locals, platform }) => {
+		if (!locals.user) {
+			throw redirect(303, '/auth/login');
+		}
+
+		const d1 = platform?.env?.DB;
+		if (!d1) {
+			return fail(500, { feedbackError: 'Database tidak tersedia.' });
+		}
+
+		const formData = await request.formData();
+		const type = formData.get('type');
+		const rating = formData.get('rating');
+		const category = formData.get('category');
+		const content = formData.get('content');
+		const currentRoute = formData.get('currentRoute');
+		const deviceInfo = formData.get('deviceInfo');
+
+		const validation = validateFeedbackInput({
+			type,
+			rating,
+			category,
+			content,
+			currentRoute,
+			deviceInfo
+		});
+
+		if (!validation.valid || !validation.data) {
+			return fail(400, { feedbackError: validation.error });
+		}
+
+		await createFeedback(d1, {
+			userId: locals.user.id,
+			type: validation.data.type,
+			rating: validation.data.rating,
+			category: validation.data.category,
+			content: validation.data.content,
+			currentRoute: validation.data.currentRoute,
+			deviceInfo: validation.data.deviceInfo
+		});
+
+		return {
+			success: true,
+			feedbackMessage: 'Ulasan atau masukan Anda berhasil dikirimkan.'
+		};
 	}
 };

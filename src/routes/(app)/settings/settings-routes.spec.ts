@@ -3,6 +3,7 @@ import { load, actions } from './+page.server.js';
 import { GET as getCsvExport } from '../../api/export/csv/+server.js';
 import { GET as getPdfExport } from '../../api/export/pdf/+server.js';
 import * as settingsDb from '#lib/server/db/settings.js';
+import * as feedbackDb from '#lib/server/db/feedback.js';
 
 describe('Settings Route Server Logic & Export Endpoints (Seam 4)', () => {
 	const mockUserId = 'user-settings-route-test';
@@ -167,6 +168,192 @@ describe('Settings Route Server Logic & Export Endpoints (Seam 4)', () => {
 			});
 
 			expect(spy).toHaveBeenCalledWith(expect.anything(), mockUserId);
+		});
+	});
+
+	describe('actions.submitFeedback', () => {
+		it('redirects to /auth/login when unauthenticated', async () => {
+			const formData = new FormData();
+			formData.set('type', 'review');
+			formData.set('rating', '5');
+			formData.set('content', 'Mantap');
+
+			await expect(
+				actions.submitFeedback({
+					request: new Request('http://localhost/settings?/submitFeedback', {
+						method: 'POST',
+						body: formData
+					}),
+					locals: { user: null },
+					platform: { env: { DB: {} as unknown as D1Database } }
+				} as unknown as Parameters<typeof actions.submitFeedback>[0])
+			).rejects.toMatchObject({
+				status: 303,
+				location: '/auth/login'
+			});
+		});
+
+		it('returns 500 when database is unavailable', async () => {
+			const formData = new FormData();
+			formData.set('type', 'review');
+			formData.set('rating', '5');
+			formData.set('content', 'Mantap');
+
+			const result = await actions.submitFeedback({
+				request: new Request('http://localhost/settings?/submitFeedback', {
+					method: 'POST',
+					body: formData
+				}),
+				locals: { user: mockUser },
+				platform: { env: {} }
+			} as unknown as Parameters<typeof actions.submitFeedback>[0]);
+
+			expect(result?.status).toBe(500);
+			expect((result?.data as { feedbackError?: string })?.feedbackError).toBeDefined();
+		});
+
+		it('returns 400 when review validation fails (missing rating)', async () => {
+			const formData = new FormData();
+			formData.set('type', 'review');
+			formData.set('content', 'Ulasan tanpa rating');
+
+			const result = await actions.submitFeedback({
+				request: new Request('http://localhost/settings?/submitFeedback', {
+					method: 'POST',
+					body: formData
+				}),
+				locals: { user: mockUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof actions.submitFeedback>[0]);
+
+			expect(result?.status).toBe(400);
+			expect((result?.data as { feedbackError?: string })?.feedbackError).toBeDefined();
+		});
+
+		it('returns 400 when feedback validation fails (missing category)', async () => {
+			const formData = new FormData();
+			formData.set('type', 'feedback');
+			formData.set('content', 'Masukan tanpa kategori');
+
+			const result = await actions.submitFeedback({
+				request: new Request('http://localhost/settings?/submitFeedback', {
+					method: 'POST',
+					body: formData
+				}),
+				locals: { user: mockUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof actions.submitFeedback>[0]);
+
+			expect(result?.status).toBe(400);
+			expect((result?.data as { feedbackError?: string })?.feedbackError).toBeDefined();
+		});
+
+		it('returns 400 when content is shorter than 3 characters', async () => {
+			const formData = new FormData();
+			formData.set('type', 'feedback');
+			formData.set('category', 'bug');
+			formData.set('content', 'ab');
+
+			const result = await actions.submitFeedback({
+				request: new Request('http://localhost/settings?/submitFeedback', {
+					method: 'POST',
+					body: formData
+				}),
+				locals: { user: mockUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof actions.submitFeedback>[0]);
+
+			expect(result?.status).toBe(400);
+			expect((result?.data as { feedbackError?: string })?.feedbackError).toBeDefined();
+		});
+
+		it('saves valid review to database and returns success', async () => {
+			const spy = vi.spyOn(feedbackDb, 'createFeedback').mockResolvedValueOnce({
+				id: 'fb-test-1',
+				userId: mockUserId,
+				type: 'review',
+				rating: 5,
+				category: null,
+				content: 'Aplikasi sangat membantu pengaturan budget bulanan saya.',
+				currentRoute: '/settings',
+				deviceInfo: 'Mac / Safari',
+				status: 'pending',
+				isFeatured: false,
+				createdAt: new Date(),
+				updatedAt: new Date()
+			});
+
+			const formData = new FormData();
+			formData.set('type', 'review');
+			formData.set('rating', '5');
+			formData.set('content', 'Aplikasi sangat membantu pengaturan budget bulanan saya.');
+			formData.set('currentRoute', '/settings');
+			formData.set('deviceInfo', 'Mac / Safari');
+
+			const result = await actions.submitFeedback({
+				request: new Request('http://localhost/settings?/submitFeedback', {
+					method: 'POST',
+					body: formData
+				}),
+				locals: { user: mockUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof actions.submitFeedback>[0]);
+
+			expect(spy).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({
+					userId: mockUserId,
+					type: 'review',
+					rating: 5,
+					content: 'Aplikasi sangat membantu pengaturan budget bulanan saya.',
+					currentRoute: '/settings',
+					deviceInfo: 'Mac / Safari'
+				})
+			);
+			expect((result as { success?: boolean })?.success).toBe(true);
+		});
+
+		it('saves valid feedback to database and returns success', async () => {
+			const spy = vi.spyOn(feedbackDb, 'createFeedback').mockResolvedValueOnce({
+				id: 'fb-test-2',
+				userId: mockUserId,
+				type: 'feedback',
+				rating: null,
+				category: 'feature',
+				content: 'Mohon tambahkan fitur dark mode otomatis berdasarkan jam.',
+				currentRoute: '/dashboard',
+				deviceInfo: null,
+				status: 'pending',
+				isFeatured: false,
+				createdAt: new Date(),
+				updatedAt: new Date()
+			});
+
+			const formData = new FormData();
+			formData.set('type', 'feedback');
+			formData.set('category', 'feature');
+			formData.set('content', 'Mohon tambahkan fitur dark mode otomatis berdasarkan jam.');
+			formData.set('currentRoute', '/dashboard');
+
+			const result = await actions.submitFeedback({
+				request: new Request('http://localhost/settings?/submitFeedback', {
+					method: 'POST',
+					body: formData
+				}),
+				locals: { user: mockUser },
+				platform: { env: { DB: {} as unknown as D1Database } }
+			} as unknown as Parameters<typeof actions.submitFeedback>[0]);
+
+			expect(spy).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({
+					userId: mockUserId,
+					type: 'feedback',
+					category: 'feature',
+					content: 'Mohon tambahkan fitur dark mode otomatis berdasarkan jam.'
+				})
+			);
+			expect((result as { success?: boolean })?.success).toBe(true);
 		});
 	});
 

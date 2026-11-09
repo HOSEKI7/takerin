@@ -1,7 +1,16 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index';
-import { user, userSettings, monthlyPeriod, category, expense, session, account } from './schema';
+import {
+	user,
+	userSettings,
+	monthlyPeriod,
+	category,
+	expense,
+	session,
+	account,
+	appFeedback
+} from './schema';
 import {
 	getUserSettingsWithProfile,
 	updateUserProfile,
@@ -22,6 +31,7 @@ describe('Settings D1 Database Operations (Seam 2)', () => {
 		db = getDb(proxy.env.DB);
 
 		// Clean up tables
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS app_feedback;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS admin_invitations;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS expense;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
@@ -211,6 +221,18 @@ describe('Settings D1 Database Operations (Seam 2)', () => {
 			updatedAt: new Date()
 		});
 
+		await db.insert(appFeedback).values({
+			id: 'fb-1',
+			userId: testUserId,
+			type: 'review',
+			rating: 5,
+			content: 'Bagus sekali',
+			status: 'pending',
+			isFeatured: false,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		});
+
 		await deleteUserData(proxy.env.DB, testUserId);
 
 		// Verify user row is gone
@@ -220,5 +242,9 @@ describe('Settings D1 Database Operations (Seam 2)', () => {
 		// Verify expenses are gone
 		const expenses = await getAllUserExpensesForExport(proxy.env.DB, testUserId);
 		expect(expenses.length).toBe(0);
+
+		// Verify feedback is gone
+		const feedbackItems = await db.select().from(appFeedback);
+		expect(feedbackItems.length).toBe(0);
 	});
 });

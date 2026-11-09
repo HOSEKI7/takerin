@@ -199,4 +199,3 @@ export function hasCategoryChanges(params: HasCategoryChangesParams): boolean {
 
 	return false;
 }
-

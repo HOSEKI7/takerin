@@ -17,6 +17,7 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 		db = getDb(proxy.env.DB);
 
 		// Clean up tables
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS app_feedback;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS admin_invitations;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS expense;');
 		await proxy.env.DB.exec('DROP TABLE IF EXISTS category;');
@@ -261,10 +262,16 @@ describe('Period Lifecycle D1 Database Operations (Seam 2)', () => {
 		const newIncomeSources = await db
 			.select()
 			.from(incomeSource)
-			.where(and(eq(incomeSource.userId, testUserId), eq(incomeSource.periodId, result.period!.id)));
+			.where(
+				and(eq(incomeSource.userId, testUserId), eq(incomeSource.periodId, result.period!.id))
+			);
 		expect(newIncomeSources).toHaveLength(2);
-		expect(newIncomeSources.map((s) => s.name)).toEqual(expect.arrayContaining(['Gaji Pokok', 'Freelance']));
-		expect(newIncomeSources.map((s) => s.amount)).toEqual(expect.arrayContaining([8000000, 2000000]));
+		expect(newIncomeSources.map((s) => s.name)).toEqual(
+			expect.arrayContaining(['Gaji Pokok', 'Freelance'])
+		);
+		expect(newIncomeSources.map((s) => s.amount)).toEqual(
+			expect.arrayContaining([8000000, 2000000])
+		);
 
 		// Verify old income sources remained untouched (immutable history)
 		const oldIncomeSources = await db

@@ -36,7 +36,9 @@
 		return 'src-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
 	}
 
-	function initializeSources(raw: Array<{ id?: string; name: string; amount: number }>): SourceRow[] {
+	function initializeSources(
+		raw: Array<{ id?: string; name: string; amount: number }>
+	): SourceRow[] {
 		if (raw && raw.length > 0) {
 			return raw.map((s) => ({
 				id: s.id || generateSourceId(),
@@ -141,15 +143,19 @@
 	}
 </script>
 
-<div class="mx-auto w-full max-w-4xl space-y-6 px-4 py-6 sm:px-6 md:py-8 font-sans">
+<div class="mx-auto w-full max-w-4xl space-y-6 px-4 py-6 font-sans sm:px-6 md:py-8">
 	<!-- Page Header -->
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class="space-y-1">
 			<div class="flex items-center gap-2.5">
-				<div class="flex h-10 w-10 items-center justify-center rounded-xl bg-lime-voltage/20 text-forest-ink dark:text-lime-voltage">
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-xl bg-lime-voltage/20 text-forest-ink dark:text-lime-voltage"
+				>
 					<HugeiconsIcon icon={Coins01Icon} class="h-6 w-6" />
 				</div>
-				<h1 class="font-heading text-2xl font-bold tracking-tight text-obsidian sm:text-3xl dark:text-paper">
+				<h1
+					class="font-heading text-2xl font-bold tracking-tight text-obsidian sm:text-3xl dark:text-paper"
+				>
 					{t('incomes.title')}
 				</h1>
 			</div>
@@ -176,16 +182,21 @@
 
 	<!-- Locked Banner (When H-1 cutoff has passed or period completed) -->
 	{#if data.isLocked}
-		<Card variant="muted" class="border-alarm-red/30 bg-alarm-red/5 p-4 sm:p-5 dark:border-alarm-red/40 dark:bg-alarm-red/10">
+		<Card
+			variant="muted"
+			class="border-alarm-red/30 bg-alarm-red/5 p-4 sm:p-5 dark:border-alarm-red/40 dark:bg-alarm-red/10"
+		>
 			<div class="flex items-start gap-3.5">
-				<div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-alarm-red/10 text-alarm-red dark:bg-alarm-red/20">
+				<div
+					class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-alarm-red/10 text-alarm-red dark:bg-alarm-red/20"
+				>
 					<HugeiconsIcon icon={Alert02Icon} class="h-5 w-5" />
 				</div>
 				<div class="space-y-1">
 					<h3 class="font-heading text-base font-semibold text-obsidian dark:text-paper">
 						{t('incomes.bannerLockedTitle')}
 					</h3>
-					<p class="text-xs sm:text-sm leading-relaxed text-charcoal dark:text-pebble">
+					<p class="text-xs leading-relaxed text-charcoal sm:text-sm dark:text-pebble">
 						{#if data.lockReason === 'h_minus_1_passed'}
 							{t('incomes.bannerLockedH1', { endDate: data.activePeriod?.endDate ?? '' })}
 						{:else if data.lockReason === 'period_completed'}
@@ -199,8 +210,13 @@
 		</Card>
 	{:else if data.activePeriod?.endDate}
 		<!-- H-1 Cutoff Notice for Active Period -->
-		<div class="flex items-center gap-2.5 rounded-xl border border-fog bg-linen-mist/30 px-4 py-3 text-xs sm:text-sm text-slate dark:border-dark-border dark:bg-dark-card/50 dark:text-pebble">
-			<HugeiconsIcon icon={InformationCircleIcon} class="h-4 w-4 shrink-0 text-forest-ink dark:text-lime-voltage" />
+		<div
+			class="flex items-center gap-2.5 rounded-xl border border-fog bg-linen-mist/30 px-4 py-3 text-xs text-slate sm:text-sm dark:border-dark-border dark:bg-dark-card/50 dark:text-pebble"
+		>
+			<HugeiconsIcon
+				icon={InformationCircleIcon}
+				class="h-4 w-4 shrink-0 text-forest-ink dark:text-lime-voltage"
+			/>
 			<span>
 				{t('incomes.hMinus1Notice', { endDate: data.activePeriod.endDate })}
 			</span>
@@ -232,7 +248,9 @@
 	{#if data.isLocked}
 		<div class="space-y-4">
 			<Card variant="default" class="p-6">
-				<div class="mb-4 flex items-center justify-between border-b border-fog pb-4 dark:border-dark-border">
+				<div
+					class="mb-4 flex items-center justify-between border-b border-fog pb-4 dark:border-dark-border"
+				>
 					<div>
 						<h2 class="font-heading text-lg font-bold text-obsidian dark:text-paper">
 							{t('incomes.readOnlyCardTitle')}
@@ -255,7 +273,9 @@
 						{#each data.incomeSources as source, index (source.id ?? index)}
 							<li class="flex items-center justify-between py-3.5 first:pt-0 last:pb-0">
 								<div class="flex items-center gap-3">
-									<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-fog text-slate dark:bg-dark-surface dark:text-pebble">
+									<div
+										class="flex h-8 w-8 items-center justify-center rounded-lg bg-fog text-slate dark:bg-dark-surface dark:text-pebble"
+									>
 										<HugeiconsIcon icon={Coins01Icon} class="h-4 w-4" />
 									</div>
 									<div>
@@ -268,7 +288,9 @@
 									</div>
 								</div>
 								<div class="text-right">
-									<span class="font-heading text-base font-bold text-forest-ink dark:text-lime-voltage">
+									<span
+										class="font-heading text-base font-bold text-forest-ink dark:text-lime-voltage"
+									>
 										{formatRupiah(source.amount)}
 									</span>
 								</div>
@@ -282,7 +304,7 @@
 			<Card variant="forest" class="p-6">
 				<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 					<div>
-						<span class="text-xs font-medium uppercase tracking-wider text-lime-voltage/90">
+						<span class="text-xs font-medium tracking-wider text-lime-voltage/90 uppercase">
 							{t('incomes.totalMonthlyIncome')}
 						</span>
 						<p class="font-heading text-3xl font-extrabold text-paper sm:text-4xl">
@@ -296,7 +318,7 @@
 			</Card>
 		</div>
 
-	<!-- EDITABLE MODE (Before H-1 Cutoff) -->
+		<!-- EDITABLE MODE (Before H-1 Cutoff) -->
 	{:else}
 		<form
 			method="POST"
@@ -323,8 +345,10 @@
 			<input type="hidden" name="sources" value={JSON.stringify(normalizedSources)} />
 
 			<!-- Sources Form List -->
-			<Card variant="default" class="p-5 sm:p-6 space-y-4">
-				<div class="flex items-center justify-between border-b border-fog pb-4 dark:border-dark-border">
+			<Card variant="default" class="space-y-4 p-5 sm:p-6">
+				<div
+					class="flex items-center justify-between border-b border-fog pb-4 dark:border-dark-border"
+				>
 					<div>
 						<h2 class="font-heading text-lg font-bold text-obsidian dark:text-paper">
 							{t('incomes.sourcesSectionTitle')}
@@ -348,9 +372,13 @@
 
 				<div class="space-y-4 pt-2">
 					{#each sources as source, index (source.id)}
-						<div class="group relative rounded-xl border border-fog/80 bg-fog/30 p-4 transition-colors hover:border-slate/40 dark:border-dark-border/80 dark:bg-dark-surface/40 dark:hover:border-pebble/40">
+						<div
+							class="group relative rounded-xl border border-fog/80 bg-fog/30 p-4 transition-colors hover:border-slate/40 dark:border-dark-border/80 dark:bg-dark-surface/40 dark:hover:border-pebble/40"
+						>
 							<div class="mb-3 flex items-center justify-between">
-								<span class="text-xs font-semibold uppercase tracking-wider text-slate dark:text-pebble">
+								<span
+									class="text-xs font-semibold tracking-wider text-slate uppercase dark:text-pebble"
+								>
 									{t('incomes.sourceItem', { index: index + 1 })}
 								</span>
 
@@ -359,7 +387,9 @@
 										type="button"
 										onclick={() => handleRemoveSource(source.id)}
 										title={t('incomes.removeSource')}
-										aria-label={t('incomes.removeSourceAria', { name: source.name || (index + 1).toString() })}
+										aria-label={t('incomes.removeSourceAria', {
+											name: source.name || (index + 1).toString()
+										})}
 										class="rounded-lg p-1.5 text-slate transition-colors hover:bg-alarm-red/10 hover:text-alarm-red dark:text-pebble dark:hover:bg-alarm-red/20"
 									>
 										<HugeiconsIcon icon={Delete02Icon} class="h-4 w-4" />
@@ -399,7 +429,7 @@
 						variant="secondary"
 						size="sm"
 						onclick={handleAddSource}
-						class="w-full flex items-center justify-center gap-1.5 py-2.5"
+						class="flex w-full items-center justify-center gap-1.5 py-2.5"
 					>
 						<HugeiconsIcon icon={PlusSignIcon} class="h-4 w-4" />
 						<span>{t('incomes.addSource')}</span>
@@ -411,7 +441,7 @@
 			<Card variant="forest" class="p-6">
 				<div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
 					<div class="space-y-1">
-						<span class="text-xs font-medium uppercase tracking-wider text-lime-voltage/90">
+						<span class="text-xs font-medium tracking-wider text-lime-voltage/90 uppercase">
 							{t('incomes.totalMonthlyIncome')}
 						</span>
 						<p class="font-heading text-3xl font-extrabold text-paper sm:text-4xl">
@@ -428,10 +458,12 @@
 							variant="primary"
 							size="lg"
 							disabled={isSaving || !canSave}
-							class="w-full sm:w-auto px-8"
+							class="w-full px-8 sm:w-auto"
 						>
 							{#if isSaving}
-								<span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-forest-ink border-t-transparent"></span>
+								<span
+									class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-forest-ink border-t-transparent"
+								></span>
 								<span>{t('incomes.saving')}</span>
 							{:else}
 								<span>{t('incomes.saveChanges')}</span>
