@@ -4,6 +4,7 @@
 	import MobileNav from '#lib/components/MobileNav.svelte';
 	import ContentHeader from '#lib/components/ContentHeader.svelte';
 	import IncomeConfirmationModal from '#lib/components/IncomeConfirmationModal.svelte';
+	import ReviewFeedbackModal from '#lib/components/ReviewFeedbackModal.svelte';
 	import { authClient } from '#lib/auth-client.js';
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -14,6 +15,39 @@
 	let isSidebarCollapsed = $state(false);
 
 	const showIncomeGate = $derived(Boolean(data.activePeriod && data.incomeConfirmedAt === null));
+
+	// Feedback auto-trigger gate & session deferral state (Issue #55)
+	const FEEDBACK_DEFERRED_STORAGE_KEY = 'takerin_feedback_deferred';
+	let isFeedbackModalOpen = $state(false);
+	let hasDismissedThisSession = $state(false);
+	let hasSubmittedFeedbackLocally = $state(false);
+
+	$effect(() => {
+		if (
+			data.shouldPromptFeedback &&
+			!hasSubmittedFeedbackLocally &&
+			!data.hasSubmittedFeedback &&
+			!showIncomeGate &&
+			!hasDismissedThisSession &&
+			!isFeedbackModalOpen
+		) {
+			if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+				const isDeferred = sessionStorage.getItem(FEEDBACK_DEFERRED_STORAGE_KEY) === 'true';
+				if (!isDeferred) {
+					isFeedbackModalOpen = true;
+				}
+			}
+		}
+	});
+
+	function handleFeedbackModalClose() {
+		isFeedbackModalOpen = false;
+		hasDismissedThisSession = true;
+	}
+
+	function handleFeedbackSuccess() {
+		hasSubmittedFeedbackLocally = true;
+	}
 
 	// Prevent client-side navigation bypass while gate is active
 	beforeNavigate(({ cancel, type }) => {
@@ -75,5 +109,14 @@
 		isOpen={showIncomeGate}
 		initialSources={data.incomeSources}
 		actionUrl="/dashboard?/confirmIncome"
+	/>
+
+	<!-- Non-intrusive Automated & Global Review/Feedback Modal (Issue #55) -->
+	<ReviewFeedbackModal
+		bind:isOpen={isFeedbackModalOpen}
+		showSessionDeferCheckbox={true}
+		actionUrl="/settings?/submitFeedback"
+		onClose={handleFeedbackModalClose}
+		onSuccess={handleFeedbackSuccess}
 	/>
 </div>

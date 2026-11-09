@@ -103,4 +103,32 @@ describe('ReviewFeedbackModal Component (Seam 3)', () => {
 		expect(html).toContain('Submit Review');
 		expect(html).toContain('Experience Rating');
 	});
+
+	it('does not render session defer checkbox when showSessionDeferCheckbox is false', () => {
+		const { html } = render(ReviewFeedbackModal, {
+			props: { isOpen: true, showSessionDeferCheckbox: false }
+		});
+
+		expect(html).not.toContain('id="feedback-defer-session"');
+		expect(html).not.toContain('Jangan tampilkan lagi untuk sesi ini');
+	});
+
+	it('renders session defer checkbox with bilingual labels when showSessionDeferCheckbox is true', async () => {
+		// Indonesian
+		const { html: idHtml } = render(ReviewFeedbackModal, {
+			props: { isOpen: true, showSessionDeferCheckbox: true }
+		});
+
+		expect(idHtml).toContain('id="feedback-defer-session"');
+		expect(idHtml).toContain('Jangan tampilkan lagi untuk sesi ini');
+
+		// English
+		await setLocale('en');
+		const { html: enHtml } = render(ReviewFeedbackModal, {
+			props: { isOpen: true, showSessionDeferCheckbox: true }
+		});
+
+		expect(enHtml).toContain('id="feedback-defer-session"');
+		expect(enHtml).toContain('Do not show again for this session');
+	});
 });

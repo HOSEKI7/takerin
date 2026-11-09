@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getDb } from './index.js';
 import { appFeedback, type AppFeedback } from './schema.js';
 
@@ -51,4 +51,19 @@ export async function getFeedbackById(d1: D1Database, id: string): Promise<AppFe
 	const results = await db.select().from(appFeedback).where(eq(appFeedback.id, id)).limit(1);
 
 	return results[0] ?? null;
+}
+
+/**
+ * Checks if a user has previously submitted any feedback or review.
+ */
+export async function hasUserSubmittedFeedback(d1: D1Database, userId: string): Promise<boolean> {
+	const db = getDb(d1);
+	const results = await db
+		.select({
+			count: sql<number>`cast(count(${appFeedback.id}) as int)`
+		})
+		.from(appFeedback)
+		.where(eq(appFeedback.userId, userId));
+
+	return (results[0]?.count ?? 0) > 0;
 }

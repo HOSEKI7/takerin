@@ -934,6 +934,7 @@
 		"successFeedbackMessage": "Thank you for your report and suggestions. Our team will review and act on them.",
 		"closeButton": "Close",
 		"openModalButton": "Give Review & Feedback",
+		"deferSessionCheckbox": "Do not show again for this session",
 		"errorRatingRequired": "Please select a star rating (1–5).",
 		"errorCategoryRequired": "Please select a feedback category.",
 		"errorContentRequired": "Feedback description is required.",

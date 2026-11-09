@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index.js';
 import { user, appFeedback } from './schema.js';
-import { createFeedback, getFeedbackById } from './feedback.js';
+import { createFeedback, getFeedbackById, hasUserSubmittedFeedback } from './feedback.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { eq } from 'drizzle-orm';
@@ -172,5 +172,35 @@ describe('Feedback D1 Database Operations (Seam 1)', () => {
 
 		const afterDelete = await getFeedbackById(proxy.env.DB, created.id);
 		expect(afterDelete).toBeNull();
+	});
+
+	it('checks if a user has previously submitted review or feedback', async () => {
+		// Initially neither user has submitted feedback
+		expect(await hasUserSubmittedFeedback(proxy.env.DB, testUserId)).toBe(false);
+		expect(await hasUserSubmittedFeedback(proxy.env.DB, testUser2Id)).toBe(false);
+
+		// User 1 submits a review
+		await createFeedback(proxy.env.DB, {
+			userId: testUserId,
+			type: 'review',
+			rating: 5,
+			content: 'Aplikasi yang luar biasa membantu.'
+		});
+
+		// Now User 1 returns true, but User 2 still returns false
+		expect(await hasUserSubmittedFeedback(proxy.env.DB, testUserId)).toBe(true);
+		expect(await hasUserSubmittedFeedback(proxy.env.DB, testUser2Id)).toBe(false);
+
+		// User 2 submits a bug feedback
+		await createFeedback(proxy.env.DB, {
+			userId: testUser2Id,
+			type: 'feedback',
+			category: 'bug',
+			content: 'Laporan bug pertama.'
+		});
+
+		// Both now return true
+		expect(await hasUserSubmittedFeedback(proxy.env.DB, testUserId)).toBe(true);
+		expect(await hasUserSubmittedFeedback(proxy.env.DB, testUser2Id)).toBe(true);
 	});
 });

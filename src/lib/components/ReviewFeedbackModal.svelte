@@ -19,8 +19,10 @@
 		actionUrl?: string;
 		currentRoute?: string;
 		deviceInfo?: string;
+		showSessionDeferCheckbox?: boolean;
 		onClose?: () => void;
 		onSuccess?: (data?: unknown) => void;
+		onSessionDeferChange?: (deferred: boolean) => void;
 	}
 
 	let {
@@ -29,8 +31,10 @@
 		actionUrl = '/settings?/submitFeedback',
 		currentRoute: propCurrentRoute,
 		deviceInfo: propDeviceInfo,
+		showSessionDeferCheckbox = false,
 		onClose,
-		onSuccess
+		onSuccess,
+		onSessionDeferChange
 	}: Props = $props();
 
 	type FeedbackCategory = 'bug' | 'feature' | 'general';
@@ -69,6 +73,22 @@
 
 	let detectedCurrentRoute = $state<string>('');
 	let detectedDeviceInfo = $state<string>('');
+
+	const SESSION_DEFER_STORAGE_KEY = 'takerin_feedback_deferred';
+	let isSessionDeferred = $state<boolean>(false);
+
+	function handleSessionDeferToggle(e: Event) {
+		const target = e.target as HTMLInputElement;
+		isSessionDeferred = target.checked;
+		if (typeof sessionStorage !== 'undefined') {
+			if (isSessionDeferred) {
+				sessionStorage.setItem(SESSION_DEFER_STORAGE_KEY, 'true');
+			} else {
+				sessionStorage.removeItem(SESSION_DEFER_STORAGE_KEY);
+			}
+		}
+		onSessionDeferChange?.(isSessionDeferred);
+	}
 
 	// Active route and device info computation (universal fallback, SSR safe)
 	let resolvedCurrentRoute = $derived(propCurrentRoute || detectedCurrentRoute || '');
@@ -109,6 +129,9 @@
 					isSuccess = false;
 
 					if (typeof window !== 'undefined') {
+						if (typeof sessionStorage !== 'undefined') {
+							isSessionDeferred = sessionStorage.getItem(SESSION_DEFER_STORAGE_KEY) === 'true';
+						}
 						if (!propDeviceInfo) {
 							detectedDeviceInfo = JSON.stringify({
 								browser: navigator.userAgent,
@@ -617,6 +640,25 @@
 									</span>
 								</div>
 							</div>
+						</div>
+					{/if}
+
+					<!-- Session Deferral Checkbox -->
+					{#if showSessionDeferCheckbox}
+						<div class="mt-4 flex items-center gap-2.5 pt-1">
+							<input
+								type="checkbox"
+								id="feedback-defer-session"
+								checked={isSessionDeferred}
+								onchange={handleSessionDeferToggle}
+								class="h-4 w-4 cursor-pointer rounded border-fog text-forest-ink accent-forest-ink transition-colors focus:ring-2 focus:ring-forest-ink/20 focus:outline-none dark:border-dark-border dark:bg-dark-card dark:accent-lime-voltage dark:focus:ring-lime-voltage/20"
+							/>
+							<label
+								for="feedback-defer-session"
+								class="cursor-pointer text-xs text-slate transition-colors select-none hover:text-charcoal dark:text-pebble dark:hover:text-white"
+							>
+								{t('feedback.deferSessionCheckbox')}
+							</label>
 						</div>
 					{/if}
 

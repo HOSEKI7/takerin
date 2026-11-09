@@ -934,6 +934,7 @@
 		"successFeedbackMessage": "Terima kasih atas laporan dan saran Anda. Tim kami akan meninjau dan menindaklanjutinya.",
 		"closeButton": "Tutup",
 		"openModalButton": "Beri Ulasan & Masukan",
+		"deferSessionCheckbox": "Jangan tampilkan lagi untuk sesi ini",
 		"errorRatingRequired": "Skor bintang ulasan wajib dipilih (1–5).",
 		"errorCategoryRequired": "Kategori umpan balik wajib dipilih.",
 		"errorContentRequired": "Deskripsi masukan wajib diisi.",
