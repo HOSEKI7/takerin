@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/env';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { t } from '#lib/i18n/index.js';
@@ -27,7 +28,7 @@
 
 	let showDeletedBanner = $state(true);
 	const isAccountDeleted = $derived(
-		page.url.searchParams.get('deleted') === 'true' && showDeletedBanner
+		browser && page.url.searchParams.get('deleted') === 'true' && showDeletedBanner
 	);
 
 	const softwareApplicationSchema = {
@@ -214,11 +215,7 @@
 
 	<!-- Account Deletion Feedback Banner -->
 	{#if isAccountDeleted}
-		<aside
-			role="status"
-			aria-live="polite"
-			class="mx-auto max-w-6xl px-4 pt-6 sm:px-6"
-		>
+		<aside role="status" aria-live="polite" class="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
 			<div
 				class="flex items-center justify-between gap-3 rounded-xl border border-lime-500/30 bg-lime-50 p-4 text-sm font-medium text-forest-ink shadow-sm dark:border-lime-500/20 dark:bg-lime-950/40 dark:text-lime-300"
 			>
