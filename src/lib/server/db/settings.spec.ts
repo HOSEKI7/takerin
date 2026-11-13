@@ -301,4 +301,29 @@ describe('Settings D1 Database Operations (Seam 2)', () => {
 		const verifications = await db.select().from(verification);
 		expect(verifications.length).toBe(0);
 	});
+
+	it('succeeds gracefully even if optional tables like app_feedback do not exist', async () => {
+		await proxy.env.DB.exec('DROP TABLE IF EXISTS app_feedback;');
+
+		// Seed a fresh test user
+		const tempUserId = 'user-no-feedback-table';
+		await db.insert(user).values({
+			id: tempUserId,
+			name: 'User Without Feedback',
+			email: 'nofb@example.com',
+			emailVerified: true,
+			role: 'user',
+			twoFactorEnabled: false,
+			onboardingCompleted: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		});
+
+		await expect(
+			deleteUserData(proxy.env.DB, tempUserId, 'nofb@example.com')
+		).resolves.not.toThrow();
+
+		const profile = await getUserSettingsWithProfile(proxy.env.DB, tempUserId);
+		expect(profile).toBeNull();
+	});
 });
