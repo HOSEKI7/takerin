@@ -88,4 +88,8 @@ _Avoid_: Rating toko, ulasan belanja, bintang app store
 Penyampaian masukan spesifik berdasarkan kategori (kendala sistem, usulan fitur, atau saran umum) untuk perbaikan dan pengembangan aplikasi.
 _Avoid_: Komplain, tiket bantuan, customer service, laporan insiden
 
+**Hapus Akun (Account Deletion)**:
+Tindakan permanen dan tidak dapat dibatalkan di mana seluruh identitas pengguna, sesi autentikasi, pengaturan, dan riwayat keuangan (Periode Bulan, Kategori, Pengeluaran, Sumber Pemasukan) dihapus bersih (Hard Delete) dari Cloudflare D1. Entri Ulasan dan Umpan Balik dilepaskan tautan kepemilikannya (dianonimkan) untuk menjaga wawasan pengembang tanpa menyimpan identitas pengguna. Jika pengguna mendaftar kembali dengan email yang sama, sistem memperlakukannya sebagai Pengguna baru dari awal.
+_Avoid_: Deaktivasi akun, soft delete, suspend akun
+
 

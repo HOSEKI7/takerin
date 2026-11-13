@@ -143,9 +143,15 @@ export const actions: Actions = {
 			throw redirect(303, '/auth/login');
 		}
 
+		const rawLocale = cookies?.get?.('takerin_lang');
+		const locale: 'id' | 'en' = rawLocale === 'en' ? 'en' : 'id';
+
 		const d1 = platform?.env?.DB;
 		if (!d1) {
-			return fail(500, { deleteError: 'Database tidak tersedia.' });
+			return fail(500, {
+				deleteError:
+					locale === 'en' ? 'Database service unavailable.' : 'Database tidak tersedia.'
+			});
 		}
 
 		const formData = await request.formData();
@@ -154,17 +160,30 @@ export const actions: Actions = {
 		if (confirmText !== 'HAPUS AKUN SAYA' && confirmText !== 'DELETE MY ACCOUNT') {
 			return fail(400, {
 				deleteError:
-					'Teks konfirmasi tidak sesuai. Harap ketik "HAPUS AKUN SAYA" atau "DELETE MY ACCOUNT" dengan huruf kapital.'
+					locale === 'en'
+						? 'Confirmation text does not match. Please type "HAPUS AKUN SAYA" or "DELETE MY ACCOUNT" in capital letters.'
+						: 'Teks konfirmasi tidak sesuai. Harap ketik "HAPUS AKUN SAYA" atau "DELETE MY ACCOUNT" dengan huruf kapital.'
 			});
 		}
 
-		// Delete all data in D1
-		await deleteUserData(d1, locals.user.id);
+		try {
+			// Delete all data in D1 in strict relational dependency order
+			await deleteUserData(d1, locals.user.id, locals.user.email);
 
-		// Clear session cookie
-		cookies.delete('better-auth.session_token', { path: '/' });
+			// Clear session cookies (standard and secure HTTPS variants)
+			cookies.delete('better-auth.session_token', { path: '/' });
+			cookies.delete('__Secure-better-auth.session_token', { path: '/' });
+		} catch (error) {
+			console.error('Failed to delete user account:', error);
+			return fail(500, {
+				deleteError:
+					locale === 'en'
+						? 'Failed to delete account. Please try again later.'
+						: 'Gagal menghapus akun. Silakan coba beberapa saat lagi.'
+			});
+		}
 
-		throw redirect(303, '/');
+		throw redirect(303, '/?deleted=true');
 	},
 
 	submitFeedback: async ({ request, locals, platform, cookies }) => {

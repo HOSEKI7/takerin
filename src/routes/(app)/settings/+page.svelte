@@ -1318,6 +1318,15 @@
 				{t('settings.deleteModalWarning')}
 			</p>
 
+			{#if form?.deleteError}
+				<div
+					role="alert"
+					class="mt-3 rounded-lg border border-alarm-red/30 bg-alarm-red/10 p-3 text-xs font-medium text-alarm-red dark:bg-alarm-red/20"
+				>
+					{form.deleteError}
+				</div>
+			{/if}
+
 			<form
 				method="POST"
 				action="?/deleteAccount"

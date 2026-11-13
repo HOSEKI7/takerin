@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { t } from '#lib/i18n/index.js';
 	import { Button, BrandLogo, Badge, SupportMascot, PublicNavbar } from '#lib';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
@@ -22,6 +24,11 @@
 		{ label: 'Blog', href: '/blog' },
 		{ label: 'Tanya Jawab', href: '#faq' }
 	];
+
+	let showDeletedBanner = $state(true);
+	const isAccountDeleted = $derived(
+		page.url.searchParams.get('deleted') === 'true' && showDeletedBanner
+	);
 
 	const softwareApplicationSchema = {
 		'@context': 'https://schema.org',
@@ -204,6 +211,36 @@
 >
 	<!-- Navigation Bar -->
 	<PublicNavbar />
+
+	<!-- Account Deletion Feedback Banner -->
+	{#if isAccountDeleted}
+		<aside
+			role="status"
+			aria-live="polite"
+			class="mx-auto max-w-6xl px-4 pt-6 sm:px-6"
+		>
+			<div
+				class="flex items-center justify-between gap-3 rounded-xl border border-lime-500/30 bg-lime-50 p-4 text-sm font-medium text-forest-ink shadow-sm dark:border-lime-500/20 dark:bg-lime-950/40 dark:text-lime-300"
+			>
+				<div class="flex items-center gap-3">
+					<HugeiconsIcon
+						icon={CheckmarkCircle02Icon}
+						size={20}
+						class="shrink-0 text-lime-600 dark:text-lime-400"
+					/>
+					<p>{t('settings.accountDeletedSuccess')}</p>
+				</div>
+				<button
+					type="button"
+					aria-label={t('common.close')}
+					onclick={() => (showDeletedBanner = false)}
+					class="cursor-pointer rounded-lg p-1 text-slate transition hover:bg-lime-200/50 hover:text-charcoal dark:text-stone-300 dark:hover:bg-lime-900/50 dark:hover:text-paper"
+				>
+					<HugeiconsIcon icon={Cancel01Icon} size={18} />
+				</button>
+			</div>
+		</aside>
+	{/if}
 
 	<main>
 		<!-- Section 1: Hero Section -->

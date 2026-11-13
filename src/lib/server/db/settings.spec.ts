@@ -9,14 +9,19 @@ import {
 	expense,
 	session,
 	account,
-	appFeedback
+	appFeedback,
+	adminInvitations,
+	verification,
+	twoFactor,
+	incomeSource
 } from './schema';
 import {
 	getUserSettingsWithProfile,
 	updateUserProfile,
 	updateUserSettings,
 	getAllUserExpensesForExport,
-	deleteUserData
+	deleteUserData,
+	ANONYMOUS_USER_ID
 } from './settings';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -201,8 +206,11 @@ describe('Settings D1 Database Operations (Seam 2)', () => {
 		});
 	});
 
-	it('deletes all user data from D1 on account deletion', async () => {
-		// Add some extra session and account rows to verify full cleanup
+	it('deletes all user data from D1 and anonymizes feedback on account deletion', async () => {
+		// Enable foreign key enforcement to ensure strict cascade and constraint checking
+		await proxy.env.DB.exec('PRAGMA foreign_keys = ON;');
+
+		// Add session, account, 2fa, income source, admin invitation, verification, and feedback
 		await db.insert(session).values({
 			id: 'sess-1',
 			userId: testUserId,
@@ -221,6 +229,43 @@ describe('Settings D1 Database Operations (Seam 2)', () => {
 			updatedAt: new Date()
 		});
 
+		await db.insert(twoFactor).values({
+			id: '2fa-1',
+			userId: testUserId,
+			secret: 'secret-test',
+			backupCodes: JSON.stringify(['code1', 'code2']),
+			verified: true,
+			failedVerificationCount: 0
+		});
+
+		await db.insert(incomeSource).values({
+			id: 'inc-1',
+			userId: testUserId,
+			name: 'Gaji Pokok',
+			amount: 5000000,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		});
+
+		await db.insert(adminInvitations).values({
+			id: 'inv-1',
+			email: 'newadmin@example.com',
+			token: 'invitation-token-123',
+			invitedBy: testUserId,
+			status: 'pending',
+			expiresAt: new Date(Date.now() + 86400000),
+			createdAt: new Date()
+		});
+
+		await db.insert(verification).values({
+			id: 'verif-1',
+			identifier: 'budi@example.com',
+			value: '123456',
+			expiresAt: new Date(Date.now() + 300000),
+			createdAt: new Date(),
+			updatedAt: new Date()
+		});
+
 		await db.insert(appFeedback).values({
 			id: 'fb-1',
 			userId: testUserId,
@@ -233,7 +278,7 @@ describe('Settings D1 Database Operations (Seam 2)', () => {
 			updatedAt: new Date()
 		});
 
-		await deleteUserData(proxy.env.DB, testUserId);
+		await deleteUserData(proxy.env.DB, testUserId, 'budi@example.com');
 
 		// Verify user row is gone
 		const profile = await getUserSettingsWithProfile(proxy.env.DB, testUserId);
@@ -243,8 +288,17 @@ describe('Settings D1 Database Operations (Seam 2)', () => {
 		const expenses = await getAllUserExpensesForExport(proxy.env.DB, testUserId);
 		expect(expenses.length).toBe(0);
 
-		// Verify feedback is gone
+		// Verify feedback is ANONYMIZED, not deleted
 		const feedbackItems = await db.select().from(appFeedback);
-		expect(feedbackItems.length).toBe(0);
+		expect(feedbackItems.length).toBe(1);
+		expect(feedbackItems[0].userId).toBe(ANONYMOUS_USER_ID);
+
+		// Verify admin invitation created by this user is gone
+		const invitations = await db.select().from(adminInvitations);
+		expect(invitations.length).toBe(0);
+
+		// Verify verification OTP code is gone
+		const verifications = await db.select().from(verification);
+		expect(verifications.length).toBe(0);
 	});
 });

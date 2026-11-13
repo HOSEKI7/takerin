@@ -640,7 +640,10 @@
 		"copyCodesFailed": "Failed to copy codes.",
 		"feedbackTitle": "Review & Feedback",
 		"feedbackDesc": "Help us improve Takerin by sharing your satisfaction review or reporting issues and suggestions.",
-		"feedbackButton": "Give Review & Feedback"
+		"feedbackButton": "Give Review & Feedback",
+		"deleteAccountFailed": "Failed to delete account. Please try again later.",
+		"deleteConfirmMismatch": "Confirmation text does not match. Please type \"HAPUS AKUN SAYA\" or \"DELETE MY ACCOUNT\" in capital letters.",
+		"accountDeletedSuccess": "Your account and all data have been permanently deleted."
 	},
 	"admin": {
 		"title": "Takerin Admin Panel",

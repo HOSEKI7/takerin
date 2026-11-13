@@ -135,7 +135,7 @@ describe('Settings Route Server Logic & Export Endpoints (Seam 4)', () => {
 	});
 
 	describe('actions.deleteAccount', () => {
-		it('fails if confirmation text does not match HAPUS AKUN SAYA', async () => {
+		it('fails if confirmation text does not match HAPUS AKUN SAYA or DELETE MY ACCOUNT', async () => {
 			const formData = new FormData();
 			formData.set('confirmText', 'salah');
 
@@ -143,13 +143,14 @@ describe('Settings Route Server Logic & Export Endpoints (Seam 4)', () => {
 				request: new Request('http://localhost/settings', { method: 'POST', body: formData }),
 				locals: { user: mockUser },
 				platform: { env: { DB: {} as unknown as D1Database } },
-				cookies: { delete: vi.fn() }
+				cookies: { delete: vi.fn(), get: vi.fn().mockReturnValue('id') }
 			} as unknown as Parameters<typeof actions.deleteAccount>[0]);
 
 			expect(result?.status).toBe(400);
+			expect(result?.data).toHaveProperty('deleteError');
 		});
 
-		it('deletes user data and redirects to / when confirmation text matches', async () => {
+		it('deletes user data and redirects to /?deleted=true when confirmation text matches ID phrase', async () => {
 			const spy = vi.spyOn(settingsDb, 'deleteUserData').mockResolvedValueOnce();
 			const deleteCookieSpy = vi.fn();
 			const formData = new FormData();
@@ -160,14 +161,53 @@ describe('Settings Route Server Logic & Export Endpoints (Seam 4)', () => {
 					request: new Request('http://localhost/settings', { method: 'POST', body: formData }),
 					locals: { user: mockUser },
 					platform: { env: { DB: {} as unknown as D1Database } },
-					cookies: { delete: deleteCookieSpy }
+					cookies: { delete: deleteCookieSpy, get: vi.fn().mockReturnValue('id') }
 				} as unknown as Parameters<typeof actions.deleteAccount>[0])
 			).rejects.toMatchObject({
 				status: 303,
-				location: '/'
+				location: '/?deleted=true'
 			});
 
-			expect(spy).toHaveBeenCalledWith(expect.anything(), mockUserId);
+			expect(spy).toHaveBeenCalledWith(expect.anything(), mockUserId, mockUser.email);
+			expect(deleteCookieSpy).toHaveBeenCalledWith('better-auth.session_token', { path: '/' });
+			expect(deleteCookieSpy).toHaveBeenCalledWith('__Secure-better-auth.session_token', { path: '/' });
+		});
+
+		it('deletes user data and redirects to /?deleted=true when confirmation text matches EN phrase', async () => {
+			const spy = vi.spyOn(settingsDb, 'deleteUserData').mockResolvedValueOnce();
+			const deleteCookieSpy = vi.fn();
+			const formData = new FormData();
+			formData.set('confirmText', 'DELETE MY ACCOUNT');
+
+			await expect(
+				actions.deleteAccount({
+					request: new Request('http://localhost/settings', { method: 'POST', body: formData }),
+					locals: { user: mockUser },
+					platform: { env: { DB: {} as unknown as D1Database } },
+					cookies: { delete: deleteCookieSpy, get: vi.fn().mockReturnValue('en') }
+				} as unknown as Parameters<typeof actions.deleteAccount>[0])
+			).rejects.toMatchObject({
+				status: 303,
+				location: '/?deleted=true'
+			});
+
+			expect(spy).toHaveBeenCalledWith(expect.anything(), mockUserId, mockUser.email);
+		});
+
+		it('returns 500 fail with localized error when deleteUserData fails', async () => {
+			vi.spyOn(settingsDb, 'deleteUserData').mockRejectedValueOnce(new Error('D1 error'));
+			const formData = new FormData();
+			formData.set('confirmText', 'HAPUS AKUN SAYA');
+
+			const result = await actions.deleteAccount({
+				request: new Request('http://localhost/settings', { method: 'POST', body: formData }),
+				locals: { user: mockUser },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				cookies: { delete: vi.fn(), get: vi.fn().mockReturnValue('id') }
+			} as unknown as Parameters<typeof actions.deleteAccount>[0]);
+
+			expect(result?.status).toBe(500);
+			expect(result?.data).toHaveProperty('deleteError', 'Gagal menghapus akun. Silakan coba beberapa saat lagi.');
 		});
 	});
 
