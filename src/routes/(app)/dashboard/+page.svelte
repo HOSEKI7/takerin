@@ -692,6 +692,7 @@
 										id="enable-2fa-password"
 										label={t('auth.login.passwordLabel')}
 										type="password"
+										autocomplete="current-password"
 										placeholder={t('dashboard.enterPasswordPlaceholder')}
 										required
 										bind:value={actionPassword}
@@ -742,6 +743,7 @@
 										id="disable-2fa-password"
 										label={t('dashboard.accountPasswordLabel')}
 										type="password"
+										autocomplete="current-password"
 										placeholder={t('dashboard.enterPasswordPlaceholder')}
 										required
 										bind:value={actionPassword}

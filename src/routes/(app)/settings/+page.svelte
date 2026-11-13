@@ -477,6 +477,7 @@
 						<Input
 							id="profile-name"
 							name="name"
+							autocomplete="name"
 							label={t('settings.displayNameLabel')}
 							placeholder={t('settings.displayNamePlaceholder')}
 							required
@@ -591,6 +592,7 @@
 									id="change-email-password"
 									label={t('settings.currentPasswordLabel')}
 									type="password"
+									autocomplete="current-password"
 									placeholder="••••••••"
 									required
 									bind:value={changeEmailCurrentPassword}
@@ -600,6 +602,7 @@
 									id="change-email-new"
 									label={t('settings.newEmailLabel')}
 									type="email"
+									autocomplete="email"
 									placeholder={t('settings.newEmailPlaceholder')}
 									required
 									bind:value={changeEmailNewEmail}
@@ -638,6 +641,7 @@
 									label={t('settings.otpLabel')}
 									type="text"
 									inputmode="numeric"
+									autocomplete="one-time-code"
 									maxlength={6}
 									placeholder={t('settings.otpPlaceholder')}
 									required
@@ -720,10 +724,21 @@
 					{/if}
 
 					<form onsubmit={handleChangePassword} class="mt-4 space-y-3">
+						<input
+							type="text"
+							name="username"
+							value={userEmail}
+							autocomplete="username"
+							class="hidden"
+							tabindex="-1"
+							aria-hidden="true"
+							readonly
+						/>
 						<Input
 							id="current-password"
 							label={t('settings.currentPasswordLabel')}
 							type="password"
+							autocomplete="current-password"
 							placeholder="••••••••"
 							required
 							bind:value={currentPassword}
@@ -733,6 +748,7 @@
 							id="new-password"
 							label={t('settings.newPasswordLabel')}
 							type="password"
+							autocomplete="new-password"
 							placeholder={t('settings.passwordPlaceholderMin')}
 							required
 							bind:value={newPassword}
@@ -742,6 +758,7 @@
 							id="confirm-password"
 							label={t('settings.confirmPasswordLabel')}
 							type="password"
+							autocomplete="new-password"
 							placeholder={t('settings.confirmPasswordPlaceholder')}
 							required
 							bind:value={confirmPassword}
@@ -819,6 +836,7 @@
 										id="enable-2fa-pwd"
 										label={t('auth.login.passwordLabel')}
 										type="password"
+										autocomplete="current-password"
 										placeholder={t('settings.accountPasswordPlaceholder')}
 										required
 										bind:value={twoFactorPassword}
@@ -880,6 +898,7 @@
 										id="disable-2fa-pwd"
 										label={t('auth.login.passwordLabel')}
 										type="password"
+										autocomplete="current-password"
 										placeholder={t('settings.accountPasswordPlaceholder')}
 										required
 										bind:value={twoFactorPassword}
@@ -914,6 +933,7 @@
 										id="gen-codes-pwd"
 										label={t('auth.login.passwordLabel')}
 										type="password"
+										autocomplete="current-password"
 										placeholder={t('settings.accountPasswordPlaceholder')}
 										required
 										bind:value={twoFactorPassword}
