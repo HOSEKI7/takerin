@@ -542,7 +542,10 @@
 		"saved": "Tersimpan",
 		"retry": "Coba Lagi",
 		"aiFailed": "Gagal membuat frasa analisis AI.",
-		"aiNetworkError": "Terjadi kendala jaringan saat menghubungi layanan AI."
+		"aiNetworkError": "Terjadi kendala jaringan saat menghubungi layanan AI.",
+		"backToPeriodDetail": "Kembali ke Riwayat Periode",
+		"categoryDetailSubtitle": "Evaluasi alokasi dan riwayat catatan pengeluaran pada periode ini.",
+		"viewCategoryExpenses": "Lihat detail pengeluaran {{category}}"
 	},
 	"settings": {
 		"title": "Pengaturan Akun & Profil",

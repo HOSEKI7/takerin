@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { getDb } from './index';
 import { user, monthlyPeriod, category, expense, incomeSource } from './schema';
-import { getCompletedPeriods, getCompletedPeriodDetail, savePeriodAiSummary } from './history';
+import { getCompletedPeriods, getCompletedPeriodDetail, getCompletedCategoryDetail, savePeriodAiSummary } from './history';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -564,5 +564,112 @@ describe('History D1 Database Operations (Seam 2)', () => {
 		const catB = p1Detail?.categories.find((c) => c.id === catP1B);
 		expect(catB?.spent).toBe(500000);
 		expect(catB?.balance).toBe(3500000); // 40% of 10.000.000 is 4.000.000 - 500.000 = 3.500.000
+	});
+
+	describe('getCompletedCategoryDetail', () => {
+		const periodId = 'period-cat-test';
+		const catId = 'cat-cat-test';
+
+		beforeEach(async () => {
+			const now = new Date();
+			await db.insert(monthlyPeriod).values({
+				id: periodId,
+				userId: testUserId,
+				startDate: '2026-01-25',
+				endDate: '2026-02-24',
+				payDay: 25,
+				totalIncome: 10000000,
+				status: 'completed',
+				createdAt: now
+			});
+
+			await db.insert(category).values({
+				id: catId,
+				userId: testUserId,
+				periodId,
+				name: 'Kebutuhan',
+				percentage: 60,
+				isSavings: false,
+				status: 'active',
+				createdAt: now,
+				updatedAt: now
+			});
+
+			await db.insert(expense).values([
+				{
+					id: 'exp-test-1',
+					userId: testUserId,
+					periodId,
+					categoryId: catId,
+					name: 'Makan',
+					amount: 1000000,
+					date: '2026-02-01',
+					createdAt: now,
+					updatedAt: now
+				},
+				{
+					id: 'exp-test-2',
+					userId: testUserId,
+					periodId,
+					categoryId: catId,
+					name: 'Sewa',
+					amount: 2000000,
+					date: '2026-02-05',
+					createdAt: now,
+					updatedAt: now
+				}
+			]);
+		});
+
+		it('returns null if period is not found or not completed or belonging to another user', async () => {
+			const res = await getCompletedCategoryDetail(
+				proxy.env.DB,
+				testUserId,
+				'non-existent-period',
+				catId
+			);
+			expect(res).toBeNull();
+		});
+
+		it('returns null if category is not found or belongs to another period', async () => {
+			const res = await getCompletedCategoryDetail(
+				proxy.env.DB,
+				testUserId,
+				periodId,
+				'non-existent-cat'
+			);
+			expect(res).toBeNull();
+		});
+
+		it('returns completed category detail and period info with correct calculations', async () => {
+			const res = await getCompletedCategoryDetail(
+				proxy.env.DB,
+				testUserId,
+				periodId,
+				catId
+			);
+
+			expect(res).not.toBeNull();
+			expect(res?.period).toEqual({
+				id: periodId,
+				startDate: '2026-01-25',
+				endDate: '2026-02-24',
+				payDay: 25,
+				totalIncome: 10000000,
+				status: 'completed'
+			});
+
+			expect(res?.category).toEqual({
+				id: catId,
+				name: 'Kebutuhan',
+				percentage: 60,
+				allocation: 6000000,
+				spent: 3000000,
+				balance: 3000000,
+				spentPercentage: 50,
+				isSavings: false,
+				status: 'active'
+			});
+		});
 	});
 });

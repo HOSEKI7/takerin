@@ -54,6 +54,17 @@ export interface CompletedPeriodDetail {
 	aiAggregateData: AiAggregateData;
 }
 
+function computeCategoryFinancials(
+	totalIncome: number,
+	percentage: number,
+	spent: number
+): { allocation: number; balance: number; spentPercentage: number } {
+	const allocation = Math.round(totalIncome * (percentage / 100));
+	const balance = allocation - spent;
+	const spentPercentage = allocation > 0 ? Math.round((spent / allocation) * 100) : 0;
+	return { allocation, balance, spentPercentage };
+}
+
 /**
  * Returns all completed monthly periods for the given user, ordered by startDate descending.
  * Aggregates total spent and remaining balance for each completed cycle.
@@ -172,19 +183,17 @@ export async function getCompletedPeriodDetail(
 	}
 
 	const detailedCategories: CompletedCategoryDetail[] = categories.map((cat) => {
-		const allocation = Math.round(period.totalIncome * (cat.percentage / 100));
 		const spent = spentByCat.get(cat.id) ?? 0;
-		const balance = allocation - spent;
-		const spentPercentage = allocation > 0 ? Math.round((spent / allocation) * 100) : 0;
+		const financials = computeCategoryFinancials(period.totalIncome, cat.percentage, spent);
 
 		return {
 			id: cat.id,
 			name: cat.name,
 			percentage: cat.percentage,
-			allocation,
+			allocation: financials.allocation,
 			spent,
-			balance,
-			spentPercentage,
+			balance: financials.balance,
+			spentPercentage: financials.spentPercentage,
 			isSavings: Boolean(cat.isSavings),
 			status: cat.status as 'active' | 'frozen'
 		};
@@ -314,4 +323,104 @@ export async function savePeriodAiSummary(
 		.update(schema.monthlyPeriod)
 		.set({ aiSummary })
 		.where(and(eq(schema.monthlyPeriod.id, periodId), eq(schema.monthlyPeriod.userId, userId)));
+}
+
+export interface CompletedCategoryOverview {
+	period: {
+		id: string;
+		startDate: string;
+		endDate: string;
+		payDay: number;
+		totalIncome: number;
+		status: string;
+	};
+	category: CompletedCategoryDetail;
+}
+
+/**
+ * Fetches the details and financial metrics of a single category within a completed monthly period.
+ * Verifies period is completed and belongs to user, and category belongs to user and period.
+ */
+export async function getCompletedCategoryDetail(
+	d1: D1Database,
+	userId: string,
+	periodId: string,
+	categoryId: string
+): Promise<CompletedCategoryOverview | null> {
+	const db = getDb(d1);
+
+	// 1. Fetch completed period
+	const periods = await db
+		.select()
+		.from(schema.monthlyPeriod)
+		.where(
+			and(
+				eq(schema.monthlyPeriod.id, periodId),
+				eq(schema.monthlyPeriod.userId, userId),
+				eq(schema.monthlyPeriod.status, 'completed')
+			)
+		)
+		.limit(1);
+
+	const period = periods[0] ?? null;
+	if (!period) {
+		return null;
+	}
+
+	// 2. Fetch category
+	const categories = await db
+		.select()
+		.from(schema.category)
+		.where(
+			and(
+				eq(schema.category.id, categoryId),
+				eq(schema.category.userId, userId),
+				eq(schema.category.periodId, periodId)
+			)
+		)
+		.limit(1);
+
+	const cat = categories[0] ?? null;
+	if (!cat) {
+		return null;
+	}
+
+	// 3. Aggregate spent for this category
+	const spentRows = await db
+		.select({
+			totalSpent: sql<number>`cast(coalesce(sum(${schema.expense.amount}), 0) as int)`
+		})
+		.from(schema.expense)
+		.where(
+			and(
+				eq(schema.expense.userId, userId),
+				eq(schema.expense.periodId, periodId),
+				eq(schema.expense.categoryId, categoryId)
+			)
+		);
+
+	const spent = spentRows[0]?.totalSpent ?? 0;
+	const financials = computeCategoryFinancials(period.totalIncome, cat.percentage, spent);
+
+	return {
+		period: {
+			id: period.id,
+			startDate: period.startDate,
+			endDate: period.endDate,
+			payDay: period.payDay,
+			totalIncome: period.totalIncome,
+			status: period.status
+		},
+		category: {
+			id: cat.id,
+			name: cat.name,
+			percentage: cat.percentage,
+			allocation: financials.allocation,
+			spent,
+			balance: financials.balance,
+			spentPercentage: financials.spentPercentage,
+			isSavings: Boolean(cat.isSavings),
+			status: cat.status as 'active' | 'frozen'
+		}
+	};
 }

@@ -15,7 +15,8 @@
 		Coins01Icon,
 		PiggyBankIcon,
 		AiChat02Icon,
-		Alert02Icon
+		Alert02Icon,
+		ArrowRight02Icon
 	} from '@hugeicons/core-free-icons';
 
 	let { data }: PageProps = $props();
@@ -308,70 +309,84 @@
 
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 			{#each data.categories as cat (cat.id)}
-				<Card class="p-4 sm:p-5">
-					<div class="flex items-start justify-between">
-						<div>
-							<div class="flex flex-wrap items-center gap-2">
-								<h3 class="font-bold text-obsidian dark:text-paper">
-									{cat.name}
-								</h3>
-								{#if cat.isSavings}
-									<span
-										class="flex items-center gap-1 rounded-full bg-lime-voltage/20 px-2 py-0.5 text-[10px] font-bold text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage"
-									>
-										<HugeiconsIcon icon={PiggyBankIcon} class="h-3 w-3" />
-										{t('categories.savingsBadge')}
-									</span>
-								{/if}
-								{#if cat.status === 'frozen'}
-									<span
-										class="rounded-full bg-fog px-2 py-0.5 text-[10px] font-bold text-slate dark:bg-dark-surface dark:text-pebble"
-									>
-										{t('common.frozen')}
-									</span>
-								{/if}
+				<a
+					href={resolve('/(app)/history/[periodId]/categories/[categoryId]', {
+						periodId: data.period.id,
+						categoryId: cat.id
+					})}
+					class="group block rounded-lg transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-ink dark:focus-visible:ring-lime-voltage"
+					aria-label={t('history.viewCategoryExpenses', { category: cat.name })}
+				>
+					<Card class="p-4 transition-all group-hover:border-pebble/70 group-hover:shadow-xs sm:p-5 dark:group-hover:border-slate/60">
+						<div class="flex items-start justify-between">
+							<div>
+								<div class="flex flex-wrap items-center gap-2">
+									<h3 class="font-bold text-obsidian transition-colors group-hover:text-forest-ink dark:text-paper dark:group-hover:text-lime-voltage">
+										{cat.name}
+									</h3>
+									{#if cat.isSavings}
+										<span
+											class="flex items-center gap-1 rounded-full bg-lime-voltage/20 px-2 py-0.5 text-[10px] font-bold text-forest-ink dark:bg-spruce/60 dark:text-lime-voltage"
+										>
+											<HugeiconsIcon icon={PiggyBankIcon} class="h-3 w-3" />
+											{t('categories.savingsBadge')}
+										</span>
+									{/if}
+									{#if cat.status === 'frozen'}
+										<span
+											class="rounded-full bg-fog px-2 py-0.5 text-[10px] font-bold text-slate dark:bg-dark-surface dark:text-pebble"
+										>
+											{t('common.frozen')}
+										</span>
+									{/if}
+								</div>
+								<p class="mt-0.5 text-xs text-slate dark:text-pebble">
+									{t('dashboard.allocationLabel', {
+										amount: formatRupiah(cat.allocation),
+										percent: cat.percentage
+									})}
+								</p>
 							</div>
-							<p class="mt-0.5 text-xs text-slate dark:text-pebble">
-								{t('dashboard.allocationLabel', {
-									amount: formatRupiah(cat.allocation),
-									percent: cat.percentage
-								})}
-							</p>
+
+							<div class="flex items-center gap-2.5">
+								<div class="text-right">
+									<p class="text-xs font-semibold text-slate dark:text-pebble">
+										{t('dashboard.balanceRemaining')}
+									</p>
+									<p
+										class={`text-sm font-bold ${
+											cat.balance >= 0 ? 'text-forest-ink dark:text-lime-voltage' : 'text-alarm-red'
+										}`}
+									>
+										{formatRupiah(cat.balance)}
+									</p>
+								</div>
+								<div class="text-slate transition-transform group-hover:translate-x-0.5 group-hover:text-forest-ink dark:text-pebble dark:group-hover:text-lime-voltage">
+									<HugeiconsIcon icon={ArrowRight02Icon} class="h-4 w-4" />
+								</div>
+							</div>
 						</div>
 
-						<div class="text-right">
-							<p class="text-xs font-semibold text-slate dark:text-pebble">
-								{t('dashboard.balanceRemaining')}
-							</p>
-							<p
-								class={`text-sm font-bold ${
-									cat.balance >= 0 ? 'text-forest-ink dark:text-lime-voltage' : 'text-alarm-red'
-								}`}
-							>
-								{formatRupiah(cat.balance)}
-							</p>
+						<div class="mt-4">
+							<div class="mb-1.5 flex justify-between text-xs font-semibold">
+								<span class="text-slate dark:text-pebble">
+									{t('dashboard.spentLabel', { amount: formatRupiah(cat.spent) })}
+								</span>
+								<span
+									class={cat.spentPercentage > 100
+										? 'font-bold text-alarm-red'
+										: 'text-slate dark:text-pebble'}
+								>
+									{cat.spentPercentage}%
+								</span>
+							</div>
+							<ProgressBar
+								value={Math.min(100, cat.spentPercentage)}
+								color={cat.spentPercentage > 100 ? 'alarm' : cat.isSavings ? 'spruce' : 'forest'}
+							/>
 						</div>
-					</div>
-
-					<div class="mt-4">
-						<div class="mb-1.5 flex justify-between text-xs font-semibold">
-							<span class="text-slate dark:text-pebble">
-								{t('dashboard.spentLabel', { amount: formatRupiah(cat.spent) })}
-							</span>
-							<span
-								class={cat.spentPercentage > 100
-									? 'font-bold text-alarm-red'
-									: 'text-slate dark:text-pebble'}
-							>
-								{cat.spentPercentage}%
-							</span>
-						</div>
-						<ProgressBar
-							value={Math.min(100, cat.spentPercentage)}
-							color={cat.spentPercentage > 100 ? 'alarm' : cat.isSavings ? 'spruce' : 'forest'}
-						/>
-					</div>
-				</Card>
+					</Card>
+				</a>
 			{/each}
 		</div>
 	</div>

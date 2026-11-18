@@ -384,5 +384,49 @@ describe('History Routes & API Handlers (Seam 3)', () => {
 			expect(html).toContain('Rincian Sumber Pemasukan');
 			expect(html).toContain('Tidak ada Sumber Pemasukan yang tercatat untuk periode ini.');
 		});
+
+		it('renders category cards as interactive links pointing to category history detail route', () => {
+			const { html } = render(HistoryDetailPage, {
+				props: {
+					data: {
+						user: mockUser,
+						period: {
+							id: 'p-1',
+							startDate: '2026-01-25',
+							endDate: '2026-02-24',
+							payDay: 25,
+							totalIncome: 10000000,
+							status: 'completed',
+							aiSummary: null
+						},
+						summary: {
+							totalIncome: 10000000,
+							totalSpent: 4000000,
+							remaining: 6000000,
+							spentPercentage: 40
+						},
+						categories: [
+							{
+								id: 'c-1',
+								name: 'Kebutuhan',
+								percentage: 50,
+								allocation: 5000000,
+								spent: 4000000,
+								balance: 1000000,
+								spentPercentage: 80,
+								isSavings: false,
+								status: 'active'
+							}
+						],
+						incomeSources: []
+					},
+					params: { periodId: 'p-1' },
+					form: null
+				} as unknown as PageProps
+			});
+
+			expect(html).toContain('href="/history/p-1/categories/c-1"');
+			expect(html).toContain('Kebutuhan');
+		});
 	});
 });
