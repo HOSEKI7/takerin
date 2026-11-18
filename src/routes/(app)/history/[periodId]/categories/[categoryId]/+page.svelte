@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types.js';
 	import Card from '#lib/components/Card.svelte';
+	import Button from '#lib/components/Button.svelte';
 	import ProgressBar from '#lib/components/ProgressBar.svelte';
 	import { resolve } from '$app/paths';
 	import { formatRupiah, formatDate } from '#lib/validation/onboarding.js';
@@ -16,6 +17,57 @@
 	} from '@hugeicons/core-free-icons';
 
 	let { data }: PageProps = $props();
+
+	const INITIAL_EXPENSES_LIMIT = 50;
+
+	// svelte-ignore state_referenced_locally
+	let displayedExpenses = $state<typeof data.expenses>(data.expenses ?? []);
+	// svelte-ignore state_referenced_locally
+	let currentTotalCount = $state<number>(data.totalCount ?? 0);
+	let isLoadingMore = $state(false);
+	let loadMoreError = $state<string | null>(null);
+
+	$effect(() => {
+		displayedExpenses = data.expenses ?? [];
+		currentTotalCount = data.totalCount ?? 0;
+	});
+
+	let hasMore = $derived(displayedExpenses.length < currentTotalCount);
+
+	async function handleLoadMore() {
+		if (isLoadingMore || !hasMore) return;
+		isLoadingMore = true;
+		loadMoreError = null;
+
+		try {
+			const queryParams = new URLSearchParams({
+				periodId: data.period.id,
+				categoryId: data.category.id,
+				limit: String(INITIAL_EXPENSES_LIMIT),
+				offset: String(displayedExpenses.length)
+			});
+
+			const res = await fetch(`/api/expenses?${queryParams.toString()}`);
+			if (!res.ok) {
+				throw new Error('Failed to load more expenses');
+			}
+			const json = (await res.json()) as {
+				expenses: typeof data.expenses;
+				totalCount?: number;
+				hasMore: boolean;
+			};
+
+			displayedExpenses = [...displayedExpenses, ...json.expenses];
+			if (typeof json.totalCount === 'number') {
+				currentTotalCount = json.totalCount;
+			}
+		} catch (err) {
+			console.error(err);
+			loadMoreError = t('history.loadMoreError');
+		} finally {
+			isLoadingMore = false;
+		}
+	}
 </script>
 
 <main class="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
@@ -158,18 +210,18 @@
 					{t('history.categoryExpensesSectionSubtitle')}
 				</p>
 			</div>
-			{#if data.totalCount !== undefined && data.totalCount > 0}
+			{#if currentTotalCount > 0}
 				<div class="self-start sm:self-auto">
 					<span
 						class="rounded-full bg-fog px-3 py-1 text-xs font-semibold text-charcoal dark:bg-dark-surface dark:text-linen-mist"
 					>
-						{t('history.totalExpensesCount', { count: data.totalCount })}
+						{t('history.totalExpensesCount', { count: currentTotalCount })}
 					</span>
 				</div>
 			{/if}
 		</div>
 
-		{#if !data.expenses || data.expenses.length === 0}
+		{#if displayedExpenses.length === 0}
 			<!-- Empty State -->
 			<Card variant="tinted" padding="lg" class="text-center">
 				<div
@@ -189,7 +241,7 @@
 			</Card>
 		{:else}
 			<div class="space-y-3">
-				{#each data.expenses as expense (expense.id)}
+				{#each displayedExpenses as expense (expense.id)}
 					<div
 						class="flex flex-col justify-between gap-3 rounded-xl border border-fog bg-paper p-4 transition-colors sm:flex-row sm:items-center dark:border-dark-border dark:bg-dark-card"
 					>
@@ -261,6 +313,35 @@
 					</div>
 				{/each}
 			</div>
+
+			{#if hasMore}
+				<div class="flex flex-col items-center justify-center pt-6 pb-2">
+					<Button
+						type="button"
+						variant="secondary"
+						size="md"
+						disabled={isLoadingMore}
+						class="flex items-center gap-2 font-bold shadow-xs hover:border-forest-ink dark:hover:border-lime-voltage"
+						onclick={handleLoadMore}
+					>
+						{#if isLoadingMore}
+							<div
+								class="h-4 w-4 animate-spin rounded-full border-2 border-forest-ink border-t-transparent dark:border-lime-voltage"
+								aria-hidden="true"
+							></div>
+							<span>{t('history.loadingMore')}</span>
+						{:else}
+							<span>{t('history.loadMore')}</span>
+						{/if}
+					</Button>
+
+					{#if loadMoreError}
+						<p role="alert" class="mt-2 text-xs font-medium text-alarm-red">
+							{loadMoreError}
+						</p>
+					{/if}
+				</div>
+			{/if}
 		{/if}
 	</div>
 </main>

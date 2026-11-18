@@ -348,5 +348,107 @@ describe('Category History Routes & Component Rendering (Seam 3 - Issue #58)', (
 			expect(html).toContain('Belum Ada Catatan Pengeluaran');
 			expect(html).toContain('Tidak ada catatan pengeluaran untuk kategori ini pada periode terkait');
 		});
+
+		it('renders "Muat Lebih Banyak" button when totalCount exceeds displayed expenses (Issue #60)', () => {
+			const dummyExpenses = Array.from({ length: 50 }, (_, i) => ({
+				id: `exp-${i + 1}`,
+				userId: mockUser.id,
+				periodId: 'p-1',
+				categoryId: 'c-1',
+				categoryName: 'Kebutuhan',
+				isSavings: false,
+				name: `Pengeluaran ke-${i + 1}`,
+				amount: 50000,
+				date: '2026-02-01',
+				time: '12:00',
+				notes: null,
+				createdAt: new Date(),
+				updatedAt: new Date()
+			}));
+
+			const { html } = render(CategoryHistoryDetailPage, {
+				props: {
+					data: {
+						user: mockUser,
+						period: {
+							id: 'p-1',
+							startDate: '2026-01-25',
+							endDate: '2026-02-24',
+							payDay: 25,
+							totalIncome: 10000000,
+							status: 'completed'
+						},
+						category: {
+							id: 'c-1',
+							name: 'Kebutuhan',
+							percentage: 50,
+							allocation: 5000000,
+							spent: 2500000,
+							balance: 2500000,
+							spentPercentage: 50,
+							isSavings: false,
+							status: 'active'
+						},
+						expenses: dummyExpenses,
+						totalCount: 75
+					},
+					params: { periodId: 'p-1', categoryId: 'c-1' },
+					form: null
+				} as unknown as PageProps
+			});
+
+			expect(html).toContain('Muat Lebih Banyak');
+		});
+
+		it('does not render "Muat Lebih Banyak" button when totalCount is less than or equal to displayed expenses (Issue #60)', () => {
+			const { html } = render(CategoryHistoryDetailPage, {
+				props: {
+					data: {
+						user: mockUser,
+						period: {
+							id: 'p-1',
+							startDate: '2026-01-25',
+							endDate: '2026-02-24',
+							payDay: 25,
+							totalIncome: 10000000,
+							status: 'completed'
+						},
+						category: {
+							id: 'c-1',
+							name: 'Kebutuhan',
+							percentage: 50,
+							allocation: 5000000,
+							spent: 100000,
+							balance: 4900000,
+							spentPercentage: 2,
+							isSavings: false,
+							status: 'active'
+						},
+						expenses: [
+							{
+								id: 'exp-1',
+								userId: mockUser.id,
+								periodId: 'p-1',
+								categoryId: 'c-1',
+								categoryName: 'Kebutuhan',
+								isSavings: false,
+								name: 'Sarapan',
+								amount: 100000,
+								date: '2026-02-01',
+								time: '07:00',
+								notes: null,
+								createdAt: new Date(),
+								updatedAt: new Date()
+							}
+						],
+						totalCount: 1
+					},
+					params: { periodId: 'p-1', categoryId: 'c-1' },
+					form: null
+				} as unknown as PageProps
+			});
+
+			expect(html).not.toContain('Muat Lebih Banyak');
+		});
 	});
 });

@@ -550,7 +550,10 @@
 		"categoryExpensesSectionSubtitle": "Individual expense records registered in this category.",
 		"noCategoryExpensesTitle": "No Expenses Recorded",
 		"noCategoryExpensesDesc": "No expenses recorded for this category in this period. The full allocation remains intact.",
-		"totalExpensesCount": "{{count}} expenses"
+		"totalExpensesCount": "{{count}} expenses",
+		"loadMore": "Load More",
+		"loadingMore": "Loading...",
+		"loadMoreError": "Failed to load additional expenses."
 	},
 	"settings": {
 		"title": "Account & Profile Settings",

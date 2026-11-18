@@ -550,7 +550,10 @@
 		"categoryExpensesSectionSubtitle": "Catatan pengeluaran individual yang tercatat pada kategori ini.",
 		"noCategoryExpensesTitle": "Belum Ada Catatan Pengeluaran",
 		"noCategoryExpensesDesc": "Tidak ada catatan pengeluaran untuk kategori ini pada periode terkait. Seluruh alokasi saldo tetap utuh.",
-		"totalExpensesCount": "{{count}} pengeluaran"
+		"totalExpensesCount": "{{count}} pengeluaran",
+		"loadMore": "Muat Lebih Banyak",
+		"loadingMore": "Memuat...",
+		"loadMoreError": "Gagal memuat pengeluaran tambahan."
 	},
 	"settings": {
 		"title": "Pengaturan Akun & Profil",
