@@ -189,18 +189,18 @@
 			</Card>
 		{:else}
 			<div class="space-y-3">
-				{#each data.expenses as exp (exp.id)}
+				{#each data.expenses as expense (expense.id)}
 					<div
 						class="flex flex-col justify-between gap-3 rounded-xl border border-fog bg-paper p-4 transition-colors sm:flex-row sm:items-center dark:border-dark-border dark:bg-dark-card"
 					>
 						<!-- Left: Details -->
 						<div class="flex items-start gap-3.5">
 							<div
-								class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {exp.isSavings
+								class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {expense.isSavings
 									? 'bg-spruce/15 text-spruce dark:bg-spruce/40 dark:text-lime-voltage'
 									: 'bg-linen-mist/80 text-forest-ink dark:bg-dark-surface dark:text-lime-voltage'}"
 							>
-								{#if exp.isSavings}
+								{#if expense.isSavings}
 									<HugeiconsIcon icon={PiggyBankIcon} class="h-5 w-5" />
 								{:else}
 									<HugeiconsIcon icon={Coins01Icon} class="h-5 w-5" />
@@ -210,14 +210,14 @@
 							<div>
 								<div class="flex flex-wrap items-center gap-2">
 									<h3 class="text-base font-bold text-obsidian dark:text-paper">
-										{exp.name}
+										{expense.name}
 									</h3>
 									<span
 										class="rounded-full bg-fog px-2.5 py-0.5 text-[11px] font-semibold text-charcoal dark:bg-dark-surface dark:text-linen-mist"
 									>
-										{exp.categoryName}
+										{expense.categoryName}
 									</span>
-									{#if exp.isSavings}
+									{#if expense.isSavings}
 										<span
 											class="rounded-full bg-spruce/10 px-2 py-0.5 text-[10px] font-bold text-spruce dark:bg-spruce/30 dark:text-lime-voltage"
 										>
@@ -231,18 +231,18 @@
 								>
 									<span class="flex items-center gap-1">
 										<HugeiconsIcon icon={Calendar01Icon} class="h-3.5 w-3.5" />
-										<span>{formatDate(exp.date, getLocale())}</span>
+										<span>{formatDate(expense.date, getLocale())}</span>
 									</span>
-									{#if exp.time}
+									{#if expense.time}
 										<span>•</span>
 										<span class="flex items-center gap-1">
 											<HugeiconsIcon icon={Clock01Icon} class="h-3.5 w-3.5" />
-											<span>{exp.time}</span>
+											<span>{expense.time}</span>
 										</span>
 									{/if}
-									{#if exp.notes}
+									{#if expense.notes}
 										<span>•</span>
-										<span class="text-charcoal/80 italic dark:text-linen-mist/80">"{exp.notes}"</span>
+										<span class="text-charcoal/80 italic dark:text-linen-mist/80">"{expense.notes}"</span>
 									{/if}
 								</div>
 							</div>
@@ -255,7 +255,7 @@
 							<p
 								class="text-lg font-black tracking-tight text-forest-ink sm:text-xl dark:text-lime-voltage"
 							>
-								{formatRupiah(exp.amount)}
+								{formatRupiah(expense.amount)}
 							</p>
 						</div>
 					</div>

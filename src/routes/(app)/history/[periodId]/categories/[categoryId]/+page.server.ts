@@ -3,6 +3,8 @@ import { redirect, error } from '@sveltejs/kit';
 import { getCompletedCategoryDetail } from '#lib/server/db/history.js';
 import { getExpenses, countExpenses } from '#lib/server/db/expense.js';
 
+const INITIAL_EXPENSES_LIMIT = 50;
+
 export const load: PageServerLoad = async ({ locals, platform, params }) => {
 	if (!locals.user) {
 		throw redirect(303, '/auth/login');
@@ -23,19 +25,19 @@ export const load: PageServerLoad = async ({ locals, platform, params }) => {
 		throw error(404, 'Detail kategori riwayat tidak ditemukan.');
 	}
 
+	const filterParams = {
+		userId: locals.user.id,
+		periodId: params.periodId,
+		categoryId: params.categoryId
+	};
+
 	const [expenses, totalCount] = await Promise.all([
 		getExpenses(platform.env.DB, {
-			userId: locals.user.id,
-			periodId: params.periodId,
-			categoryId: params.categoryId,
-			limit: 50,
+			...filterParams,
+			limit: INITIAL_EXPENSES_LIMIT,
 			offset: 0
 		}),
-		countExpenses(platform.env.DB, {
-			userId: locals.user.id,
-			periodId: params.periodId,
-			categoryId: params.categoryId
-		})
+		countExpenses(platform.env.DB, filterParams)
 	]);
 
 	return {
