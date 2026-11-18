@@ -20,19 +20,16 @@
 
 	const INITIAL_EXPENSES_LIMIT = 50;
 
-	// svelte-ignore state_referenced_locally
-	let displayedExpenses = $state<typeof data.expenses>(data.expenses ?? []);
-	// svelte-ignore state_referenced_locally
-	let currentTotalCount = $state<number>(data.totalCount ?? 0);
+	let extraExpenses = $state<typeof data.expenses>([]);
+	let serverHasMore = $state<boolean | null>(null);
 	let isLoadingMore = $state(false);
 	let loadMoreError = $state<string | null>(null);
 
-	$effect(() => {
-		displayedExpenses = data.expenses ?? [];
-		currentTotalCount = data.totalCount ?? 0;
-	});
-
-	let hasMore = $derived(displayedExpenses.length < currentTotalCount);
+	let displayedExpenses = $derived([...(data.expenses ?? []), ...extraExpenses]);
+	let currentTotalCount = $derived(data.totalCount ?? 0);
+	let hasMore = $derived(
+		serverHasMore !== null ? serverHasMore : displayedExpenses.length < currentTotalCount
+	);
 
 	async function handleLoadMore() {
 		if (isLoadingMore || !hasMore) return;
@@ -57,10 +54,8 @@
 				hasMore: boolean;
 			};
 
-			displayedExpenses = [...displayedExpenses, ...json.expenses];
-			if (typeof json.totalCount === 'number') {
-				currentTotalCount = json.totalCount;
-			}
+			extraExpenses = [...extraExpenses, ...json.expenses];
+			serverHasMore = json.hasMore;
 		} catch (err) {
 			console.error(err);
 			loadMoreError = t('history.loadMoreError');
@@ -321,7 +316,7 @@
 						variant="secondary"
 						size="md"
 						disabled={isLoadingMore}
-						class="flex items-center gap-2 font-bold shadow-xs hover:border-forest-ink dark:hover:border-lime-voltage"
+						class="font-bold shadow-subtle hover:border-forest-ink dark:hover:border-lime-voltage"
 						onclick={handleLoadMore}
 					>
 						{#if isLoadingMore}
