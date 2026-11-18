@@ -9,6 +9,7 @@
 	import Button from './Button.svelte';
 	import { isRouteActive } from '#lib/navigation/route.js';
 	import { t } from '#lib/i18n/index.js';
+	import { lockScroll, unlockScroll } from '#lib/scroll-lock.js';
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		Analytics01Icon,
@@ -75,14 +76,11 @@
 	});
 
 	$effect(() => {
-		if (typeof document !== 'undefined') {
-			if (isOpen) {
-				const originalOverflow = document.body.style.overflow;
-				document.body.style.overflow = 'hidden';
-				return () => {
-					document.body.style.overflow = originalOverflow;
-				};
-			}
+		if (isOpen) {
+			lockScroll();
+			return () => {
+				unlockScroll();
+			};
 		}
 	});
 

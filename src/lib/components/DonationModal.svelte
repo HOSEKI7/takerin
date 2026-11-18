@@ -4,6 +4,7 @@
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import { Cancel01Icon, LinkSquare02Icon, HeartIcon } from '@hugeicons/core-free-icons';
 	import { t } from '#lib/i18n/index.js';
+	import { lockScroll, unlockScroll } from '#lib/scroll-lock.js';
 
 	interface DonationPlatform {
 		id: string;
@@ -46,14 +47,11 @@
 
 	// Lock body scroll when modal is open
 	$effect(() => {
-		if (typeof document !== 'undefined') {
-			if (isOpen) {
-				const originalOverflow = document.body.style.overflow;
-				document.body.style.overflow = 'hidden';
-				return () => {
-					document.body.style.overflow = originalOverflow;
-				};
-			}
+		if (isOpen) {
+			lockScroll();
+			return () => {
+				unlockScroll();
+			};
 		}
 	});
 </script>

@@ -12,6 +12,7 @@
 		CheckmarkCircle02Icon
 	} from '@hugeicons/core-free-icons';
 	import { t } from '#lib/i18n/index.js';
+	import { lockScroll, unlockScroll } from '#lib/scroll-lock.js';
 
 	interface Props {
 		isOpen?: boolean;
@@ -112,43 +113,40 @@
 	// Lock body scroll when modal is open and capture client context
 	let wasOpen = false;
 	$effect(() => {
-		if (typeof document !== 'undefined') {
-			if (isOpen) {
-				const originalOverflow = document.body.style.overflow;
-				document.body.style.overflow = 'hidden';
+		if (isOpen) {
+			lockScroll();
 
-				if (!wasOpen) {
-					activeTab = initialType;
-					rating = 0;
-					hoveredRating = 0;
-					category = 'bug';
-					content = '';
-					formError = null;
-					isSuccess = false;
+			if (!wasOpen) {
+				activeTab = initialType;
+				rating = 0;
+				hoveredRating = 0;
+				category = 'bug';
+				content = '';
+				formError = null;
+				isSuccess = false;
 
-					if (typeof window !== 'undefined') {
-						if (typeof sessionStorage !== 'undefined') {
-							isSessionDeferred = sessionStorage.getItem(storageKey) === 'true';
-						}
-						if (!propDeviceInfo) {
-							detectedDeviceInfo = JSON.stringify({
-								browser: navigator.userAgent,
-								screen: `${window.innerWidth}x${window.innerHeight}`
-							});
-						}
-						if (!propCurrentRoute) {
-							detectedCurrentRoute = window.location.pathname;
-						}
+				if (typeof window !== 'undefined') {
+					if (typeof sessionStorage !== 'undefined') {
+						isSessionDeferred = sessionStorage.getItem(storageKey) === 'true';
+					}
+					if (!propDeviceInfo) {
+						detectedDeviceInfo = JSON.stringify({
+							browser: navigator.userAgent,
+							screen: `${window.innerWidth}x${window.innerHeight}`
+						});
+					}
+					if (!propCurrentRoute) {
+						detectedCurrentRoute = window.location.pathname;
 					}
 				}
-				wasOpen = true;
-
-				return () => {
-					document.body.style.overflow = originalOverflow;
-				};
-			} else {
-				wasOpen = false;
 			}
+			wasOpen = true;
+
+			return () => {
+				unlockScroll();
+			};
+		} else {
+			wasOpen = false;
 		}
 	});
 

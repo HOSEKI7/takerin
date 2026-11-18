@@ -10,6 +10,7 @@
 		Coins01Icon
 	} from '@hugeicons/core-free-icons';
 	import { t } from '#lib/i18n/index.js';
+	import { lockScroll, unlockScroll } from '#lib/scroll-lock.js';
 	import { formatRupiah, calculateTotalIncome } from '#lib/validation/onboarding.js';
 
 	export interface IncomeSourceItem {
@@ -202,9 +203,8 @@
 
 	// Focus management and body scroll locking
 	$effect(() => {
-		if (typeof document !== 'undefined' && isOpen) {
-			const originalOverflow = document.body.style.overflow;
-			document.body.style.overflow = 'hidden';
+		if (isOpen) {
+			lockScroll();
 
 			// Focus first interactive element or dialog container
 			requestAnimationFrame(() => {
@@ -215,7 +215,7 @@
 			});
 
 			return () => {
-				document.body.style.overflow = originalOverflow;
+				unlockScroll();
 			};
 		}
 	});

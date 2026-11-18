@@ -20,5 +20,8 @@ export { default as PublicNavbar } from './components/PublicNavbar.svelte';
 // Theme Utilities
 export * from './theme';
 
+// Scroll Lock Utilities
+export * from './scroll-lock.js';
+
 // PWA Utilities
 export * from './pwa/index.js';
