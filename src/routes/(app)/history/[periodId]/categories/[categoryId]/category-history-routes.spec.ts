@@ -4,9 +4,16 @@ import CategoryHistoryDetailPage from './+page.svelte';
 import type { PageProps } from './$types.js';
 
 const mockGetCompletedCategoryDetail = vi.fn();
+const mockGetExpenses = vi.fn();
+const mockCountExpenses = vi.fn();
 
 vi.mock('#lib/server/db/history.js', () => ({
 	getCompletedCategoryDetail: (...args: unknown[]) => mockGetCompletedCategoryDetail(...args)
+}));
+
+vi.mock('#lib/server/db/expense.js', () => ({
+	getExpenses: (...args: unknown[]) => mockGetExpenses(...args),
+	countExpenses: (...args: unknown[]) => mockCountExpenses(...args)
 }));
 
 import { load } from './+page.server.js';
@@ -62,7 +69,7 @@ describe('Category History Routes & Component Rendering (Seam 3 - Issue #58)', (
 			);
 		});
 
-		it('loads completed category overview with period and category metrics', async () => {
+		it('loads completed category overview with period, category metrics, and initial 50 expenses', async () => {
 			const sampleOverview = {
 				period: {
 					id: 'p-1',
@@ -85,7 +92,27 @@ describe('Category History Routes & Component Rendering (Seam 3 - Issue #58)', (
 				}
 			};
 
+			const sampleExpenses = [
+				{
+					id: 'exp-1',
+					userId: mockUser.id,
+					periodId: 'p-1',
+					categoryId: 'c-1',
+					categoryName: 'Kebutuhan',
+					isSavings: false,
+					name: 'Belanja Mingguan',
+					amount: 1500000,
+					date: '2026-02-01',
+					time: '10:00',
+					notes: 'Bahan makanan',
+					createdAt: new Date(),
+					updatedAt: new Date()
+				}
+			];
+
 			mockGetCompletedCategoryDetail.mockResolvedValue(sampleOverview);
+			mockGetExpenses.mockResolvedValue(sampleExpenses);
+			mockCountExpenses.mockResolvedValue(1);
 
 			const mockEvent = {
 				locals: { user: mockUser },
@@ -93,11 +120,30 @@ describe('Category History Routes & Component Rendering (Seam 3 - Issue #58)', (
 				params: { periodId: 'p-1', categoryId: 'c-1' }
 			} as unknown as Parameters<typeof load>[0];
 
-			const result = (await load(mockEvent)) as typeof sampleOverview & { user: typeof mockUser };
+			const result = (await load(mockEvent)) as typeof sampleOverview & {
+				user: typeof mockUser;
+				expenses: typeof sampleExpenses;
+				totalCount: number;
+			};
 
 			expect(result.period).toEqual(sampleOverview.period);
 			expect(result.category).toEqual(sampleOverview.category);
 			expect(result.user).toEqual(mockUser);
+			expect(result.expenses).toEqual(sampleExpenses);
+			expect(result.totalCount).toBe(1);
+
+			expect(mockGetExpenses).toHaveBeenCalledWith(mockD1, {
+				userId: mockUser.id,
+				periodId: 'p-1',
+				categoryId: 'c-1',
+				limit: 50,
+				offset: 0
+			});
+			expect(mockCountExpenses).toHaveBeenCalledWith(mockD1, {
+				userId: mockUser.id,
+				periodId: 'p-1',
+				categoryId: 'c-1'
+			});
 		});
 	});
 
@@ -205,6 +251,102 @@ describe('Category History Routes & Component Rendering (Seam 3 - Issue #58)', (
 
 			expect(html).toContain('Tabungan');
 			expect(html).toContain('Dibekukan');
+		});
+
+		it('renders historical expense cards view-only without edit or delete buttons', () => {
+			const { html } = render(CategoryHistoryDetailPage, {
+				props: {
+					data: {
+						user: mockUser,
+						period: {
+							id: 'p-1',
+							startDate: '2026-01-25',
+							endDate: '2026-02-24',
+							payDay: 25,
+							totalIncome: 10000000,
+							status: 'completed'
+						},
+						category: {
+							id: 'c-1',
+							name: 'Kebutuhan',
+							percentage: 50,
+							allocation: 5000000,
+							spent: 1500000,
+							balance: 3500000,
+							spentPercentage: 30,
+							isSavings: false,
+							status: 'active'
+						},
+						expenses: [
+							{
+								id: 'exp-1',
+								userId: mockUser.id,
+								periodId: 'p-1',
+								categoryId: 'c-1',
+								categoryName: 'Kebutuhan',
+								isSavings: false,
+								name: 'Belanja Sayur & Buah',
+								amount: 1500000,
+								date: '2026-02-01',
+								time: '08:30',
+								notes: 'Pasar tradisional',
+								createdAt: new Date(),
+								updatedAt: new Date()
+							}
+						],
+						totalCount: 1
+					},
+					params: { periodId: 'p-1', categoryId: 'c-1' },
+					form: null
+				} as unknown as PageProps
+			});
+
+			expect(html).toContain('Belanja Sayur &amp; Buah');
+			expect(html).toContain('Kebutuhan');
+			expect(html).toContain('08:30');
+			expect(html).toContain('Pasar tradisional');
+			expect(html).toContain('Rp 1.500.000');
+
+			// Strictly view-only: no edit links, no delete buttons
+			expect(html).not.toContain('/edit');
+			expect(html).not.toContain('aria-label="Hapus');
+			expect(html).not.toContain('aria-label="Ubah');
+		});
+
+		it('renders informative empty state card when expenses list is empty', () => {
+			const { html } = render(CategoryHistoryDetailPage, {
+				props: {
+					data: {
+						user: mockUser,
+						period: {
+							id: 'p-1',
+							startDate: '2026-01-25',
+							endDate: '2026-02-24',
+							payDay: 25,
+							totalIncome: 10000000,
+							status: 'completed'
+						},
+						category: {
+							id: 'c-empty',
+							name: 'Dana Darurat',
+							percentage: 10,
+							allocation: 1000000,
+							spent: 0,
+							balance: 1000000,
+							spentPercentage: 0,
+							isSavings: true,
+							status: 'active'
+						},
+						expenses: [],
+						totalCount: 0
+					},
+					params: { periodId: 'p-1', categoryId: 'c-empty' },
+					form: null
+				} as unknown as PageProps
+			});
+
+			expect(html).toContain('Belum Ada Catatan Pengeluaran');
+			expect(html).toContain('Tidak ada catatan pengeluaran untuk kategori ini pada periode terkait');
 		});
 	});
 });

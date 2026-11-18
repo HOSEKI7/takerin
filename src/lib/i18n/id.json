@@ -545,7 +545,12 @@
 		"aiNetworkError": "Terjadi kendala jaringan saat menghubungi layanan AI.",
 		"backToPeriodDetail": "Kembali ke Riwayat Periode",
 		"categoryDetailSubtitle": "Evaluasi alokasi dan riwayat catatan pengeluaran pada periode ini.",
-		"viewCategoryExpenses": "Lihat detail pengeluaran {{category}}"
+		"viewCategoryExpenses": "Lihat detail pengeluaran {{category}}",
+		"categoryExpensesSectionTitle": "Daftar Pengeluaran Kategori",
+		"categoryExpensesSectionSubtitle": "Catatan pengeluaran individual yang tercatat pada kategori ini.",
+		"noCategoryExpensesTitle": "Belum Ada Catatan Pengeluaran",
+		"noCategoryExpensesDesc": "Tidak ada catatan pengeluaran untuk kategori ini pada periode terkait. Seluruh alokasi saldo tetap utuh.",
+		"totalExpensesCount": "{{count}} pengeluaran"
 	},
 	"settings": {
 		"title": "Pengaturan Akun & Profil",

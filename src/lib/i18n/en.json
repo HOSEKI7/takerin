@@ -545,7 +545,12 @@
 		"aiNetworkError": "Network error while connecting to AI service.",
 		"backToPeriodDetail": "Back to Period History",
 		"categoryDetailSubtitle": "Evaluate allocation and expense records for this category in this period.",
-		"viewCategoryExpenses": "View {{category}} expenses detail"
+		"viewCategoryExpenses": "View {{category}} expenses detail",
+		"categoryExpensesSectionTitle": "Category Expenses List",
+		"categoryExpensesSectionSubtitle": "Individual expense records registered in this category.",
+		"noCategoryExpensesTitle": "No Expenses Recorded",
+		"noCategoryExpensesDesc": "No expenses recorded for this category in this period. The full allocation remains intact.",
+		"totalExpensesCount": "{{count}} expenses"
 	},
 	"settings": {
 		"title": "Account & Profile Settings",
