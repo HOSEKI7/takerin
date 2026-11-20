@@ -35,7 +35,9 @@
 		'@context': 'https://schema.org',
 		'@type': 'SoftwareApplication',
 		name: 'Takerin',
+		alternateName: ['Takerin App', 'Aplikasi Takerin', 'Takerin Finansial'],
 		applicationCategory: 'FinanceApplication',
+		applicationSubCategory: 'Budgeting & Expense Tracking',
 		operatingSystem: 'All',
 		offers: {
 			'@type': 'Offer',
@@ -137,11 +139,22 @@
 		'@context': 'https://schema.org',
 		'@type': 'WebSite',
 		name: 'Takerin',
+		alternateName: ['Takerin App', 'Aplikasi Takerin', 'Takerin Finansial'],
 		url: 'https://takerin.my.id',
 		sameAs: ['https://github.com/HOSEKI7/takerin'],
 		description:
 			'Aplikasi web gratis untuk membagi gaji bulanan ke dalam takaran jatah per kategori dan mencatat pengeluaran harian.',
-		inLanguage: 'id'
+		inLanguage: 'id',
+		publisher: {
+			'@type': 'Organization',
+			name: 'Takerin',
+			url: 'https://takerin.my.id',
+			sameAs: ['https://github.com/HOSEKI7/takerin'],
+			logo: {
+				'@type': 'ImageObject',
+				url: 'https://takerin.my.id/brand/takerin-logo.webp'
+			}
+		}
 	};
 
 	const jsonLdSoftwareApp =

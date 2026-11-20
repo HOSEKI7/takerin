@@ -9,10 +9,15 @@
 </p>
 
 <p align="center">
+  🌐 <strong>Website Resmi:</strong> <a href="https://takerin.my.id">https://takerin.my.id</a>
+</p>
+
+<p align="center">
   Aplikasi web modern untuk penganggaran finansial pribadi berbasis persentase dan pencatatan pengeluaran harian yang terarah, terukur, dan transparan.
 </p>
 
 <p align="center">
+  <a href="https://takerin.my.id"><img src="https://img.shields.io/badge/Live_App-takerin.my.id-163300?style=flat-square&logo=googlechrome&logoColor=white" alt="Live App" /></a>
   <a href="https://svelte.dev/"><img src="https://img.shields.io/badge/SvelteKit-5-FF3E00?style=flat-square&logo=svelte&logoColor=white" alt="SvelteKit 5" /></a>
   <a href="https://pages.cloudflare.com/"><img src="https://img.shields.io/badge/Cloudflare-Pages%20%26%20D1-F38020?style=flat-square&logo=cloudflare&logoColor=white" alt="Cloudflare Pages & D1" /></a>
   <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS v4" /></a>
@@ -26,6 +31,7 @@
 ## 📑 Daftar Isi
 
 - [📑 Daftar Isi](#-daftar-isi)
+- [🌐 Tautan Resmi](#-tautan-resmi)
 - [💡 Tentang Takerin](#-tentang-takerin)
 - [⚖️ Filosofi \& Konsep Inti](#️-filosofi--konsep-inti)
 - [✨ Fitur Utama](#-fitur-utama)
@@ -56,11 +62,21 @@
 
 ---
 
+## 🌐 Tautan Resmi
+
+- 🏠 **Aplikasi Web (Produksi):** [https://takerin.my.id](https://takerin.my.id)
+- 📚 **Blog & Edukasi Finansial:** [https://takerin.my.id/blog](https://takerin.my.id/blog)
+- ✨ **Buat Akun Gratis:** [https://takerin.my.id/auth/register](https://takerin.my.id/auth/register)
+- 🗺️ **Peta Situs (Sitemap):** [https://takerin.my.id/sitemap.xml](https://takerin.my.id/sitemap.xml)
+- 🤖 **Protokol Konteks AI (LLMs):** [https://takerin.my.id/llms.txt](https://takerin.my.id/llms.txt)
+
+---
+
 ## 💡 Tentang Takerin
 
 Banyak orang rutin mencatat pengeluaran harian, namun tetap mendapati uang mereka habis sebelum akhir bulan. Hal ini umumnya terjadi karena pengeluaran dicatat **setelah** uang terbelanjakan, tanpa batas alokasi yang jelas di awal.
 
-**Takerin** membalik paradigma tersebut dengan pendekatan perencanaan awal: **bagi dulu di awal periode gajian, lalu catat setiap pengeluaran terhadap jatahnya.** 
+**[Takerin](https://takerin.my.id)** membalik paradigma tersebut dengan pendekatan perencanaan awal: **bagi dulu di awal periode gajian, lalu catat setiap pengeluaran terhadap jatahnya.** 
 
 Dengan Takerin, setiap rupiah pemasukan bulanan dialokasikan ke dalam takaran persentase kebutuhan (seperti kebutuhan pokok, tabungan, transportasi, hingga hiburan) dengan batas total 100%. Pengguna dapat memantau sisa saldo per pos pengeluaran secara real-time dan mendapatkan pengingat yang ramah saat pengeluaran mendekati atau melampaui batas.
 

@@ -3,6 +3,20 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"homepage": "https://takerin.my.id",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/HOSEKI7/takerin.git"
+	},
+	"keywords": [
+		"takerin",
+		"budgeting",
+		"pengatur-keuangan",
+		"pembagi-gaji",
+		"catat-pengeluaran",
+		"keuangan-pribadi",
+		"personal-finance"
+	],
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
