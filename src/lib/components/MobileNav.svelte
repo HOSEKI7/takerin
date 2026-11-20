@@ -75,6 +75,34 @@
 		}
 	}
 
+	// Edge-swipe touch gesture handling (< 1024px)
+	let touchStartX = 0;
+	let touchStartY = 0;
+
+	function handleTouchStart(event: TouchEvent) {
+		if (event.touches.length !== 1) return;
+		touchStartX = event.touches[0].clientX;
+		touchStartY = event.touches[0].clientY;
+	}
+
+	function handleTouchEnd(event: TouchEvent) {
+		if (event.changedTouches.length !== 1) return;
+		const deltaX = event.changedTouches[0].clientX - touchStartX;
+		const deltaY = event.changedTouches[0].clientY - touchStartY;
+
+		// Horizontal gesture must dominate vertical scrolling (ratio > 1.5)
+		if (Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+			// Swipe right from left edge (start X <= 40px) opens drawer
+			if (!isOpen && touchStartX <= 40 && deltaX > 50) {
+				isOpen = true;
+			}
+			// Swipe left when drawer is open closes drawer
+			else if (isOpen && deltaX < -50) {
+				isOpen = false;
+			}
+		}
+	}
+
 	afterNavigate(() => {
 		closeDrawer();
 	});
@@ -129,11 +157,27 @@
 			exact: false
 		}
 	]);
+
+	const isDashboardActive = $derived(
+		isRouteActive(effectivePath, resolve('/(app)/dashboard'), true)
+	);
+	const isExpensesActive = $derived(
+		isRouteActive(effectivePath, resolve('/(app)/expenses'), false) &&
+			!effectivePath.endsWith('/expenses/new')
+	);
+	const isCategoriesActive = $derived(
+		isRouteActive(effectivePath, resolve('/(app)/categories'), false)
+	);
+	const isHistoryActive = $derived(isRouteActive(effectivePath, resolve('/(app)/history'), false));
 </script>
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window
+	onkeydown={handleKeydown}
+	ontouchstart={handleTouchStart}
+	ontouchend={handleTouchEnd}
+/>
 
 {#snippet userAvatar()}
 	{#if user?.image}
@@ -170,10 +214,18 @@
 		<BrandLogo href="/(app)/dashboard" size="sm" />
 	</div>
 
-	<!-- Right: ThemeToggle & User Avatar -->
+	<!-- Right: ThemeToggle & User Avatar (tap to toggle drawer) -->
 	<div class="flex items-center gap-2.5">
 		<ThemeToggle />
-		{@render userAvatar()}
+		<button
+			type="button"
+			onclick={toggleDrawer}
+			class="cursor-pointer rounded-full transition-transform focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-95 dark:focus-visible:ring-lime-voltage"
+			aria-label={t('nav.openMenu')}
+			aria-expanded={isOpen}
+		>
+			{@render userAvatar()}
+		</button>
 	</div>
 </header>
 
@@ -368,3 +420,83 @@
 {/if}
 
 <DonationModal bind:isOpen={isDonationModalOpen} />
+
+<!-- Fixed Bottom Navigation Bar (< 1024px / lg:hidden) -->
+<nav
+	aria-label={t('nav.bottomNav')}
+	class="fixed inset-x-0 bottom-0 z-30 border-t border-fog/80 bg-paper/95 backdrop-blur-md lg:hidden dark:border-dark-border dark:bg-dark-card/95"
+	style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.25rem);"
+>
+	<div class="grid h-16 grid-cols-5 items-center px-1">
+		<!-- Tab 1: Dashboard -->
+		<a
+			href={resolve('/(app)/dashboard')}
+			class="flex flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors {isDashboardActive
+				? 'font-bold text-forest-ink dark:text-lime-voltage'
+				: 'font-medium text-slate hover:text-charcoal dark:text-pebble dark:hover:text-linen-mist'}"
+			aria-current={isDashboardActive ? 'page' : undefined}
+		>
+			<HugeiconsIcon icon={LayoutDashboardIcon} size={20} />
+			<span class="max-w-[60px] truncate text-[10px] leading-tight">{t('nav.dashboard')}</span>
+			{#if isDashboardActive}
+				<span class="h-1 w-1 rounded-full bg-forest-ink dark:bg-lime-voltage"></span>
+			{/if}
+		</a>
+
+		<!-- Tab 2: Pengeluaran -->
+		<a
+			href={resolve('/(app)/expenses')}
+			class="flex flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors {isExpensesActive
+				? 'font-bold text-forest-ink dark:text-lime-voltage'
+				: 'font-medium text-slate hover:text-charcoal dark:text-pebble dark:hover:text-linen-mist'}"
+			aria-current={isExpensesActive ? 'page' : undefined}
+		>
+			<HugeiconsIcon icon={Wallet01Icon} size={20} />
+			<span class="max-w-[60px] truncate text-[10px] leading-tight">{t('nav.expenses')}</span>
+			{#if isExpensesActive}
+				<span class="h-1 w-1 rounded-full bg-forest-ink dark:bg-lime-voltage"></span>
+			{/if}
+		</a>
+
+		<!-- Tab 3: Center Elevated (+) Action Button -->
+		<div class="flex items-center justify-center">
+			<a
+				href={resolve('/(app)/expenses/new')}
+				class="flex h-12 w-12 -translate-y-2.5 items-center justify-center rounded-full border-4 border-paper bg-forest-ink text-lime-voltage shadow-lg transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-95 dark:border-dark-card dark:bg-lime-voltage dark:text-forest-ink dark:focus-visible:ring-lime-voltage"
+				aria-label={t('nav.quickAdd')}
+			>
+				<HugeiconsIcon icon={PlusSignIcon} size={22} />
+			</a>
+		</div>
+
+		<!-- Tab 4: Kategori -->
+		<a
+			href={resolve('/(app)/categories')}
+			class="flex flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors {isCategoriesActive
+				? 'font-bold text-forest-ink dark:text-lime-voltage'
+				: 'font-medium text-slate hover:text-charcoal dark:text-pebble dark:hover:text-linen-mist'}"
+			aria-current={isCategoriesActive ? 'page' : undefined}
+		>
+			<HugeiconsIcon icon={Layers01Icon} size={20} />
+			<span class="max-w-[60px] truncate text-[10px] leading-tight">{t('nav.categories')}</span>
+			{#if isCategoriesActive}
+				<span class="h-1 w-1 rounded-full bg-forest-ink dark:bg-lime-voltage"></span>
+			{/if}
+		</a>
+
+		<!-- Tab 5: Riwayat -->
+		<a
+			href={resolve('/(app)/history')}
+			class="flex flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors {isHistoryActive
+				? 'font-bold text-forest-ink dark:text-lime-voltage'
+				: 'font-medium text-slate hover:text-charcoal dark:text-pebble dark:hover:text-linen-mist'}"
+			aria-current={isHistoryActive ? 'page' : undefined}
+		>
+			<HugeiconsIcon icon={Calendar01Icon} size={20} />
+			<span class="max-w-[60px] truncate text-[10px] leading-tight">{t('nav.history')}</span>
+			{#if isHistoryActive}
+				<span class="h-1 w-1 rounded-full bg-forest-ink dark:bg-lime-voltage"></span>
+			{/if}
+		</a>
+	</div>
+</nav>

@@ -392,4 +392,44 @@ describe('App Route Group & Centralized Layout (Issue #26)', () => {
 		expect(content).toContain('window.history.replaceState');
 		expect(content).toContain('sessionStorage.removeItem(feedbackStorageKey)');
 	});
+
+	describe('Mobile PWA Thumb-Zone Navigation & Bottom Bar (Issue #62)', () => {
+		const mobileNavPath = path.resolve('src/lib/components/MobileNav.svelte');
+		const layoutPath = path.resolve('src/routes/(app)/+layout.svelte');
+
+		it('hides ContentHeader breadcrumb on mobile viewports (< lg) and adds bottom padding to app shell', () => {
+			const layoutContent = fs.readFileSync(layoutPath, 'utf-8');
+
+			expect(layoutContent).toContain('<ContentHeader class="hidden lg:block" />');
+			expect(layoutContent).toContain('pb-20 lg:pb-0');
+		});
+
+		it('renders fixed Bottom Navigation Bar on mobile with 5 interactive slots in MobileNav.svelte', () => {
+			const mobileNavContent = fs.readFileSync(mobileNavPath, 'utf-8');
+
+			// Fixed bottom navigation container for mobile
+			expect(mobileNavContent).toContain('bottom-0');
+			expect(mobileNavContent).toContain('fixed');
+			expect(mobileNavContent).toContain('lg:hidden');
+			expect(mobileNavContent).toContain('env(safe-area-inset-bottom');
+
+			// 5 navigation destinations
+			expect(mobileNavContent).toContain("resolve('/(app)/dashboard')");
+			expect(mobileNavContent).toContain("resolve('/(app)/expenses')");
+			expect(mobileNavContent).toContain("resolve('/(app)/expenses/new')");
+			expect(mobileNavContent).toContain("resolve('/(app)/categories')");
+			expect(mobileNavContent).toContain("resolve('/(app)/history')");
+		});
+
+		it('supports edge-swipe touch gesture and avatar click to trigger side drawer in MobileNav.svelte', () => {
+			const mobileNavContent = fs.readFileSync(mobileNavPath, 'utf-8');
+
+			// Edge-swipe touch listeners or handler
+			expect(mobileNavContent).toContain('handleTouchStart');
+			expect(mobileNavContent).toContain('handleTouchEnd');
+
+			// Avatar is clickable to open drawer
+			expect(mobileNavContent).toContain('toggleDrawer');
+		});
+	});
 });

@@ -111,10 +111,10 @@
 				: 'lg:pl-64'}"
 		>
 			<div class="app-content-shell flex min-h-screen flex-col">
-				<!-- Minimalist Content Header with Dynamic Breadcrumbs (Issue #29) -->
-				<ContentHeader />
+				<!-- Minimalist Content Header with Dynamic Breadcrumbs (hidden on mobile < lg) -->
+				<ContentHeader class="hidden lg:block" />
 
-				<div class="flex-1">
+				<div class="flex-1 pb-20 lg:pb-0">
 					{@render children()}
 				</div>
 			</div>

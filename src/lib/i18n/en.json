@@ -67,6 +67,8 @@
 		"openMenu": "Open navigation menu",
 		"closeMenu": "Close navigation menu",
 		"mobileNav": "Mobile Navigation",
+		"bottomNav": "Bottom Navigation",
+		"quickAdd": "Quick Add Expense",
 		"breadcrumb": "Breadcrumb",
 		"newExpense": "Record Expense",
 		"admin": "Admin",
