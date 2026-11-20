@@ -247,8 +247,8 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 		});
 	});
 
-	describe('/expenses (Listing & Delete)', () => {
-		it('loads expenses with category filter', async () => {
+	describe('/expenses (Listing, Pagination & Delete)', () => {
+		it('loads expenses with category filter and default pagination (limit 15, page 1)', async () => {
 			mockGetDashboardData.mockResolvedValue({
 				period: { id: 'p-1' },
 				categories: [
@@ -288,20 +288,24 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 				selectedCategory: string;
 				totalCount: number;
 				allExpensesCount: number;
-				hasMore: boolean;
+				page: number;
+				limit: number;
+				totalPages: number;
 			};
 			expect(data.expenses).toHaveLength(1);
 			expect(data.selectedCategory).toBe('c-1');
 			expect(data.totalCount).toBe(1);
 			expect(data.allExpensesCount).toBe(1);
-			expect(data.hasMore).toBe(false);
+			expect(data.page).toBe(1);
+			expect(data.limit).toBe(15);
+			expect(data.totalPages).toBe(1);
 			expect(mockGetExpenses).toHaveBeenCalledWith(
 				expect.anything(),
 				expect.objectContaining({
 					userId: 'u-1',
 					periodId: 'p-1',
 					categoryId: 'c-1',
-					limit: 20,
+					limit: 15,
 					offset: 0
 				})
 			);
@@ -311,6 +315,107 @@ describe('Expenses Route Server Handlers (Seam 3)', () => {
 					userId: 'u-1',
 					periodId: 'p-1',
 					categoryId: 'c-1'
+				})
+			);
+		});
+
+		it('supports ?page=2 query parameter, computes totalPages, and calculates correct offset', async () => {
+			mockGetDashboardData.mockResolvedValue({
+				period: { id: 'p-1' },
+				categories: []
+			});
+			mockGetExpenses.mockResolvedValue([
+				{ id: 'exp-16', name: 'Belanja Mingguan', amount: 150000 }
+			]);
+			mockCountExpenses.mockResolvedValue(35);
+
+			const mockUrl = new URL('http://localhost/expenses?page=2');
+			const mockEvent = {
+				locals: { user: { id: 'u-1' } },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				url: mockUrl
+			} as unknown as Parameters<typeof loadList>[0];
+
+			const data = (await loadList(mockEvent)) as {
+				page: number;
+				limit: number;
+				totalPages: number;
+				totalCount: number;
+			};
+
+			expect(data.page).toBe(2);
+			expect(data.limit).toBe(15);
+			expect(data.totalPages).toBe(3);
+			expect(data.totalCount).toBe(35);
+			expect(mockGetExpenses).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({
+					userId: 'u-1',
+					periodId: 'p-1',
+					limit: 15,
+					offset: 15
+				})
+			);
+		});
+
+		it('clamps page to 1 when page query parameter is invalid or less than 1', async () => {
+			mockGetDashboardData.mockResolvedValue({
+				period: { id: 'p-1' },
+				categories: []
+			});
+			mockGetExpenses.mockResolvedValue([]);
+			mockCountExpenses.mockResolvedValue(10);
+
+			const mockUrl = new URL('http://localhost/expenses?page=-3');
+			const mockEvent = {
+				locals: { user: { id: 'u-1' } },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				url: mockUrl
+			} as unknown as Parameters<typeof loadList>[0];
+
+			const data = (await loadList(mockEvent)) as {
+				page: number;
+				totalPages: number;
+			};
+
+			expect(data.page).toBe(1);
+			expect(data.totalPages).toBe(1);
+			expect(mockGetExpenses).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({
+					limit: 15,
+					offset: 0
+				})
+			);
+		});
+
+		it('clamps page to totalPages when page query parameter exceeds totalPages', async () => {
+			mockGetDashboardData.mockResolvedValue({
+				period: { id: 'p-1' },
+				categories: []
+			});
+			mockGetExpenses.mockResolvedValue([]);
+			mockCountExpenses.mockResolvedValue(30);
+
+			const mockUrl = new URL('http://localhost/expenses?page=99');
+			const mockEvent = {
+				locals: { user: { id: 'u-1' } },
+				platform: { env: { DB: {} as unknown as D1Database } },
+				url: mockUrl
+			} as unknown as Parameters<typeof loadList>[0];
+
+			const data = (await loadList(mockEvent)) as {
+				page: number;
+				totalPages: number;
+			};
+
+			expect(data.page).toBe(2);
+			expect(data.totalPages).toBe(2);
+			expect(mockGetExpenses).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.objectContaining({
+					limit: 15,
+					offset: 15
 				})
 			);
 		});

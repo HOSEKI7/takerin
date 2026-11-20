@@ -449,7 +449,12 @@
 		"deleteFailed": "Gagal menghapus pengeluaran.",
 		"loadMore": "Muat Lebih Banyak",
 		"loadingMore": "Memuat...",
-		"loadMoreError": "Gagal memuat pengeluaran tambahan."
+		"loadMoreError": "Gagal memuat pengeluaran tambahan.",
+		"pagination": {
+			"previous": "Sebelumnya",
+			"next": "Berikutnya",
+			"pageOf": "Halaman {{current}} dari {{total}}"
+		}
 	},
 	"categories": {
 		"title": "Manajemen Kategori",

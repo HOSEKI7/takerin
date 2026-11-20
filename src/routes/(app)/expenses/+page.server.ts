@@ -16,6 +16,9 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 			expenses: [],
 			totalCount: 0,
 			allExpensesCount: 0,
+			page: 1,
+			limit: 15,
+			totalPages: 1,
 			hasMore: false,
 			selectedCategory: ''
 		};
@@ -32,16 +35,9 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	}
 
 	const selectedCategory = url.searchParams.get('category') ?? '';
-	const limit = 20;
+	const limit = 15;
 
-	const [expenses, totalCount, rawAllCount] = await Promise.all([
-		getExpenses(platform.env.DB, {
-			userId: locals.user.id,
-			periodId: dashboardData.period.id,
-			categoryId: selectedCategory || undefined,
-			limit,
-			offset: 0
-		}),
+	const [totalCount, rawAllCount] = await Promise.all([
 		countExpenses(platform.env.DB, {
 			userId: locals.user.id,
 			periodId: dashboardData.period.id,
@@ -56,6 +52,20 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	]);
 
 	const allExpensesCount = selectedCategory ? rawAllCount : totalCount;
+	const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+
+	const rawPage = parseInt(url.searchParams.get('page') ?? '1', 10);
+	const requestedPage = Number.isFinite(rawPage) ? rawPage : 1;
+	const page = Math.min(Math.max(1, requestedPage), totalPages);
+	const offset = (page - 1) * limit;
+
+	const expenses = await getExpenses(platform.env.DB, {
+		userId: locals.user.id,
+		periodId: dashboardData.period.id,
+		categoryId: selectedCategory || undefined,
+		limit,
+		offset
+	});
 
 	return {
 		period: dashboardData.period,
@@ -64,7 +74,10 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 		expenses,
 		totalCount,
 		allExpensesCount,
-		hasMore: totalCount > limit,
+		page,
+		limit,
+		totalPages,
+		hasMore: page < totalPages,
 		selectedCategory
 	};
 };

@@ -130,4 +130,76 @@ describe('GET /api/expenses Route Handler (Issue #41)', () => {
 		expect(json.totalCount).toBe(45);
 		expect(json.hasMore).toBe(false);
 	});
+
+	it('supports ?page=X query parameter with default limit 15, calculates totalPages and offset', async () => {
+		const mockExpenses = Array.from({ length: 15 }, (_, i) => ({
+			id: `exp-${i + 16}`,
+			name: `Expense ${i + 16}`,
+			amount: 15000
+		}));
+
+		mockGetExpenses.mockResolvedValue(mockExpenses);
+		mockCountExpenses.mockResolvedValue(45);
+
+		const url = new URL('http://localhost/api/expenses?periodId=p-1&page=2');
+		const res = await GET({
+			locals: { user: { id: 'u-1' } },
+			platform: { env: { DB: {} as unknown as D1Database } },
+			url
+		} as unknown as Parameters<typeof GET>[0]);
+
+		expect(res.status).toBe(200);
+		const json = (await res.json()) as {
+			expenses: unknown[];
+			totalCount: number;
+			totalPages: number;
+			page: number;
+			limit: number;
+			offset: number;
+			hasMore: boolean;
+		};
+
+		expect(json.expenses).toHaveLength(15);
+		expect(json.totalCount).toBe(45);
+		expect(json.totalPages).toBe(3);
+		expect(json.page).toBe(2);
+		expect(json.limit).toBe(15);
+		expect(json.offset).toBe(15);
+		expect(json.hasMore).toBe(true);
+
+		expect(mockGetExpenses).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				userId: 'u-1',
+				periodId: 'p-1',
+				limit: 15,
+				offset: 15
+			})
+		);
+	});
+
+	it('clamps page to totalPages when ?page exceeds totalPages in /api/expenses', async () => {
+		mockGetExpenses.mockResolvedValue([]);
+		mockCountExpenses.mockResolvedValue(30);
+
+		const url = new URL('http://localhost/api/expenses?periodId=p-1&page=99');
+		const res = await GET({
+			locals: { user: { id: 'u-1' } },
+			platform: { env: { DB: {} as unknown as D1Database } },
+			url
+		} as unknown as Parameters<typeof GET>[0]);
+
+		expect(res.status).toBe(200);
+		const json = (await res.json()) as {
+			page: number;
+			totalPages: number;
+			offset: number;
+			limit: number;
+		};
+
+		expect(json.page).toBe(2);
+		expect(json.totalPages).toBe(2);
+		expect(json.offset).toBe(15);
+		expect(json.limit).toBe(15);
+	});
 });

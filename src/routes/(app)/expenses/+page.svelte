@@ -12,11 +12,10 @@
 	import {
 		PlusSignIcon,
 		Delete02Icon,
-		Edit02Icon,
-		Calendar01Icon,
 		Coins01Icon,
-		Clock01Icon,
-		PiggyBankIcon
+		PiggyBankIcon,
+		ArrowLeft01Icon,
+		ArrowRight01Icon
 	} from '@hugeicons/core-free-icons';
 
 	let { data }: PageProps = $props();
@@ -25,52 +24,16 @@
 	let isDeleting = $state(false);
 	let deleteError = $state<string | null>(null);
 
-	let displayedExpenses = $state<typeof data.expenses>([]);
-	let hasMore = $state(false);
-	let totalCount = $state(0);
-	let isLoadingMore = $state(false);
-	let loadMoreError = $state<string | null>(null);
-
-	$effect(() => {
-		displayedExpenses = [...data.expenses];
-		hasMore = data.hasMore;
-		totalCount = data.totalCount;
-		loadMoreError = null;
-	});
-
-	async function handleLoadMore() {
-		if (isLoadingMore || !hasMore || !data.period) return;
-		isLoadingMore = true;
-		loadMoreError = null;
-
-		try {
-			const queryParts = [
-				`periodId=${encodeURIComponent(data.period.id)}`,
-				'limit=20',
-				`offset=${displayedExpenses.length}`
-			];
-			if (data.selectedCategory) {
-				queryParts.push(`categoryId=${encodeURIComponent(data.selectedCategory)}`);
-			}
-
-			const res = await fetch(`/api/expenses?${queryParts.join('&')}`);
-			if (!res.ok) throw new Error('Failed to load more expenses');
-			const json = (await res.json()) as {
-				expenses: typeof data.expenses;
-				totalCount?: number;
-				hasMore: boolean;
-			};
-			displayedExpenses = [...displayedExpenses, ...json.expenses];
-			hasMore = json.hasMore;
-			if (typeof json.totalCount === 'number') {
-				totalCount = json.totalCount;
-			}
-		} catch (e) {
-			console.error(e);
-			loadMoreError = t('expenses.loadMoreError');
-		} finally {
-			isLoadingMore = false;
+	function goToPage(targetPage: number) {
+		if (targetPage < 1 || targetPage > data.totalPages || targetPage === data.page) return;
+		const url = new URL(page.url.href);
+		if (targetPage === 1) {
+			url.searchParams.delete('page');
+		} else {
+			url.searchParams.set('page', String(targetPage));
 		}
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(url.toString());
 	}
 
 	function handleCategoryFilter(categoryId: string) {
@@ -80,6 +43,8 @@
 		} else {
 			url.searchParams.delete('category');
 		}
+		// Reset pagination back to page 1
+		url.searchParams.delete('page');
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(url.toString());
 	}
@@ -149,7 +114,7 @@
 		>
 			<span>{t('common.all')}</span>
 			<span class="py-0.2 rounded-full bg-paper/20 px-1.5 text-[10px] dark:bg-dark-surface/40">
-				{data.allExpensesCount ?? totalCount}
+				{data.allExpensesCount ?? data.totalCount}
 			</span>
 		</button>
 
@@ -173,7 +138,7 @@
 	</div>
 
 	<!-- EXPENSES LIST -->
-	{#if displayedExpenses.length === 0}
+	{#if data.expenses.length === 0}
 		<!-- Empty State -->
 		<Card variant="tinted" padding="lg" class="text-center">
 			<div
@@ -194,136 +159,133 @@
 			</div>
 		</Card>
 	{:else}
-		<div class="space-y-3">
-			{#each displayedExpenses as exp (exp.id)}
+		<!-- Compact 2-Line List Rows (~56–64px) -->
+		<div class="space-y-2">
+			{#each data.expenses as exp (exp.id)}
 				<div
-					class="flex flex-col justify-between gap-3 rounded-xl border border-fog bg-paper p-4 transition-colors hover:border-pebble/50 sm:flex-row sm:items-center dark:border-dark-border dark:bg-dark-card dark:hover:border-slate/60"
+					class="group relative flex flex-col justify-between rounded-xl border border-fog bg-paper p-3 transition hover:border-forest-ink/40 hover:bg-fog/20 sm:px-4 sm:py-2.5 dark:border-dark-border dark:bg-dark-card dark:hover:border-lime-voltage/40 dark:hover:bg-dark-surface/40"
 				>
-					<!-- Left: Details -->
-					<div class="flex items-start gap-3.5">
-						<div
-							class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {exp.isSavings
-								? 'bg-spruce/15 text-spruce dark:bg-spruce/40 dark:text-lime-voltage'
-								: 'bg-linen-mist/80 text-forest-ink dark:bg-dark-surface dark:text-lime-voltage'}"
-						>
+					<!-- Stretched clickable area to edit expense -->
+					<a
+						href={resolve('/(app)/expenses/[id]/edit', { id: exp.id })}
+						class="absolute inset-0 z-0 rounded-xl focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none dark:focus-visible:ring-lime-voltage"
+						aria-label="{t('common.edit')} {exp.name}"
+					></a>
+
+					<!-- Baris Atas: Nama Pengeluaran di kiri, Nominal Rupiah tebal di kanan -->
+					<div class="pointer-events-none z-10 flex items-center justify-between gap-3">
+						<div class="flex min-w-0 items-center gap-2">
+							<div
+								class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md {exp.isSavings
+									? 'bg-spruce/15 text-spruce dark:bg-spruce/40 dark:text-lime-voltage'
+									: 'bg-linen-mist text-forest-ink dark:bg-dark-surface dark:text-lime-voltage'}"
+							>
+								{#if exp.isSavings}
+									<HugeiconsIcon icon={PiggyBankIcon} size={13} />
+								{:else}
+									<HugeiconsIcon icon={Coins01Icon} size={13} />
+								{/if}
+							</div>
+							<h2 class="truncate text-sm font-bold text-obsidian sm:text-base dark:text-paper">
+								{exp.name}
+							</h2>
 							{#if exp.isSavings}
-								<HugeiconsIcon icon={PiggyBankIcon} class="h-5 w-5" />
-							{:else}
-								<HugeiconsIcon icon={Coins01Icon} class="h-5 w-5" />
+								<span
+									class="py-0.2 shrink-0 rounded-full bg-spruce/10 px-1.5 text-[10px] font-bold text-spruce dark:bg-spruce/30 dark:text-lime-voltage"
+								>
+									{t('categories.savingsBadge')}
+								</span>
 							{/if}
 						</div>
-
-						<div>
-							<div class="flex flex-wrap items-center gap-2">
-								<h2 class="text-base font-bold text-obsidian dark:text-paper">
-									{exp.name}
-								</h2>
-								<span
-									class="rounded-full bg-fog px-2.5 py-0.5 text-[11px] font-semibold text-charcoal dark:bg-dark-surface dark:text-linen-mist"
-								>
-									{exp.categoryName}
-								</span>
-								{#if exp.isSavings}
-									<span
-										class="rounded-full bg-spruce/10 px-2 py-0.5 text-[10px] font-bold text-spruce dark:bg-spruce/30 dark:text-lime-voltage"
-									>
-										{t('categories.savingsBadge')}
-									</span>
-								{/if}
-							</div>
-
-							<div
-								class="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate dark:text-pebble"
-							>
-								<span class="flex items-center gap-1">
-									<HugeiconsIcon icon={Calendar01Icon} class="h-3.5 w-3.5" />
-									<span>{formatDate(exp.date, getLocale())}</span>
-								</span>
-								{#if exp.time}
-									<span>•</span>
-									<span class="flex items-center gap-1">
-										<HugeiconsIcon icon={Clock01Icon} class="h-3.5 w-3.5" />
-										<span>{exp.time}</span>
-									</span>
-								{/if}
-								{#if exp.notes}
-									<span>•</span>
-									<span class="text-charcoal/80 italic dark:text-linen-mist/80">"{exp.notes}"</span>
-								{/if}
-							</div>
-						</div>
-					</div>
-
-					<!-- Right: Amount and Actions -->
-					<div
-						class="flex items-center justify-between gap-4 border-t border-fog pt-3 sm:border-0 sm:pt-0"
-					>
 						<p
-							class="text-lg font-black tracking-tight text-forest-ink sm:text-xl dark:text-lime-voltage"
+							class="shrink-0 text-sm font-black tracking-tight text-forest-ink sm:text-base dark:text-lime-voltage"
 						>
 							{formatRupiah(exp.amount)}
 						</p>
+					</div>
 
-						<div class="flex items-center gap-1">
-							<a
-								href={resolve('/(app)/expenses/[id]/edit', { id: exp.id })}
-								class="flex h-8 w-8 items-center justify-center rounded-full border border-fog bg-paper text-slate transition hover:border-forest-ink hover:text-forest-ink dark:border-dark-border dark:bg-dark-surface dark:text-pebble dark:hover:border-lime-voltage dark:hover:text-lime-voltage"
-								aria-label={t('common.edit')}
+					<!-- Baris Bawah: Badge kategori & tanggal/jam di kiri, Tombol hapus cepat di kanan -->
+					<div class="pointer-events-none z-10 mt-1 flex items-center justify-between gap-2">
+						<div class="flex min-w-0 items-center gap-1.5 text-xs text-slate dark:text-pebble">
+							<span
+								class="shrink-0 rounded-md bg-fog px-2 py-0.5 text-[10px] font-semibold text-charcoal dark:bg-dark-surface dark:text-linen-mist"
 							>
-								<HugeiconsIcon icon={Edit02Icon} class="h-4 w-4" />
-							</a>
-
-							<button
-								type="button"
-								class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-alarm-red/30 bg-alarm-red/10 text-alarm-red transition hover:bg-alarm-red/20"
-								aria-label={t('common.delete')}
-								onclick={() => {
-									deleteCandidateId = exp.id;
-									deleteError = null;
-								}}
-							>
-								<HugeiconsIcon icon={Delete02Icon} class="h-4 w-4" />
-							</button>
+								{exp.categoryName}
+							</span>
+							<span>•</span>
+							<span class="truncate">{formatDate(exp.date, getLocale())}</span>
+							{#if exp.time}
+								<span>{exp.time}</span>
+							{/if}
+							{#if exp.notes}
+								<span class="hidden truncate italic sm:inline">"{exp.notes}"</span>
+							{/if}
 						</div>
+
+						<!-- Quick Delete Button (Interactive) -->
+						<button
+							type="button"
+							class="pointer-events-auto relative z-20 flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-slate transition hover:bg-alarm-red/10 hover:text-alarm-red focus-visible:ring-2 focus-visible:ring-alarm-red focus-visible:outline-none dark:text-pebble dark:hover:bg-alarm-red/20 dark:hover:text-alarm-red"
+							aria-label="{t('common.delete')} {exp.name}"
+							onclick={(e) => {
+								e.stopPropagation();
+								deleteCandidateId = exp.id;
+								deleteError = null;
+							}}
+						>
+							<HugeiconsIcon icon={Delete02Icon} size={15} />
+						</button>
 					</div>
 				</div>
 			{/each}
 		</div>
 
-		{#if hasMore}
-			<div class="flex flex-col items-center justify-center pt-6 pb-2">
+		<!-- Bounded Pagination Bar -->
+		{#if data.totalPages > 1}
+			<nav
+				class="mt-6 flex items-center justify-between border-t border-fog/80 pt-4 dark:border-dark-border"
+				aria-label={t('expenses.title')}
+			>
+				<!-- Tombol Sebelumnya -->
 				<Button
 					type="button"
 					variant="secondary"
-					size="md"
-					disabled={isLoadingMore}
-					class="flex items-center gap-2 font-bold shadow-xs hover:border-forest-ink dark:hover:border-lime-voltage"
-					onclick={handleLoadMore}
+					size="sm"
+					disabled={data.page <= 1}
+					onclick={() => goToPage(data.page - 1)}
+					class="flex items-center gap-1.5 text-xs font-semibold"
+					aria-label={t('expenses.pagination.previous')}
 				>
-					{#if isLoadingMore}
-						<div
-							class="h-4 w-4 animate-spin rounded-full border-2 border-forest-ink border-t-transparent dark:border-lime-voltage"
-							aria-hidden="true"
-						></div>
-						<span>{t('expenses.loadingMore')}</span>
-					{:else}
-						<span>{t('expenses.loadMore')}</span>
-					{/if}
+					<HugeiconsIcon icon={ArrowLeft01Icon} size={15} />
+					<span>{t('expenses.pagination.previous')}</span>
 				</Button>
 
-				{#if loadMoreError}
-					<p role="alert" class="mt-2 text-xs font-medium text-alarm-red">
-						{loadMoreError}
-					</p>
-				{/if}
-			</div>
+				<!-- Status Halaman -->
+				<span class="text-xs font-medium text-slate dark:text-pebble">
+					{t('expenses.pagination.pageOf', { current: data.page, total: data.totalPages })}
+				</span>
+
+				<!-- Tombol Berikutnya -->
+				<Button
+					type="button"
+					variant="secondary"
+					size="sm"
+					disabled={data.page >= data.totalPages}
+					onclick={() => goToPage(data.page + 1)}
+					class="flex items-center gap-1.5 text-xs font-semibold"
+					aria-label={t('expenses.pagination.next')}
+				>
+					<span>{t('expenses.pagination.next')}</span>
+					<HugeiconsIcon icon={ArrowRight01Icon} size={15} />
+				</Button>
+			</nav>
 		{/if}
 	{/if}
 </main>
 
 <!-- DELETE CONFIRMATION MODAL -->
 {#if deleteCandidateId}
-	{@const targetExp = displayedExpenses.find((e) => e.id === deleteCandidateId)}
+	{@const targetExp = data.expenses.find((e) => e.id === deleteCandidateId)}
 	<div
 		role="dialog"
 		aria-modal="true"
