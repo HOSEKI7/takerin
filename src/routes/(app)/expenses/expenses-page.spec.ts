@@ -76,8 +76,9 @@ describe('Expenses Page Component (Issue #63 Compact Rows & Pagination)', () => 
 			}
 		});
 
-		// Status text
+		// Status text and semantic aria-label
 		expect(html).toContain('Halaman 1 dari 3');
+		expect(html).toContain('aria-label="Navigasi halaman pengeluaran"');
 
 		// Previous button disabled on page 1
 		expect(html).toMatch(/<button[^>]*disabled[^>]*aria-label="Sebelumnya"/);
@@ -106,7 +107,7 @@ describe('Expenses Page Component (Issue #63 Compact Rows & Pagination)', () => 
 		expect(html).toMatch(/<button[^>]*disabled[^>]*aria-label="Berikutnya"/);
 	});
 
-	it('does not render pagination bar when totalPages <= 1', () => {
+	it('renders pagination bar with both buttons disabled when totalPages === 1', () => {
 		const { html } = render(ExpensesPage, {
 			props: {
 				data: {
@@ -121,8 +122,8 @@ describe('Expenses Page Component (Issue #63 Compact Rows & Pagination)', () => 
 			}
 		});
 
-		expect(html).not.toContain('Halaman 1 dari 1');
-		expect(html).not.toContain('aria-label="Sebelumnya"');
-		expect(html).not.toContain('aria-label="Berikutnya"');
+		expect(html).toContain('Halaman 1 dari 1');
+		expect(html).toMatch(/<button[^>]*disabled[^>]*aria-label="Sebelumnya"/);
+		expect(html).toMatch(/<button[^>]*disabled[^>]*aria-label="Berikutnya"/);
 	});
 });

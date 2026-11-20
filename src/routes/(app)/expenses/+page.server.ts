@@ -2,6 +2,7 @@ import type { PageServerLoad, Actions } from './$types.js';
 import { redirect, fail } from '@sveltejs/kit';
 import { getDashboardData } from '#lib/server/db/dashboard.js';
 import { getExpenses, countExpenses, deleteExpense } from '#lib/server/db/expense.js';
+import { calculatePagination } from '#lib/pagination.js';
 
 export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	if (!locals.user) {
@@ -52,19 +53,18 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	]);
 
 	const allExpensesCount = selectedCategory ? rawAllCount : totalCount;
-	const totalPages = Math.max(1, Math.ceil(totalCount / limit));
-
-	const rawPage = parseInt(url.searchParams.get('page') ?? '1', 10);
-	const requestedPage = Number.isFinite(rawPage) ? rawPage : 1;
-	const page = Math.min(Math.max(1, requestedPage), totalPages);
-	const offset = (page - 1) * limit;
+	const pagination = calculatePagination({
+		pageParam: url.searchParams.get('page'),
+		totalCount,
+		limit
+	});
 
 	const expenses = await getExpenses(platform.env.DB, {
 		userId: locals.user.id,
 		periodId: dashboardData.period.id,
 		categoryId: selectedCategory || undefined,
-		limit,
-		offset
+		limit: pagination.limit,
+		offset: pagination.offset
 	});
 
 	return {
@@ -74,10 +74,10 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 		expenses,
 		totalCount,
 		allExpensesCount,
-		page,
-		limit,
-		totalPages,
-		hasMore: page < totalPages,
+		page: pagination.page,
+		limit: pagination.limit,
+		totalPages: pagination.totalPages,
+		hasMore: pagination.hasMore,
 		selectedCategory
 	};
 };

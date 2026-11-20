@@ -1,5 +1,6 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getExpenses, countExpenses } from '#lib/server/db/expense.js';
+import { calculatePagination } from '#lib/pagination.js';
 
 export const GET: RequestHandler = async ({ locals, platform, url }) => {
 	if (!locals?.user) {
@@ -22,40 +23,61 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 	const rawLimit = Number(url.searchParams.get('limit'));
 	const defaultLimit = url.searchParams.has('page') ? 15 : 20;
 	const limit =
-		Number.isFinite(rawLimit) && rawLimit > 0
-			? Math.min(Math.max(1, rawLimit), 100)
-			: defaultLimit;
-
-	const totalCount = await countExpenses(platform.env.DB, {
-		userId: locals.user.id,
-		periodId,
-		categoryId
-	});
-
-	const totalPages = Math.max(1, Math.ceil(totalCount / limit));
-
-	let page = 1;
-	let offset = 0;
+		Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.max(1, rawLimit), 100) : defaultLimit;
 
 	if (url.searchParams.has('page')) {
-		const rawPage = parseInt(url.searchParams.get('page') ?? '1', 10);
-		const requestedPage = Number.isFinite(rawPage) ? rawPage : 1;
-		page = Math.min(Math.max(1, requestedPage), totalPages);
-		offset = (page - 1) * limit;
-	} else {
-		const rawOffset = Number(url.searchParams.get('offset'));
-		offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
-		page = Math.floor(offset / limit) + 1;
+		const totalCount = await countExpenses(platform.env.DB, {
+			userId: locals.user.id,
+			periodId,
+			categoryId
+		});
+
+		const pagination = calculatePagination({
+			pageParam: url.searchParams.get('page'),
+			totalCount,
+			limit
+		});
+
+		const expenses = await getExpenses(platform.env.DB, {
+			userId: locals.user.id,
+			periodId,
+			categoryId,
+			limit: pagination.limit,
+			offset: pagination.offset
+		});
+
+		return json({
+			expenses,
+			totalCount,
+			totalPages: pagination.totalPages,
+			page: pagination.page,
+			hasMore: pagination.hasMore,
+			limit: pagination.limit,
+			offset: pagination.offset
+		});
 	}
 
-	const expenses = await getExpenses(platform.env.DB, {
-		userId: locals.user.id,
-		periodId,
-		categoryId,
-		limit,
-		offset
-	});
+	// Offset-based path (parallel execution)
+	const rawOffset = Number(url.searchParams.get('offset'));
+	const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
 
+	const [expenses, totalCount] = await Promise.all([
+		getExpenses(platform.env.DB, {
+			userId: locals.user.id,
+			periodId,
+			categoryId,
+			limit,
+			offset
+		}),
+		countExpenses(platform.env.DB, {
+			userId: locals.user.id,
+			periodId,
+			categoryId
+		})
+	]);
+
+	const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+	const page = Math.floor(offset / limit) + 1;
 	const hasMore = offset + expenses.length < totalCount;
 
 	return json({

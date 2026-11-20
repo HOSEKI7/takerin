@@ -27,11 +27,7 @@
 	function goToPage(targetPage: number) {
 		if (targetPage < 1 || targetPage > data.totalPages || targetPage === data.page) return;
 		const url = new URL(page.url.href);
-		if (targetPage === 1) {
-			url.searchParams.delete('page');
-		} else {
-			url.searchParams.set('page', String(targetPage));
-		}
+		url.searchParams.set('page', String(targetPage));
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(url.toString());
 	}
@@ -222,10 +218,10 @@
 							{/if}
 						</div>
 
-						<!-- Quick Delete Button (Interactive) -->
+						<!-- Quick Delete Button (Interactive with generous tap target) -->
 						<button
 							type="button"
-							class="pointer-events-auto relative z-20 flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-slate transition hover:bg-alarm-red/10 hover:text-alarm-red focus-visible:ring-2 focus-visible:ring-alarm-red focus-visible:outline-none dark:text-pebble dark:hover:bg-alarm-red/20 dark:hover:text-alarm-red"
+							class="pointer-events-auto relative z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-slate transition hover:bg-alarm-red/10 hover:text-alarm-red focus-visible:ring-2 focus-visible:ring-alarm-red focus-visible:outline-none dark:text-pebble dark:hover:bg-alarm-red/20 dark:hover:text-alarm-red"
 							aria-label="{t('common.delete')} {exp.name}"
 							onclick={(e) => {
 								e.stopPropagation();
@@ -233,7 +229,7 @@
 								deleteError = null;
 							}}
 						>
-							<HugeiconsIcon icon={Delete02Icon} size={15} />
+							<HugeiconsIcon icon={Delete02Icon} size={17} />
 						</button>
 					</div>
 				</div>
@@ -241,45 +237,43 @@
 		</div>
 
 		<!-- Bounded Pagination Bar -->
-		{#if data.totalPages > 1}
-			<nav
-				class="mt-6 flex items-center justify-between border-t border-fog/80 pt-4 dark:border-dark-border"
-				aria-label={t('expenses.title')}
+		<nav
+			class="mt-6 flex items-center justify-between border-t border-fog/80 pt-4 dark:border-dark-border"
+			aria-label={t('expenses.pagination.ariaNav')}
+		>
+			<!-- Tombol Sebelumnya -->
+			<Button
+				type="button"
+				variant="secondary"
+				size="sm"
+				disabled={data.page <= 1}
+				onclick={() => goToPage(data.page - 1)}
+				class="flex items-center gap-1.5 text-xs font-semibold"
+				aria-label={t('expenses.pagination.previous')}
 			>
-				<!-- Tombol Sebelumnya -->
-				<Button
-					type="button"
-					variant="secondary"
-					size="sm"
-					disabled={data.page <= 1}
-					onclick={() => goToPage(data.page - 1)}
-					class="flex items-center gap-1.5 text-xs font-semibold"
-					aria-label={t('expenses.pagination.previous')}
-				>
-					<HugeiconsIcon icon={ArrowLeft01Icon} size={15} />
-					<span>{t('expenses.pagination.previous')}</span>
-				</Button>
+				<HugeiconsIcon icon={ArrowLeft01Icon} size={15} />
+				<span>{t('expenses.pagination.previous')}</span>
+			</Button>
 
-				<!-- Status Halaman -->
-				<span class="text-xs font-medium text-slate dark:text-pebble">
-					{t('expenses.pagination.pageOf', { current: data.page, total: data.totalPages })}
-				</span>
+			<!-- Status Halaman -->
+			<span class="text-xs font-medium text-slate dark:text-pebble">
+				{t('expenses.pagination.pageOf', { current: data.page, total: data.totalPages })}
+			</span>
 
-				<!-- Tombol Berikutnya -->
-				<Button
-					type="button"
-					variant="secondary"
-					size="sm"
-					disabled={data.page >= data.totalPages}
-					onclick={() => goToPage(data.page + 1)}
-					class="flex items-center gap-1.5 text-xs font-semibold"
-					aria-label={t('expenses.pagination.next')}
-				>
-					<span>{t('expenses.pagination.next')}</span>
-					<HugeiconsIcon icon={ArrowRight01Icon} size={15} />
-				</Button>
-			</nav>
-		{/if}
+			<!-- Tombol Berikutnya -->
+			<Button
+				type="button"
+				variant="secondary"
+				size="sm"
+				disabled={data.page >= data.totalPages}
+				onclick={() => goToPage(data.page + 1)}
+				class="flex items-center gap-1.5 text-xs font-semibold"
+				aria-label={t('expenses.pagination.next')}
+			>
+				<span>{t('expenses.pagination.next')}</span>
+				<HugeiconsIcon icon={ArrowRight01Icon} size={15} />
+			</Button>
+		</nav>
 	{/if}
 </main>
 
