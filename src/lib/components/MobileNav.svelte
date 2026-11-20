@@ -80,12 +80,14 @@
 	let touchStartY = 0;
 
 	function handleTouchStart(event: TouchEvent) {
+		if (typeof window !== 'undefined' && window.innerWidth >= 1024) return;
 		if (event.touches.length !== 1) return;
 		touchStartX = event.touches[0].clientX;
 		touchStartY = event.touches[0].clientY;
 	}
 
 	function handleTouchEnd(event: TouchEvent) {
+		if (typeof window !== 'undefined' && window.innerWidth >= 1024) return;
 		if (event.changedTouches.length !== 1) return;
 		const deltaX = event.changedTouches[0].clientX - touchStartX;
 		const deltaY = event.changedTouches[0].clientY - touchStartY;
@@ -165,6 +167,10 @@
 		isRouteActive(effectivePath, resolve('/(app)/expenses'), false) &&
 			!effectivePath.endsWith('/expenses/new')
 	);
+	const isQuickAddActive = $derived(
+		isRouteActive(effectivePath, resolve('/(app)/expenses/new'), true) ||
+			effectivePath.endsWith('/expenses/new')
+	);
 	const isCategoriesActive = $derived(
 		isRouteActive(effectivePath, resolve('/(app)/categories'), false)
 	);
@@ -197,7 +203,7 @@
 
 <!-- Mobile Top Header (< 1024px / lg:hidden) -->
 <header
-	class="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-fog bg-paper/95 px-4 backdrop-blur-md lg:hidden dark:border-dark-border dark:bg-dark-card/95"
+	class="sticky top-0 z-20 flex h-12 items-center justify-between border-b border-fog bg-paper/95 px-4 backdrop-blur-md lg:hidden dark:border-dark-border dark:bg-dark-card/95"
 >
 	<!-- Left: Hamburger button & Brand Logo -->
 	<div class="flex items-center gap-3">
@@ -220,7 +226,7 @@
 		<button
 			type="button"
 			onclick={toggleDrawer}
-			class="cursor-pointer rounded-full transition-transform focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-95 dark:focus-visible:ring-lime-voltage"
+			class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full transition-transform focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-95 dark:focus-visible:ring-lime-voltage"
 			aria-label={t('nav.openMenu')}
 			aria-expanded={isOpen}
 		>
@@ -421,42 +427,44 @@
 
 <DonationModal bind:isOpen={isDonationModalOpen} />
 
+{#snippet bottomTab(href: string, label: string, icon: any, active: boolean)}
+	<a
+		{href}
+		class="flex flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors {active
+			? 'font-bold text-forest-ink dark:text-lime-voltage'
+			: 'font-medium text-slate hover:text-charcoal dark:text-pebble dark:hover:text-linen-mist'}"
+		aria-current={active ? 'page' : undefined}
+	>
+		<HugeiconsIcon {icon} size={20} />
+		<span class="max-w-[64px] truncate text-xs leading-tight">{label}</span>
+		{#if active}
+			<span class="h-1 w-1 rounded-full bg-forest-ink dark:bg-lime-voltage"></span>
+		{/if}
+	</a>
+{/snippet}
+
 <!-- Fixed Bottom Navigation Bar (< 1024px / lg:hidden) -->
 <nav
 	aria-label={t('nav.bottomNav')}
 	class="fixed inset-x-0 bottom-0 z-30 border-t border-fog/80 bg-paper/95 backdrop-blur-md lg:hidden dark:border-dark-border dark:bg-dark-card/95"
-	style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.25rem);"
+	style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);"
 >
 	<div class="grid h-16 grid-cols-5 items-center px-1">
 		<!-- Tab 1: Dashboard -->
-		<a
-			href={resolve('/(app)/dashboard')}
-			class="flex flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors {isDashboardActive
-				? 'font-bold text-forest-ink dark:text-lime-voltage'
-				: 'font-medium text-slate hover:text-charcoal dark:text-pebble dark:hover:text-linen-mist'}"
-			aria-current={isDashboardActive ? 'page' : undefined}
-		>
-			<HugeiconsIcon icon={LayoutDashboardIcon} size={20} />
-			<span class="max-w-[60px] truncate text-[10px] leading-tight">{t('nav.dashboard')}</span>
-			{#if isDashboardActive}
-				<span class="h-1 w-1 rounded-full bg-forest-ink dark:bg-lime-voltage"></span>
-			{/if}
-		</a>
+		{@render bottomTab(
+			resolve('/(app)/dashboard'),
+			t('nav.dashboard'),
+			LayoutDashboardIcon,
+			isDashboardActive
+		)}
 
 		<!-- Tab 2: Pengeluaran -->
-		<a
-			href={resolve('/(app)/expenses')}
-			class="flex flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors {isExpensesActive
-				? 'font-bold text-forest-ink dark:text-lime-voltage'
-				: 'font-medium text-slate hover:text-charcoal dark:text-pebble dark:hover:text-linen-mist'}"
-			aria-current={isExpensesActive ? 'page' : undefined}
-		>
-			<HugeiconsIcon icon={Wallet01Icon} size={20} />
-			<span class="max-w-[60px] truncate text-[10px] leading-tight">{t('nav.expenses')}</span>
-			{#if isExpensesActive}
-				<span class="h-1 w-1 rounded-full bg-forest-ink dark:bg-lime-voltage"></span>
-			{/if}
-		</a>
+		{@render bottomTab(
+			resolve('/(app)/expenses'),
+			t('nav.expenses'),
+			Wallet01Icon,
+			isExpensesActive
+		)}
 
 		<!-- Tab 3: Center Elevated (+) Action Button -->
 		<div class="flex items-center justify-center">
@@ -464,39 +472,26 @@
 				href={resolve('/(app)/expenses/new')}
 				class="flex h-12 w-12 -translate-y-2.5 items-center justify-center rounded-full border-4 border-paper bg-forest-ink text-lime-voltage shadow-lg transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-forest-ink focus-visible:outline-none active:scale-95 dark:border-dark-card dark:bg-lime-voltage dark:text-forest-ink dark:focus-visible:ring-lime-voltage"
 				aria-label={t('nav.quickAdd')}
+				aria-current={isQuickAddActive ? 'page' : undefined}
 			>
 				<HugeiconsIcon icon={PlusSignIcon} size={22} />
 			</a>
 		</div>
 
 		<!-- Tab 4: Kategori -->
-		<a
-			href={resolve('/(app)/categories')}
-			class="flex flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors {isCategoriesActive
-				? 'font-bold text-forest-ink dark:text-lime-voltage'
-				: 'font-medium text-slate hover:text-charcoal dark:text-pebble dark:hover:text-linen-mist'}"
-			aria-current={isCategoriesActive ? 'page' : undefined}
-		>
-			<HugeiconsIcon icon={Layers01Icon} size={20} />
-			<span class="max-w-[60px] truncate text-[10px] leading-tight">{t('nav.categories')}</span>
-			{#if isCategoriesActive}
-				<span class="h-1 w-1 rounded-full bg-forest-ink dark:bg-lime-voltage"></span>
-			{/if}
-		</a>
+		{@render bottomTab(
+			resolve('/(app)/categories'),
+			t('nav.categories'),
+			Layers01Icon,
+			isCategoriesActive
+		)}
 
 		<!-- Tab 5: Riwayat -->
-		<a
-			href={resolve('/(app)/history')}
-			class="flex flex-col items-center justify-center gap-0.5 py-1 text-center transition-colors {isHistoryActive
-				? 'font-bold text-forest-ink dark:text-lime-voltage'
-				: 'font-medium text-slate hover:text-charcoal dark:text-pebble dark:hover:text-linen-mist'}"
-			aria-current={isHistoryActive ? 'page' : undefined}
-		>
-			<HugeiconsIcon icon={Calendar01Icon} size={20} />
-			<span class="max-w-[60px] truncate text-[10px] leading-tight">{t('nav.history')}</span>
-			{#if isHistoryActive}
-				<span class="h-1 w-1 rounded-full bg-forest-ink dark:bg-lime-voltage"></span>
-			{/if}
-		</a>
+		{@render bottomTab(
+			resolve('/(app)/history'),
+			t('nav.history'),
+			Calendar01Icon,
+			isHistoryActive
+		)}
 	</div>
 </nav>
