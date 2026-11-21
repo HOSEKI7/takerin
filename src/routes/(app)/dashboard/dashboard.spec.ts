@@ -363,8 +363,10 @@ describe('Dashboard Page Component UI (Issue #65 Hero Balance & Categories)', ()
 		expect(html).not.toContain('Sedekah');
 		expect(html).not.toContain('Lain-lain');
 
-		// In-place expansion toggle button is present
+		// In-place expansion toggle button is present with accessible attributes
 		expect(html).toMatch(/Tampilkan Semua Kategori \(6\)|Show All Categories \(6\)/);
+		expect(html).toContain('aria-expanded="false"');
+		expect(html).toContain('aria-controls="dashboard-categories-list"');
 	});
 
 	it('renders all categories without toggle button when count <= 4', () => {

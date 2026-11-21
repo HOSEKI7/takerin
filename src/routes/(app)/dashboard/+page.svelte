@@ -19,6 +19,7 @@
 	let { data }: PageProps = $props();
 
 	// In-place category expansion toggle (default: top 4)
+	const DEFAULT_VISIBLE_CATEGORIES = 4;
 	let showAllCategories = $state(false);
 
 	const sortedCategories = $derived(
@@ -28,7 +29,7 @@
 	);
 
 	const visibleCategories = $derived(
-		showAllCategories ? sortedCategories : sortedCategories.slice(0, 4)
+		showAllCategories ? sortedCategories : sortedCategories.slice(0, DEFAULT_VISIBLE_CATEGORIES)
 	);
 </script>
 
@@ -232,7 +233,7 @@
 						</p>
 					</Card>
 				{:else}
-					<div class="space-y-3">
+					<div id="dashboard-categories-list" class="space-y-3">
 						{#each visibleCategories as cat (cat.id)}
 							<div
 								class="rounded-xl border p-3.5 transition-colors sm:p-4 {cat.isSavings
@@ -355,12 +356,14 @@
 						{/each}
 
 						<!-- In-Place Toggle Button for >4 Categories -->
-						{#if data.categories.length > 4}
+						{#if data.categories.length > DEFAULT_VISIBLE_CATEGORIES}
 							<div class="mt-3 text-center">
 								<Button
 									type="button"
 									variant="secondary"
 									size="sm"
+									aria-expanded={showAllCategories}
+									aria-controls="dashboard-categories-list"
 									onclick={() => (showAllCategories = !showAllCategories)}
 									class="w-full text-xs font-semibold sm:w-auto"
 								>
