@@ -11,6 +11,22 @@ export interface EnsureActivePeriodResult {
 	transitioned: boolean;
 }
 
+interface CachedActivePeriod {
+	period: typeof schema.monthlyPeriod.$inferSelect | null;
+	cachedAt: number;
+}
+
+const activePeriodCache = new Map<string, CachedActivePeriod>();
+const ACTIVE_PERIOD_CACHE_TTL_MS = 60_000; // 60 seconds
+
+export function invalidateActivePeriodCache(userId?: string): void {
+	if (userId) {
+		activePeriodCache.delete(userId);
+	} else {
+		activePeriodCache.clear();
+	}
+}
+
 /**
  * Ensures that the user has an up-to-date active monthly period.
  * If the currently active period's endDate has passed relative to `now`,
@@ -25,8 +41,23 @@ export interface EnsureActivePeriodResult {
 export async function ensureActivePeriod(
 	d1: D1Database,
 	userId: string,
-	now: Date = new Date()
+	now?: Date
 ): Promise<EnsureActivePeriodResult> {
+	const effectiveNow = now ?? new Date();
+
+	// Only utilize in-memory caching when running in real-time mode (now was not overridden for time-travel)
+	if (!now) {
+		const cached = activePeriodCache.get(userId);
+		if (
+			cached &&
+			Date.now() - cached.cachedAt < ACTIVE_PERIOD_CACHE_TTL_MS &&
+			cached.period &&
+			!isPeriodExpired(cached.period.endDate, effectiveNow)
+		) {
+			return { period: cached.period, transitioned: false };
+		}
+	}
+
 	const db = getDb(d1);
 
 	// 1. Fetch current active period
@@ -40,11 +71,15 @@ export async function ensureActivePeriod(
 	const activePeriod = activePeriods[0] ?? null;
 
 	if (!activePeriod) {
+		activePeriodCache.delete(userId);
 		return { period: null, transitioned: false };
 	}
 
 	// 2. Check if active period is expired
-	if (!isPeriodExpired(activePeriod.endDate, now)) {
+	if (!isPeriodExpired(activePeriod.endDate, effectiveNow)) {
+		if (!now) {
+			activePeriodCache.set(userId, { period: activePeriod, cachedAt: Date.now() });
+		}
 		return { period: activePeriod, transitioned: false };
 	}
 
@@ -59,7 +94,7 @@ export async function ensureActivePeriod(
 	const payDay = settingsList[0]?.payDay ?? activePeriod.payDay;
 
 	// Calculate new period dates
-	const { startDate, endDate } = calculateCurrentPeriodDates(now, payDay);
+	const { startDate, endDate } = calculateCurrentPeriodDates(effectiveNow, payDay);
 
 	// Fetch active categories from the old period (omit frozen ones)
 	const activeCategories = await db
@@ -99,7 +134,7 @@ export async function ensureActivePeriod(
 		status: 'active',
 		aiSummary: null,
 		incomeConfirmedAt: null,
-		createdAt: now
+		createdAt: effectiveNow
 	};
 
 	// Prepare atomic batch statements
@@ -127,8 +162,8 @@ export async function ensureActivePeriod(
 			percentage: c.percentage,
 			isSavings: c.isSavings,
 			status: 'active',
-			createdAt: now,
-			updatedAt: now
+			createdAt: effectiveNow,
+			updatedAt: effectiveNow
 		}));
 
 		batchStatements.push(db.insert(schema.category).values(newCategories));
@@ -142,14 +177,18 @@ export async function ensureActivePeriod(
 			periodId: newPeriodId,
 			name: s.name,
 			amount: s.amount,
-			createdAt: now,
-			updatedAt: now
+			createdAt: effectiveNow,
+			updatedAt: effectiveNow
 		}));
 
 		batchStatements.push(db.insert(schema.incomeSource).values(newIncomeSources));
 	}
 
 	await db.batch(batchStatements as [(typeof batchStatements)[0], ...typeof batchStatements]);
+
+	if (!now) {
+		activePeriodCache.set(userId, { period: newPeriodRecord, cachedAt: Date.now() });
+	}
 
 	return {
 		period: newPeriodRecord,
@@ -258,6 +297,8 @@ export async function confirmPeriodIncome(
 	);
 
 	await db.batch(batchStatements as [(typeof batchStatements)[0], ...typeof batchStatements]);
+
+	invalidateActivePeriodCache(userId);
 
 	return {
 		success: true,

@@ -26,12 +26,14 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 		throw new Error('Database D1 tidak tersedia.');
 	}
 
-	const data = await getUserSettingsWithProfile(d1, locals.user.id);
+	const [data, periods] = await Promise.all([
+		getUserSettingsWithProfile(d1, locals.user.id, locals.activePeriod),
+		getAllUserPeriodsForExportSelection(d1, locals.user.id)
+	]);
+
 	if (!data) {
 		throw redirect(303, '/auth/login');
 	}
-
-	const periods = await getAllUserPeriodsForExportSelection(d1, locals.user.id);
 
 	return {
 		profile: data.user,
@@ -149,8 +151,7 @@ export const actions: Actions = {
 		const d1 = platform?.env?.DB;
 		if (!d1) {
 			return fail(500, {
-				deleteError:
-					locale === 'en' ? 'Database service unavailable.' : 'Database tidak tersedia.'
+				deleteError: locale === 'en' ? 'Database service unavailable.' : 'Database tidak tersedia.'
 			});
 		}
 

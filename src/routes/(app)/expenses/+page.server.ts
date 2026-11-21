@@ -25,6 +25,68 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 		};
 	}
 
+	const selectedCategory = url.searchParams.get('category') ?? '';
+	const limit = 15;
+	const pageParam = url.searchParams.get('page');
+	const parsedPage = parseInt(pageParam ?? '1', 10);
+	const isFirstPage = !parsedPage || parsedPage <= 1;
+
+	// Fast-path: When activePeriod is known and requesting page 1, fetch dashboardData, counts, and expenses concurrently
+	if (locals.activePeriod && isFirstPage) {
+		const [dashboardData, counts, expenses] = await Promise.all([
+			getDashboardData(platform.env.DB, locals.user.id, locals.activePeriod, {
+				skipRecentExpenses: true
+			}),
+			Promise.all([
+				countExpenses(platform.env.DB, {
+					userId: locals.user.id,
+					periodId: locals.activePeriod.id,
+					categoryId: selectedCategory || undefined
+				}),
+				selectedCategory
+					? countExpenses(platform.env.DB, {
+							userId: locals.user.id,
+							periodId: locals.activePeriod.id
+						})
+					: Promise.resolve(0)
+			]),
+			getExpenses(platform.env.DB, {
+				userId: locals.user.id,
+				periodId: locals.activePeriod.id,
+				categoryId: selectedCategory || undefined,
+				limit,
+				offset: 0
+			})
+		]);
+
+		if (!dashboardData.period) {
+			throw redirect(303, '/dashboard');
+		}
+
+		const totalCount = counts[0];
+		const rawAllCount = counts[1];
+		const allExpensesCount = selectedCategory ? rawAllCount : totalCount;
+		const pagination = calculatePagination({
+			pageParam,
+			totalCount,
+			limit
+		});
+
+		return {
+			period: dashboardData.period,
+			summary: dashboardData.summary,
+			categories: dashboardData.categories,
+			expenses,
+			totalCount,
+			allExpensesCount,
+			page: pagination.page,
+			limit: pagination.limit,
+			totalPages: pagination.totalPages,
+			hasMore: pagination.hasMore,
+			selectedCategory
+		};
+	}
+
 	const dashboardData = await getDashboardData(
 		platform.env.DB,
 		locals.user.id,
@@ -34,9 +96,6 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	if (!dashboardData.period) {
 		throw redirect(303, '/dashboard');
 	}
-
-	const selectedCategory = url.searchParams.get('category') ?? '';
-	const limit = 15;
 
 	const [totalCount, rawAllCount] = await Promise.all([
 		countExpenses(platform.env.DB, {
@@ -49,12 +108,12 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 					userId: locals.user.id,
 					periodId: dashboardData.period.id
 				})
-			: 0
+			: Promise.resolve(0)
 	]);
 
 	const allExpensesCount = selectedCategory ? rawAllCount : totalCount;
 	const pagination = calculatePagination({
-		pageParam: url.searchParams.get('page'),
+		pageParam,
 		totalCount,
 		limit
 	});

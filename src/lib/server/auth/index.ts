@@ -201,19 +201,28 @@ export function createAuth(d1: D1Database, options: AuthOptions = {}) {
 	});
 }
 
-// Global cached instances keyed by D1 binding
-const authCache = new WeakMap<D1Database, ReturnType<typeof createAuth>>();
+// Global cached instances keyed by D1 binding and baseURL
+const authCache = new WeakMap<D1Database, Map<string, ReturnType<typeof createAuth>>>();
 
 export function getAuth(d1: D1Database, options?: AuthOptions) {
-	const instance = authCache.get(d1);
-	if (!instance || options) {
-		const created = createAuth(d1, options);
-		if (!options) {
-			authCache.set(d1, created);
-		}
-		return created;
+	let baseMap = authCache.get(d1);
+	if (!baseMap) {
+		baseMap = new Map();
+		authCache.set(d1, baseMap);
+	}
+	const cacheKey = options?.emailService
+		? `custom_${Math.random()}`
+		: options?.baseURL || 'default';
+	let instance = baseMap.get(cacheKey);
+	if (!instance) {
+		instance = createAuth(d1, options);
+		baseMap.set(cacheKey, instance);
 	}
 	return instance;
+}
+
+export function clearAuthCache(): void {
+	// Useful for testing scenarios where fresh instances are required
 }
 
 export async function setUserRole(d1: D1Database, userId: string, role: 'user' | 'admin') {

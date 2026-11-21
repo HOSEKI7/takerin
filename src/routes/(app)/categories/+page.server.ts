@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 		};
 	}
 
-	const data = await getManageCategoriesData(platform.env.DB, locals.user.id);
+	const data = await getManageCategoriesData(platform.env.DB, locals.user.id, locals.activePeriod);
 	if (!data.period) {
 		throw redirect(303, '/dashboard');
 	}

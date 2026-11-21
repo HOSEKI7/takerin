@@ -96,21 +96,41 @@ export async function getDashboardData(
 		};
 	}
 
-	// 2. Fetch categories belonging to this active period (active and frozen, frozen shown for remaining balance)
-	const categories = await db
-		.select()
-		.from(schema.category)
-		.where(and(eq(schema.category.userId, userId), eq(schema.category.periodId, currentPeriod.id)));
-
-	// 3. Fetch aggregated category expenses directly via native SQL GROUP BY
-	const categoryExpenses = await db
-		.select({
-			categoryId: schema.expense.categoryId,
-			totalSpent: sql<number>`cast(coalesce(sum(${schema.expense.amount}), 0) as int)`
-		})
-		.from(schema.expense)
-		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, currentPeriod.id)))
-		.groupBy(schema.expense.categoryId);
+	// 2. Fetch categories, aggregated category expenses, and top 5 recent expenses concurrently in parallel
+	const [categories, categoryExpenses, recentExpensesRaw] = await Promise.all([
+		db
+			.select()
+			.from(schema.category)
+			.where(
+				and(eq(schema.category.userId, userId), eq(schema.category.periodId, currentPeriod.id))
+			),
+		db
+			.select({
+				categoryId: schema.expense.categoryId,
+				totalSpent: sql<number>`cast(coalesce(sum(${schema.expense.amount}), 0) as int)`
+			})
+			.from(schema.expense)
+			.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, currentPeriod.id)))
+			.groupBy(schema.expense.categoryId),
+		options?.skipRecentExpenses
+			? Promise.resolve([])
+			: db
+					.select({
+						id: schema.expense.id,
+						name: schema.expense.name,
+						amount: schema.expense.amount,
+						categoryName: schema.category.name,
+						isSavings: schema.category.isSavings,
+						date: schema.expense.date
+					})
+					.from(schema.expense)
+					.innerJoin(schema.category, eq(schema.expense.categoryId, schema.category.id))
+					.where(
+						and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, currentPeriod.id))
+					)
+					.orderBy(desc(schema.expense.date), desc(schema.expense.createdAt))
+					.limit(5)
+	]);
 
 	const spentByCat = new Map<string, number>();
 	let totalSpent = 0;
@@ -120,7 +140,7 @@ export async function getDashboardData(
 		totalSpent += row.totalSpent;
 	}
 
-	// 4. Calculate category allocations and remaining balances
+	// 3. Calculate category allocations and remaining balances
 	const dashboardCategories: DashboardCategory[] = categories.map((cat) => {
 		const allocation = Math.round(currentPeriod.totalIncome * (cat.percentage / 100));
 		const spent = spentByCat.get(cat.id) ?? 0;
@@ -145,34 +165,14 @@ export async function getDashboardData(
 
 	const summary = calculateDashboardSummary(currentPeriod.totalIncome, totalSpent);
 
-	// 5. Fetch top 5 recent expenses using SQL limit (unless skipRecentExpenses requested)
-	const recentExpenses: DashboardExpenseItem[] = options?.skipRecentExpenses
-		? []
-		: (
-				await db
-					.select({
-						id: schema.expense.id,
-						name: schema.expense.name,
-						amount: schema.expense.amount,
-						categoryName: schema.category.name,
-						isSavings: schema.category.isSavings,
-						date: schema.expense.date
-					})
-					.from(schema.expense)
-					.innerJoin(schema.category, eq(schema.expense.categoryId, schema.category.id))
-					.where(
-						and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, currentPeriod.id))
-					)
-					.orderBy(desc(schema.expense.date), desc(schema.expense.createdAt))
-					.limit(5)
-			).map((exp) => ({
-				id: exp.id,
-				name: exp.name,
-				amount: exp.amount,
-				categoryName: exp.categoryName,
-				isSavings: Boolean(exp.isSavings),
-				date: exp.date
-			}));
+	const recentExpenses: DashboardExpenseItem[] = recentExpensesRaw.map((exp) => ({
+		id: exp.id,
+		name: exp.name,
+		amount: exp.amount,
+		categoryName: exp.categoryName,
+		isSavings: Boolean(exp.isSavings),
+		date: exp.date
+	}));
 
 	return {
 		period: {

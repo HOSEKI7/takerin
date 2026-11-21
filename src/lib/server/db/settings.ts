@@ -2,6 +2,7 @@ import { eq, and, desc } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
 import { getIncomeSources } from './onboarding.js';
+import { invalidateActivePeriodCache } from './period.js';
 import type { CsvExpenseItem } from '#lib/validation/settings.js';
 
 export interface UserProfileAndSettings {
@@ -31,35 +32,47 @@ export interface UserProfileAndSettings {
  */
 export async function getUserSettingsWithProfile(
 	d1: D1Database,
-	userId: string
+	userId: string,
+	existingActivePeriod?: typeof schema.monthlyPeriod.$inferSelect | null
 ): Promise<UserProfileAndSettings | null> {
 	const db = getDb(d1);
 
-	// 1. Fetch user
-	const users = await db
-		.select({
-			id: schema.user.id,
-			name: schema.user.name,
-			email: schema.user.email,
-			role: schema.user.role,
-			emailVerified: schema.user.emailVerified,
-			twoFactorEnabled: schema.user.twoFactorEnabled
-		})
-		.from(schema.user)
-		.where(eq(schema.user.id, userId))
-		.limit(1);
+	// Fetch user, settings, and active monthly period (if not provided) concurrently in parallel
+	const [users, settingsList, activePeriods] = await Promise.all([
+		db
+			.select({
+				id: schema.user.id,
+				name: schema.user.name,
+				email: schema.user.email,
+				role: schema.user.role,
+				emailVerified: schema.user.emailVerified,
+				twoFactorEnabled: schema.user.twoFactorEnabled
+			})
+			.from(schema.user)
+			.where(eq(schema.user.id, userId))
+			.limit(1),
+		db.select().from(schema.userSettings).where(eq(schema.userSettings.userId, userId)).limit(1),
+		existingActivePeriod !== undefined
+			? Promise.resolve(null)
+			: db
+					.select({
+						id: schema.monthlyPeriod.id,
+						startDate: schema.monthlyPeriod.startDate,
+						endDate: schema.monthlyPeriod.endDate,
+						payDay: schema.monthlyPeriod.payDay
+					})
+					.from(schema.monthlyPeriod)
+					.where(
+						and(eq(schema.monthlyPeriod.userId, userId), eq(schema.monthlyPeriod.status, 'active'))
+					)
+					.orderBy(desc(schema.monthlyPeriod.createdAt))
+					.limit(1)
+	]);
 
 	const userRow = users[0] ?? null;
 	if (!userRow) {
 		return null;
 	}
-
-	// 2. Fetch user settings
-	const settingsList = await db
-		.select()
-		.from(schema.userSettings)
-		.where(eq(schema.userSettings.userId, userId))
-		.limit(1);
 
 	const settingsRow = settingsList[0] ?? {
 		payDay: 25,
@@ -67,18 +80,17 @@ export async function getUserSettingsWithProfile(
 		theme: 'light'
 	};
 
-	// 3. Fetch active monthly period
-	const activePeriods = await db
-		.select({
-			id: schema.monthlyPeriod.id,
-			startDate: schema.monthlyPeriod.startDate,
-			endDate: schema.monthlyPeriod.endDate,
-			payDay: schema.monthlyPeriod.payDay
-		})
-		.from(schema.monthlyPeriod)
-		.where(and(eq(schema.monthlyPeriod.userId, userId), eq(schema.monthlyPeriod.status, 'active')))
-		.orderBy(desc(schema.monthlyPeriod.createdAt))
-		.limit(1);
+	const resolvedActivePeriod =
+		existingActivePeriod !== undefined
+			? existingActivePeriod
+				? {
+						id: existingActivePeriod.id,
+						startDate: existingActivePeriod.startDate,
+						endDate: existingActivePeriod.endDate,
+						payDay: existingActivePeriod.payDay
+					}
+				: null
+			: (activePeriods?.[0] ?? null);
 
 	return {
 		user: userRow,
@@ -87,7 +99,7 @@ export async function getUserSettingsWithProfile(
 			language: settingsRow.language,
 			theme: settingsRow.theme
 		},
-		activePeriod: activePeriods[0] ?? null
+		activePeriod: resolvedActivePeriod
 	};
 }
 
@@ -125,7 +137,10 @@ export async function updateUserSettings(
 		updatedAt: now
 	};
 
-	if (data.payDay !== undefined) updatePayload.payDay = data.payDay;
+	if (data.payDay !== undefined) {
+		updatePayload.payDay = data.payDay;
+		invalidateActivePeriodCache(userId);
+	}
 	if (data.language !== undefined) updatePayload.language = data.language;
 	if (data.theme !== undefined) updatePayload.theme = data.theme;
 
@@ -186,13 +201,7 @@ export async function ensureAnonymousUser(d1: D1Database): Promise<void> {
 			`INSERT OR IGNORE INTO user (id, name, email, email_verified, created_at, updated_at, role, two_factor_enabled, onboarding_completed)
 			 VALUES (?, ?, ?, 1, ?, ?, 'user', 0, 1)`
 		)
-		.bind(
-			ANONYMOUS_USER_ID,
-			'Pengguna Anonim',
-			'anonymous@takerin.internal',
-			now,
-			now
-		)
+		.bind(ANONYMOUS_USER_ID, 'Pengguna Anonim', 'anonymous@takerin.internal', now, now)
 		.run();
 }
 
@@ -281,9 +290,7 @@ export async function deleteUserData(
 
 	// 11. Verification tokens (OTP codes tied to the email)
 	if (email && existingTables.has('verification')) {
-		batchStatements.push(
-			d1.prepare('DELETE FROM verification WHERE identifier = ?').bind(email)
-		);
+		batchStatements.push(d1.prepare('DELETE FROM verification WHERE identifier = ?').bind(email));
 	}
 
 	// 12. Finally, delete the user row itself

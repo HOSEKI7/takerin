@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
 import { ensureActivePeriod } from './period.js';
@@ -45,12 +45,16 @@ export interface UpdateCategoriesMidPeriodParams {
  */
 export async function getManageCategoriesData(
 	d1: D1Database,
-	userId: string
+	userId: string,
+	existingActivePeriod?: typeof schema.monthlyPeriod.$inferSelect | null
 ): Promise<ManageCategoriesData> {
 	const db = getDb(d1);
 
-	// 1. Ensure up-to-date active monthly period (auto-transitions if expired)
-	const { period: activePeriod } = await ensureActivePeriod(d1, userId);
+	// 1. Ensure up-to-date active monthly period (re-use passed active period if available)
+	const activePeriod =
+		existingActivePeriod !== undefined
+			? existingActivePeriod
+			: (await ensureActivePeriod(d1, userId)).period;
 
 	if (!activePeriod) {
 		return {
@@ -60,25 +64,27 @@ export async function getManageCategoriesData(
 		};
 	}
 
-	// 2. Fetch all categories for this active period
-	const categories = await db
-		.select()
-		.from(schema.category)
-		.where(and(eq(schema.category.userId, userId), eq(schema.category.periodId, activePeriod.id)));
-
-	// 3. Fetch all expenses for this period to calculate spent and balance
-	const expenses = await db
-		.select({
-			categoryId: schema.expense.categoryId,
-			amount: schema.expense.amount
-		})
-		.from(schema.expense)
-		.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, activePeriod.id)));
+	// 2. Concurrently fetch all categories and native SQL aggregated expenses for this period
+	const [categories, categoryExpenses] = await Promise.all([
+		db
+			.select()
+			.from(schema.category)
+			.where(
+				and(eq(schema.category.userId, userId), eq(schema.category.periodId, activePeriod.id))
+			),
+		db
+			.select({
+				categoryId: schema.expense.categoryId,
+				totalSpent: sql<number>`cast(coalesce(sum(${schema.expense.amount}), 0) as int)`
+			})
+			.from(schema.expense)
+			.where(and(eq(schema.expense.userId, userId), eq(schema.expense.periodId, activePeriod.id)))
+			.groupBy(schema.expense.categoryId)
+	]);
 
 	const spentByCat = new Map<string, number>();
-	for (const exp of expenses) {
-		const prev = spentByCat.get(exp.categoryId) ?? 0;
-		spentByCat.set(exp.categoryId, prev + exp.amount);
+	for (const row of categoryExpenses) {
+		spentByCat.set(row.categoryId, row.totalSpent);
 	}
 
 	const activeCategories: CategoryManagementItem[] = [];
