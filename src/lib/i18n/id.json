@@ -512,7 +512,9 @@
 		"exactly100": "✓ Pas 100%",
 		"overPercent": "Lebih {{percent}}%",
 		"underPercent": "Kurang {{percent}}%",
-		"sliderAria": "Geser persentase untuk {{name}}"
+		"sliderAria": "Geser persentase untuk {{name}}",
+		"stepDownAria": "Kurangi 1% alokasi untuk {{name}}",
+		"stepUpAria": "Tambah 1% alokasi untuk {{name}}"
 	},
 	"history": {
 		"title": "Riwayat Periode Anggaran",

@@ -13,6 +13,7 @@
 	import { HugeiconsIcon } from '@hugeicons/svelte';
 	import {
 		PlusSignIcon,
+		MinusSignIcon,
 		Delete02Icon,
 		PiggyBankIcon,
 		Wallet01Icon,
@@ -64,6 +65,12 @@
 		}));
 		frozenCategories = (data.frozenCategories ?? []).map((c) => ({ ...c }));
 		freezeCategoryIds = [];
+	}
+
+	function stepPercentage(catIndex: number, delta: number) {
+		const current = categories[catIndex].percentage;
+		const nextVal = Math.min(100, Math.max(1, Math.round((current + delta) * 100) / 100));
+		categories[catIndex].percentage = nextVal;
 	}
 
 	// Total percentage computed reactive state
@@ -474,100 +481,76 @@
 							? 'border-spruce/30 bg-linen-mist/20 dark:border-lime-voltage/30 dark:bg-spruce/10'
 							: 'border-fog bg-paper dark:border-dark-border dark:bg-dark-card'}"
 					>
-						<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-							<!-- Left: Name & Savings Toggle -->
-							<div class="flex-1 space-y-2">
-								<div class="flex items-center gap-2">
-									<div
-										class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {cat.isSavings
-											? 'bg-spruce/15 text-spruce dark:bg-lime-voltage/20 dark:text-lime-voltage'
-											: 'bg-fog text-forest-ink dark:bg-dark-surface dark:text-linen-mist'}"
-									>
-										{#if cat.isSavings}
-											<HugeiconsIcon icon={PiggyBankIcon} class="h-4.5 w-4.5" />
-										{:else}
-											<HugeiconsIcon icon={Wallet01Icon} class="h-4.5 w-4.5" />
-										{/if}
-									</div>
-
-									<input
-										type="text"
-										maxlength="100"
-										bind:value={cat.name}
-										placeholder={t('categories.namePlaceholder')}
-										aria-label={t('categories.nameLabel')}
-										required
-										class="w-full rounded-lg border border-fog bg-paper px-3 py-1.5 text-sm font-bold text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
-									/>
+						<!-- Top: Category Name, Icon & Freeze Button -->
+						<div class="flex items-start justify-between gap-2">
+							<div class="flex flex-1 items-center gap-2">
+								<div
+									class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {cat.isSavings
+										? 'bg-spruce/15 text-spruce dark:bg-lime-voltage/20 dark:text-lime-voltage'
+										: 'bg-fog text-forest-ink dark:bg-dark-surface dark:text-linen-mist'}"
+								>
+									{#if cat.isSavings}
+										<HugeiconsIcon icon={PiggyBankIcon} class="h-4.5 w-4.5" />
+									{:else}
+										<HugeiconsIcon icon={Wallet01Icon} class="h-4.5 w-4.5" />
+									{/if}
 								</div>
 
-								<!-- Toggle Tabungan Switch -->
-								<div class="flex items-center gap-2 pt-0.5 pl-10">
-									<label
-										class="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-charcoal dark:text-linen-mist"
-									>
-										<input
-											type="checkbox"
-											bind:checked={cat.isSavings}
-											class="h-4 w-4 rounded border-fog text-forest-ink focus:ring-forest-ink dark:border-dark-border dark:text-lime-voltage"
-										/>
-										<span>{t('categories.isSavingsLabel')}</span>
-									</label>
-								</div>
+								<input
+									type="text"
+									maxlength="100"
+									bind:value={cat.name}
+									placeholder={t('categories.namePlaceholder')}
+									aria-label={t('categories.nameLabel')}
+									required
+									class="w-full rounded-lg border border-fog bg-paper px-3 py-1.5 text-sm font-bold text-obsidian transition focus:border-forest-ink focus:ring-1 focus:ring-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:focus:border-lime-voltage"
+								/>
 							</div>
 
-							<!-- Right: Percentage Slider & Input, Nominal Allocation, Live Category Balance, and Freeze Button -->
-							<div
-								class="flex flex-wrap items-center justify-between gap-4 border-t border-fog pt-3 sm:border-0 sm:pt-0"
+							<!-- Freeze/Delete button -->
+							<button
+								type="button"
+								aria-label={t('categories.freezeAria', { name: cat.name })}
+								onclick={() => openFreezeModal(cat)}
+								disabled={categories.length <= 1}
+								class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-alarm-red/30 bg-alarm-red/10 text-alarm-red transition hover:bg-alarm-red/20 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
 							>
-								<div class="flex items-center gap-3">
-									<div class="flex w-28 flex-col gap-1 sm:w-36">
-										<div
-											class="flex items-center justify-between text-[10px] font-semibold text-slate dark:text-pebble"
-										>
-											<label for={`pct-${cat.id || idx}`}>{t('categories.percentageLabel')}</label>
-											<div class="relative w-14">
-												<input
-													id={`pct-${cat.id || idx}`}
-													type="number"
-													min="1"
-													max="100"
-													step="0.5"
-													inputmode="decimal"
-													bind:value={cat.percentage}
-													required
-													class="w-full rounded-lg border border-fog bg-paper px-1.5 py-0.5 text-right font-mono text-xs font-bold text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
-												/>
-												<span
-													class="pointer-events-none absolute top-1 right-1 text-[10px] text-slate dark:text-pebble"
-													>%</span
-												>
-											</div>
-										</div>
-										<input
-											type="range"
-											min="1"
-											max="100"
-											step="0.5"
-											bind:value={cat.percentage}
-											aria-label={t('categories.sliderAria', { name: cat.name })}
-											class="h-1.5 w-full cursor-pointer accent-forest-ink dark:accent-lime-voltage"
-										/>
-									</div>
+								<HugeiconsIcon icon={Delete02Icon} class="h-4 w-4" />
+							</button>
+						</div>
 
-									<div class="space-y-0.5 text-right text-xs">
+						<!-- Savings checkbox -->
+						<div class="mt-2 flex items-center gap-2 pl-10">
+							<label
+								class="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-charcoal dark:text-linen-mist"
+							>
+								<input
+									type="checkbox"
+									bind:checked={cat.isSavings}
+									class="h-4 w-4 rounded border-fog text-forest-ink focus:ring-forest-ink dark:border-dark-border dark:text-lime-voltage"
+								/>
+								<span>{t('categories.isSavingsLabel')}</span>
+							</label>
+						</div>
+
+						<!-- Allocation & Stepper Info Panel (Prominently placed above slider) -->
+						<div class="mt-3.5 border-t border-fog pt-3 dark:border-dark-border">
+							<div class="flex items-center justify-between gap-3">
+								<!-- Left: Dynamic Rupiah Allocation & Balance -->
+								<div class="min-w-0 flex-1 space-y-0.5">
+									<div class="flex items-baseline gap-1.5">
+										<span class="text-xs font-medium text-slate dark:text-pebble">
+											{t('categories.allocationLabel')}:
+										</span>
+										<span
+											class="font-mono text-sm sm:text-base font-extrabold text-obsidian dark:text-paper"
+										>
+											{formatRupiah(currentAllocation)}
+										</span>
+									</div>
+									<div class="flex flex-wrap items-center gap-x-2 text-[11px] text-slate dark:text-pebble">
 										<div>
-											<span class="text-[10px] text-slate dark:text-pebble"
-												>{t('categories.allocationLabel')}:
-											</span>
-											<span class="font-mono font-bold text-obsidian dark:text-paper">
-												{formatRupiah(currentAllocation)}
-											</span>
-										</div>
-										<div>
-											<span class="text-[10px] text-slate dark:text-pebble"
-												>{t('categories.balanceLabel')}:
-											</span>
+											<span>{t('categories.balanceLabel')}: </span>
 											<span
 												class="font-mono font-bold {currentBalance < 0
 													? 'text-alarm-red'
@@ -577,22 +560,74 @@
 											</span>
 										</div>
 										{#if cat.spent !== undefined && cat.spent > 0}
-											<div class="text-[10px] text-slate/80 dark:text-pebble/80">
-												{t('categories.spentLabel', { amount: formatRupiah(cat.spent) })}
-											</div>
+											<span class="text-slate/80 dark:text-pebble/80">
+												• {t('categories.spentLabel', { amount: formatRupiah(cat.spent) })}
+											</span>
 										{/if}
 									</div>
 								</div>
 
-								<button
-									type="button"
-									aria-label={t('categories.freezeAria', { name: cat.name })}
-									onclick={() => openFreezeModal(cat)}
-									disabled={categories.length <= 1}
-									class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-alarm-red/30 bg-alarm-red/10 text-alarm-red transition hover:bg-alarm-red/20 disabled:cursor-not-allowed disabled:opacity-40"
-								>
-									<HugeiconsIcon icon={Delete02Icon} class="h-4 w-4" />
-								</button>
+								<!-- Right: Micro Stepper Group with Percentage Input -->
+								<div class="flex items-center gap-1">
+									<!-- Stepper [-] -->
+									<button
+										type="button"
+										aria-label={t('categories.stepDownAria', { name: cat.name })}
+										onclick={() => stepPercentage(idx, -1)}
+										disabled={cat.percentage <= 1}
+										class="flex h-8 w-8 sm:h-9 sm:w-9 cursor-pointer items-center justify-center rounded-lg border border-fog bg-paper text-charcoal shadow-xs transition hover:bg-fog/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:hover:bg-dark-border"
+									>
+										<HugeiconsIcon icon={MinusSignIcon} size={14} />
+									</button>
+
+									<!-- Percentage Input Box -->
+									<div class="relative w-16 sm:w-18">
+										<input
+											id={`pct-${cat.id || idx}`}
+											type="number"
+											min="1"
+											max="100"
+											step="0.5"
+											inputmode="decimal"
+											bind:value={cat.percentage}
+											required
+											class="w-full rounded-lg border border-fog bg-paper py-1 pr-4.5 pl-1.5 text-center font-mono text-xs sm:text-sm font-bold text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
+										/>
+										<span
+											class="pointer-events-none absolute top-1.5 right-1.5 text-[11px] font-semibold text-slate dark:text-pebble"
+											>%</span
+										>
+									</div>
+
+									<!-- Stepper [+] -->
+									<button
+										type="button"
+										aria-label={t('categories.stepUpAria', { name: cat.name })}
+										onclick={() => stepPercentage(idx, 1)}
+										disabled={cat.percentage >= 100}
+										class="flex h-8 w-8 sm:h-9 sm:w-9 cursor-pointer items-center justify-center rounded-lg border border-fog bg-paper text-charcoal shadow-xs transition hover:bg-fog/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:hover:bg-dark-border"
+									>
+										<HugeiconsIcon icon={PlusSignIcon} size={14} />
+									</button>
+								</div>
+							</div>
+
+							<!-- Full-Width Touch Slider Track -->
+							<div class="mt-2.5">
+								<input
+									type="range"
+									min="1"
+									max="100"
+									step="0.5"
+									bind:value={cat.percentage}
+									aria-label={t('categories.sliderAria', { name: cat.name })}
+									class="h-2.5 sm:h-3 w-full cursor-pointer rounded-lg bg-fog/80 accent-forest-ink transition-all dark:bg-dark-surface dark:accent-lime-voltage"
+								/>
+								<div class="mt-0.5 flex justify-between text-[10px] font-medium text-slate/70 dark:text-pebble/70">
+									<span>1%</span>
+									<span>50%</span>
+									<span>100%</span>
+								</div>
 							</div>
 						</div>
 					</div>

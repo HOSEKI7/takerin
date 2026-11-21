@@ -512,7 +512,9 @@
 		"exactly100": "✓ Exactly 100%",
 		"overPercent": "Over by {{percent}}%",
 		"underPercent": "Under by {{percent}}%",
-		"sliderAria": "Slide percentage for {{name}}"
+		"sliderAria": "Slide percentage for {{name}}",
+		"stepDownAria": "Decrease 1% allocation for {{name}}",
+		"stepUpAria": "Increase 1% allocation for {{name}}"
 	},
 	"history": {
 		"title": "Budget Period History",
