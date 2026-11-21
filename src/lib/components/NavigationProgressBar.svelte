@@ -49,7 +49,7 @@
 		aria-hidden="true"
 	>
 		<div
-			class="h-full bg-forest-ink shadow-[0_0_8px_rgba(22,51,0,0.6)] transition-all duration-200 ease-out dark:bg-lime-voltage dark:shadow-[0_0_10px_rgba(159,232,112,0.8)]"
+			class="h-full bg-forest-ink shadow-[0_0_8px_rgba(22,51,0,0.6)] transition-all duration-200 ease-out motion-reduce:transition-none dark:bg-lime-voltage dark:shadow-[0_0_10px_rgba(159,232,112,0.8)]"
 			style="width: {progress}%; opacity: {progress === 100 ? 0 : 1};"
 		></div>
 	</div>

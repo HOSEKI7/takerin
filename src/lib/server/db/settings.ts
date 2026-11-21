@@ -301,6 +301,7 @@ export async function deleteUserData(
 	if (batchStatements.length > 0) {
 		await d1.batch(batchStatements);
 	}
+	invalidateActivePeriodCache(userId);
 }
 
 /**

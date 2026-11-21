@@ -1,6 +1,7 @@
 import { eq, and, isNull } from 'drizzle-orm';
 import { getDb } from './index.js';
 import * as schema from './schema.js';
+import { invalidateActivePeriodCache } from './period.js';
 import {
 	calculatePeriodDates,
 	calculateTotalIncome,
@@ -311,6 +312,7 @@ export async function completeOnboarding(
 	);
 
 	await db.batch(batchStatements as [(typeof batchStatements)[0], ...typeof batchStatements]);
+	invalidateActivePeriodCache(userId);
 
 	return { success: true, periodId };
 }
