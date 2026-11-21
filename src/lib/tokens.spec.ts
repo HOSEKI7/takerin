@@ -41,11 +41,11 @@ describe('Design Tokens, Typography & App Shell Assets', () => {
 		expect(cssContent).toMatch(/@import\s+['"]@fontsource-variable\/manrope['"];/);
 	});
 
-	it('removes external Google Fonts links and configures preload tap in app.html', () => {
+	it('removes external Google Fonts links and configures preload hover in app.html for instant navigation', () => {
 		expect(appHtml).not.toContain('fonts.googleapis.com');
 		expect(appHtml).not.toContain('fonts.gstatic.com');
-		expect(appHtml).toContain('data-sveltekit-preload-data="tap"');
-		expect(appHtml).not.toContain('data-sveltekit-preload-data="hover"');
+		expect(appHtml).toContain('data-sveltekit-preload-data="hover"');
+		expect(appHtml).not.toContain('data-sveltekit-preload-data="tap"');
 	});
 
 	it('configures key border radius tokens (10px cards/inputs, 9999px pills)', () => {

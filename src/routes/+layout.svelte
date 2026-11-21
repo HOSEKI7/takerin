@@ -4,6 +4,7 @@
 	import type { LayoutProps } from './$types.js';
 	import { initI18n, setLocale } from '#lib/i18n/index.js';
 	import PwaInstallPrompt from '#lib/components/PwaInstallPrompt.svelte';
+	import NavigationProgressBar from '#lib/components/NavigationProgressBar.svelte';
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 
@@ -50,6 +51,8 @@
 	<meta property="og:site_name" content="Takerin" />
 	<meta property="og:locale" content="id_ID" />
 </svelte:head>
+
+<NavigationProgressBar />
 
 {@render children()}
 

@@ -213,6 +213,8 @@
 		<!-- Navigation Menu Groups (Scrollable) -->
 		<nav
 			class="flex-1 space-y-4 overflow-y-auto px-3 py-4"
+			data-sveltekit-preload-data="hover"
+			data-sveltekit-preload-code="viewport"
 			aria-label={t('nav.aria.adminMobileConsole')}
 		>
 			<div>

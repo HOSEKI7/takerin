@@ -196,6 +196,8 @@
 <aside
 	onfocusin={() => (activeTooltipDismissed = false)}
 	onpointerenter={() => (activeTooltipDismissed = false)}
+	data-sveltekit-preload-data="hover"
+	data-sveltekit-preload-code="viewport"
 	class="fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-fog bg-fog/40 transition-all duration-300 ease-in-out lg:flex dark:border-dark-border dark:bg-dark-surface {isCollapsed
 		? 'w-[72px]'
 		: 'w-64'}"

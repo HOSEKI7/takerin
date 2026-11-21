@@ -294,6 +294,8 @@
 		<!-- Navigation Menu Groups (Scrollable) -->
 		<nav
 			class="flex-1 space-y-4 overflow-y-auto px-3 py-3"
+			data-sveltekit-preload-data="hover"
+			data-sveltekit-preload-code="viewport"
 			aria-label={t('nav.aria.mobileMenuAndPreferences')}
 		>
 			<!-- Group 1: Menu Utama -->
@@ -446,6 +448,8 @@
 <!-- Fixed Bottom Navigation Bar (< 1024px / lg:hidden) -->
 <nav
 	aria-label={t('nav.bottomNav')}
+	data-sveltekit-preload-data="hover"
+	data-sveltekit-preload-code="viewport"
 	class="fixed inset-x-0 bottom-0 z-30 border-t border-fog/80 bg-paper/95 backdrop-blur-md lg:hidden dark:border-dark-border dark:bg-dark-card/95"
 	style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);"
 >
