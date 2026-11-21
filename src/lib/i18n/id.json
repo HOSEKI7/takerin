@@ -342,6 +342,8 @@
 		"categoryHelp": "Alokasi budget dan sisa saldo untuk tiap kategori aktif.",
 		"manageCategories": "Kelola Kategori",
 		"categoriesCount": "{{count}} Kategori",
+		"showAllCategories": "Tampilkan Semua Kategori ({{count}})",
+		"showLessCategories": "Tampilkan Lebih Sedikit",
 		"noCategories": "Belum ada kategori yang terhubung dengan Periode Bulan ini.",
 		"collected": "Terkumpul",
 		"balanceRemaining": "Saldo Sisa",

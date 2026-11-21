@@ -2,10 +2,7 @@
 	import type { PageProps } from './$types.js';
 	import Button from '#lib/components/Button.svelte';
 	import Card from '#lib/components/Card.svelte';
-	import Input from '#lib/components/Input.svelte';
 	import ProgressBar from '#lib/components/ProgressBar.svelte';
-	import { authClient } from '#lib/auth-client.js';
-	import { formatAuthError } from '#lib/validation/auth.js';
 	import { formatRupiah, formatDate } from '#lib/validation/onboarding.js';
 	import { t, getLocale } from '#lib/i18n/index.js';
 	import { resolve } from '$app/paths';
@@ -21,107 +18,18 @@
 
 	let { data }: PageProps = $props();
 
-	// 2FA state
-	let customTwoFactorEnabled = $state<boolean | null>(null);
-	let twoFactorEnabled = $derived(customTwoFactorEnabled ?? data.user?.twoFactorEnabled ?? false);
+	// In-place category expansion toggle (default: top 4)
+	let showAllCategories = $state(false);
 
-	type ActionType = 'none' | 'enable' | 'disable';
-	let activeAction = $state<ActionType>('none');
-	let actionPassword = $state('');
+	const sortedCategories = $derived(
+		[...(data.categories ?? [])].sort(
+			(a, b) => (b.allocation ?? 0) - (a.allocation ?? 0) || (b.spent ?? 0) - (a.spent ?? 0)
+		)
+	);
 
-	let backupCodes = $state<string[]>([]);
-	let totpURI = $state<string>('');
-	let feedbackMessage = $state('');
-	let feedbackError = $state('');
-	let isActionLoading = $state(false);
-	let copied = $state(false);
-
-	// Settings accordion toggle
-	let showAccountSecurity = $state(false);
-
-	function resetActionState() {
-		activeAction = 'none';
-		actionPassword = '';
-		feedbackError = '';
-	}
-
-	async function handleEnable2FA(event: SubmitEvent) {
-		event.preventDefault();
-		feedbackMessage = '';
-		feedbackError = '';
-
-		if (!actionPassword) {
-			feedbackError = t('dashboard.passwordRequiredFor2FA');
-			return;
-		}
-
-		isActionLoading = true;
-		try {
-			const res = await authClient.twoFactor.enable({
-				password: actionPassword
-			});
-
-			if (res.error) {
-				feedbackError = formatAuthError(res.error);
-			} else if (res.data) {
-				customTwoFactorEnabled = true;
-				backupCodes = res.data.backupCodes || [];
-				totpURI = res.data.totpURI || '';
-				resetActionState();
-				feedbackMessage = t('dashboard.twoFactorEnabledSuccess');
-			}
-		} catch (err: unknown) {
-			feedbackError = formatAuthError(err instanceof Error ? err.message : null);
-		} finally {
-			resetActionState();
-			isActionLoading = false;
-		}
-	}
-
-	async function handleDisable2FA(event: SubmitEvent) {
-		event.preventDefault();
-		feedbackMessage = '';
-		feedbackError = '';
-
-		if (!actionPassword) {
-			feedbackError = t('dashboard.passwordRequiredToDisable2FA');
-			return;
-		}
-
-		isActionLoading = true;
-		try {
-			const res = await authClient.twoFactor.disable({
-				password: actionPassword
-			});
-
-			if (res.error) {
-				feedbackError = formatAuthError(res.error);
-			} else {
-				customTwoFactorEnabled = false;
-				backupCodes = [];
-				totpURI = '';
-				resetActionState();
-				feedbackMessage = t('dashboard.twoFactorDisabledSuccess');
-			}
-		} catch (err: unknown) {
-			feedbackError = formatAuthError(err instanceof Error ? err.message : null);
-		} finally {
-			isActionLoading = false;
-		}
-	}
-
-	async function handleCopyCodes() {
-		if (backupCodes.length === 0) return;
-		try {
-			await navigator.clipboard.writeText(backupCodes.join('\n'));
-			copied = true;
-			setTimeout(() => {
-				copied = false;
-			}, 2500);
-		} catch (err) {
-			console.error('Gagal menyalin kode:', err);
-		}
-	}
+	const visibleCategories = $derived(
+		showAllCategories ? sortedCategories : sortedCategories.slice(0, 4)
+	);
 </script>
 
 <main class="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
@@ -182,25 +90,6 @@
 		</div>
 	{/if}
 
-	<!-- Feedback Alerts -->
-	{#if feedbackMessage}
-		<div
-			role="status"
-			class="mb-6 rounded-xl border border-lime-voltage/40 bg-linen-mist p-4 text-sm font-medium text-forest-ink dark:bg-spruce/40 dark:text-linen-mist"
-		>
-			{feedbackMessage}
-		</div>
-	{/if}
-
-	{#if feedbackError}
-		<div
-			role="alert"
-			class="mb-6 rounded-xl border border-alarm-red/40 bg-alarm-red/10 p-4 text-sm font-medium text-alarm-red dark:border-alarm-red/50 dark:bg-alarm-red/20"
-		>
-			{feedbackError}
-		</div>
-	{/if}
-
 	{#if !data.period}
 		<!-- Empty state when no active period is found -->
 		<Card variant="tinted" padding="lg" class="text-center">
@@ -222,11 +111,11 @@
 			</div>
 		</Card>
 	{:else}
-		<!-- SUMMARY CARD -->
+		<!-- HERO BALANCE CARD -->
 		<section aria-label={t('dashboard.sectionPeriodSummary')} class="mb-8">
 			<Card variant="default" padding="lg" class="shadow-sm">
 				<div
-					class="flex flex-col justify-between gap-3 border-b border-fog pb-4 sm:flex-row sm:items-center dark:border-dark-border"
+					class="flex items-center justify-between border-b border-fog pb-3.5 dark:border-dark-border"
 				>
 					<div>
 						<span
@@ -234,97 +123,75 @@
 						>
 							{t('dashboard.periodTitle')}
 						</span>
-						<h2 class="text-lg font-bold text-obsidian sm:text-xl dark:text-paper">
+						<h2 class="text-base font-bold text-obsidian sm:text-lg dark:text-paper">
 							{t('dashboard.budgetSummary')}
 						</h2>
 					</div>
-					<div class="flex items-center gap-2 text-xs font-semibold text-slate dark:text-pebble">
+					<div class="flex items-center gap-1.5 text-xs font-semibold text-slate dark:text-pebble">
 						<span class="inline-block h-2 w-2 rounded-full bg-lime-voltage"></span>
 						<span>{t('dashboard.payDayPrefix', { day: data.period.payDay })}</span>
 					</div>
 				</div>
 
-				<!-- Metrics Grid -->
-				<div class="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
-					<!-- Total Pemasukan Bulanan -->
-					<div
-						class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
-					>
-						<span class="text-xs font-medium text-slate dark:text-pebble"
-							>{t('dashboard.totalIncome')}</span
-						>
+				<!-- Hero Balance & Usage Progress -->
+				<div class="mt-4">
+					<span class="text-xs font-medium text-slate dark:text-pebble">
+						{t('dashboard.remainingBudget')}
+					</span>
+					<div class="mt-1 flex flex-wrap items-baseline justify-between gap-2">
 						<p
-							class="mt-1.5 text-lg font-black tracking-tight text-forest-ink sm:text-2xl dark:text-paper"
-						>
-							{formatRupiah(data.summary.totalIncome)}
-						</p>
-						<span class="mt-1 block text-[11px] text-slate dark:text-pebble">
-							{t('dashboard.incomeHelp')}
-						</span>
-					</div>
-
-					<!-- Total Terpakai -->
-					<div
-						class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
-					>
-						<span class="text-xs font-medium text-slate dark:text-pebble"
-							>{t('dashboard.totalSpent')}</span
-						>
-						<p
-							class="mt-1.5 text-lg font-black tracking-tight text-obsidian sm:text-2xl dark:text-paper"
-						>
-							{formatRupiah(data.summary.totalSpent)}
-						</p>
-						<span
-							class="mt-1 block text-[11px] {data.summary.isWarning80
-								? 'font-bold text-alarm-red'
-								: 'text-slate dark:text-pebble'}"
-						>
-							{t('dashboard.spentHelp', { percent: data.summary.spentPercentage })}
-						</span>
-					</div>
-
-					<!-- Sisa Saldo -->
-					<div
-						class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
-					>
-						<span class="text-xs font-medium text-slate dark:text-pebble"
-							>{t('dashboard.remainingBudget')}</span
-						>
-						<p
-							class="mt-1.5 text-lg font-black tracking-tight {data.summary.remaining < 0
+							data-testid="hero-remaining-balance"
+							class="text-3xl font-black tracking-tight sm:text-4xl {data.summary.remaining < 0
 								? 'text-alarm-red'
-								: 'text-forest-ink dark:text-lime-voltage'} sm:text-2xl"
+								: 'text-forest-ink dark:text-lime-voltage'}"
 						>
 							{formatRupiah(data.summary.remaining)}
 						</p>
-						<span class="mt-1 block text-[11px] text-slate dark:text-pebble">
-							{t('dashboard.remainingHelp', {
-								percent: Math.max(0, 100 - data.summary.spentPercentage)
-							})}
+						<span
+							class="text-xs font-bold {data.summary.isWarning80
+								? 'text-alarm-red'
+								: 'text-slate dark:text-pebble'}"
+						>
+							{data.summary.spentPercentage}% {t('dashboard.usageStatus')}
 						</span>
 					</div>
 
-					<!-- Persentase Terpakai Overall -->
+					<div class="mt-3">
+						<ProgressBar
+							value={data.summary.totalSpent}
+							max={data.summary.totalIncome || 1}
+							variant={data.summary.isWarning80 ? 'danger' : 'lime'}
+						/>
+					</div>
+
+					<!-- Income & Spent Row Pills -->
 					<div
-						class="rounded-xl border border-fog/80 bg-fog/30 p-4 dark:border-dark-border/60 dark:bg-dark-surface/50"
+						class="mt-4 grid grid-cols-2 gap-3 border-t border-fog/60 pt-3 dark:border-dark-border/60"
 					>
-						<span class="text-xs font-medium text-slate dark:text-pebble"
-							>{t('dashboard.usageStatus')}</span
+						<div
+							class="rounded-xl border border-fog/80 bg-fog/30 p-3 dark:border-dark-border/60 dark:bg-dark-surface/50"
 						>
-						<p
-							class="mt-1.5 text-lg font-black tracking-tight sm:text-2xl {data.summary.isWarning80
-								? 'text-alarm-red'
-								: 'text-forest-ink dark:text-linen-mist'}"
+							<span class="text-xs font-medium text-slate dark:text-pebble"
+								>{t('dashboard.totalIncome')}</span
+							>
+							<p
+								class="mt-1 font-mono text-sm font-extrabold text-forest-ink sm:text-base dark:text-paper"
+							>
+								{formatRupiah(data.summary.totalIncome)}
+							</p>
+						</div>
+
+						<div
+							class="rounded-xl border border-fog/80 bg-fog/30 p-3 dark:border-dark-border/60 dark:bg-dark-surface/50"
 						>
-							{data.summary.spentPercentage}%
-						</p>
-						<div class="mt-2">
-							<ProgressBar
-								value={data.summary.totalSpent}
-								max={data.summary.totalIncome || 1}
-								variant={data.summary.isWarning80 ? 'danger' : 'lime'}
-							/>
+							<span class="text-xs font-medium text-slate dark:text-pebble"
+								>{t('dashboard.totalSpent')}</span
+							>
+							<p
+								class="mt-1 font-mono text-sm font-extrabold text-obsidian sm:text-base dark:text-paper"
+							>
+								{formatRupiah(data.summary.totalSpent)}
+							</p>
 						</div>
 					</div>
 				</div>
@@ -365,10 +232,10 @@
 						</p>
 					</Card>
 				{:else}
-					<div class="space-y-4">
-						{#each data.categories as cat (cat.id)}
+					<div class="space-y-3">
+						{#each visibleCategories as cat (cat.id)}
 							<div
-								class="rounded-xl border p-4 transition-colors {cat.isSavings
+								class="rounded-xl border p-3.5 transition-colors sm:p-4 {cat.isSavings
 									? 'border-spruce/30 bg-linen-mist/25 dark:border-lime-voltage/30 dark:bg-spruce/15'
 									: 'border-fog bg-paper dark:border-dark-border dark:bg-dark-card'}"
 							>
@@ -395,7 +262,7 @@
 												</h3>
 												{#if cat.isSavings}
 													<span
-														class="rounded-full bg-spruce/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-spruce dark:bg-lime-voltage/25 dark:text-lime-voltage"
+														class="rounded-full bg-spruce/15 px-2 py-0.5 text-xs font-bold tracking-wide text-spruce dark:bg-lime-voltage/25 dark:text-lime-voltage"
 													>
 														{t('categories.savingsBadge')}
 													</span>
@@ -403,7 +270,7 @@
 												{#if cat.status === 'frozen'}
 													<span
 														data-testid="badge-frozen"
-														class="rounded-full bg-fog px-2 py-0.5 text-[10px] font-bold tracking-wide text-slate dark:bg-dark-border dark:text-pebble"
+														class="rounded-full bg-fog px-2 py-0.5 text-xs font-bold tracking-wide text-slate dark:bg-dark-border dark:text-pebble"
 													>
 														{t('common.frozen')}
 													</span>
@@ -424,7 +291,9 @@
 											<span class="text-xs text-slate dark:text-pebble"
 												>{t('dashboard.collected')}</span
 											>
-											<p class="text-sm font-black text-spruce sm:text-base dark:text-lime-voltage">
+											<p
+												class="font-mono text-sm font-black text-spruce sm:text-base dark:text-lime-voltage"
+											>
 												{formatRupiah(cat.spent)}
 											</p>
 										{:else}
@@ -432,7 +301,7 @@
 												>{t('dashboard.balanceRemaining')}</span
 											>
 											<p
-												class="text-sm font-black sm:text-base {cat.balance < 0
+												class="font-mono text-sm font-black sm:text-base {cat.balance < 0
 													? 'text-alarm-red'
 													: 'text-forest-ink dark:text-linen-mist'}"
 											>
@@ -443,12 +312,12 @@
 								</div>
 
 								<!-- Progress Bar per kategori -->
-								<div class="mt-3.5">
+								<div class="mt-3">
 									{#if cat.isSavings}
 										<!-- Visual treatment berbeda: progress = positif (terkumpul menuju target alokasi) -->
 										<ProgressBar value={cat.spent} max={cat.allocation || 1} variant="savings" />
 										<div
-											class="mt-1.5 flex items-center justify-between text-[11px] text-slate dark:text-pebble"
+											class="mt-1.5 flex items-center justify-between text-xs text-slate dark:text-pebble"
 										>
 											<span
 												>{t('dashboard.balanceLabel', {
@@ -467,7 +336,7 @@
 											variant={cat.remainingPercentage <= 20 ? 'danger' : 'lime'}
 										/>
 										<div
-											class="mt-1.5 flex items-center justify-between text-[11px] text-slate dark:text-pebble"
+											class="mt-1.5 flex items-center justify-between text-xs text-slate dark:text-pebble"
 										>
 											<span>{t('dashboard.spentLabel', { amount: formatRupiah(cat.spent) })}</span>
 											<span
@@ -484,6 +353,23 @@
 								</div>
 							</div>
 						{/each}
+
+						<!-- In-Place Toggle Button for >4 Categories -->
+						{#if data.categories.length > 4}
+							<div class="mt-3 text-center">
+								<Button
+									type="button"
+									variant="secondary"
+									size="sm"
+									onclick={() => (showAllCategories = !showAllCategories)}
+									class="w-full text-xs font-semibold sm:w-auto"
+								>
+									{showAllCategories
+										? t('dashboard.showLessCategories')
+										: t('dashboard.showAllCategories', { count: data.categories.length })}
+								</Button>
+							</div>
+						{/if}
 					</div>
 				{/if}
 			</section>
@@ -580,237 +466,4 @@
 			</section>
 		</div>
 	{/if}
-
-	<!-- BOTTOM SECTION: ACCOUNT SECURITY & SETTINGS -->
-	<div class="mt-12 border-t border-fog pt-6 dark:border-dark-border">
-		<button
-			type="button"
-			aria-expanded={showAccountSecurity}
-			aria-controls="account-security-section"
-			class="flex w-full cursor-pointer items-center justify-between text-left"
-			onclick={() => {
-				showAccountSecurity = !showAccountSecurity;
-			}}
-		>
-			<div>
-				<h3 class="text-base font-bold text-obsidian dark:text-paper">
-					{t('dashboard.accountSecurity')}
-				</h3>
-				<p class="text-xs text-slate dark:text-pebble">
-					{t('dashboard.accountSecurityDesc')}
-				</p>
-			</div>
-			<span
-				class="rounded-lg border border-fog px-2.5 py-1 text-xs font-semibold text-slate dark:border-dark-border dark:text-pebble"
-			>
-				{showAccountSecurity ? t('dashboard.hideSettings') : t('dashboard.showSettings')}
-			</span>
-		</button>
-
-		{#if showAccountSecurity}
-			<div id="account-security-section" class="mt-6 grid gap-6 md:grid-cols-2">
-				<Card variant="default" padding="lg">
-					<h4 class="text-sm font-bold text-obsidian dark:text-paper">
-						{t('dashboard.accountInfo')}
-					</h4>
-					<div class="mt-4 space-y-3 text-sm">
-						<div>
-							<span class="text-xs text-slate dark:text-pebble">{t('dashboard.nameLabel')}</span>
-							<p class="font-semibold text-forest-ink dark:text-linen-mist">{data.user?.name}</p>
-						</div>
-						<div>
-							<span class="text-xs text-slate dark:text-pebble">{t('dashboard.emailLabel')}</span>
-							<p class="font-semibold text-forest-ink dark:text-linen-mist">{data.user?.email}</p>
-						</div>
-						<div>
-							<span class="text-xs text-slate dark:text-pebble">{t('dashboard.roleLabel')}</span>
-							<p class="font-semibold text-forest-ink dark:text-lime-voltage">
-								{data.user?.role === 'admin' ? t('common.admin') : t('common.user')}
-							</p>
-						</div>
-						<div>
-							<span class="text-xs text-slate dark:text-pebble"
-								>{t('dashboard.verificationStatus')}</span
-							>
-							<p
-								class="font-semibold {data.user?.emailVerified
-									? 'text-forest-ink dark:text-lime-voltage'
-									: 'text-alarm-red'}"
-							>
-								{data.user?.emailVerified
-									? t('dashboard.emailVerified')
-									: t('dashboard.emailUnverified')}
-							</p>
-						</div>
-					</div>
-				</Card>
-
-				<Card variant="default" padding="lg">
-					<div class="flex items-center justify-between">
-						<h4 class="text-sm font-bold text-obsidian dark:text-paper">
-							{t('dashboard.twoFactorTitle')}
-						</h4>
-						<span
-							class="rounded-full px-2.5 py-0.5 text-xs font-semibold {twoFactorEnabled
-								? 'bg-linen-mist text-forest-ink dark:bg-spruce dark:text-lime-voltage'
-								: 'bg-fog text-slate dark:bg-dark-border dark:text-linen-mist/80'}"
-						>
-							{twoFactorEnabled
-								? t('dashboard.twoFactorStatusActive')
-								: t('dashboard.twoFactorStatusInactive')}
-						</span>
-					</div>
-
-					<p class="mt-3 text-xs text-slate dark:text-linen-mist/80">
-						{twoFactorEnabled ? t('dashboard.twoFactorActive') : t('dashboard.twoFactorInactive')}
-					</p>
-
-					<!-- 2FA Actions -->
-					<div class="mt-5 space-y-4">
-						{#if !twoFactorEnabled}
-							{#if activeAction !== 'enable'}
-								<Button
-									variant="primary"
-									size="sm"
-									onclick={() => {
-										activeAction = 'enable';
-										actionPassword = '';
-										feedbackError = '';
-									}}
-								>
-									{t('dashboard.enable2FA')}
-								</Button>
-							{:else}
-								<form
-									onsubmit={handleEnable2FA}
-									class="space-y-3 rounded-lg border border-fog bg-paper p-4 dark:border-dark-border dark:bg-dark-surface"
-								>
-									<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
-										{t('dashboard.enterPasswordPrompt')}
-									</p>
-									<Input
-										id="enable-2fa-password"
-										label={t('auth.login.passwordLabel')}
-										type="password"
-										autocomplete="current-password"
-										placeholder={t('dashboard.enterPasswordPlaceholder')}
-										required
-										bind:value={actionPassword}
-										disabled={isActionLoading}
-									/>
-									<div class="flex items-center gap-2 pt-1">
-										<Button type="submit" variant="primary" size="sm" disabled={isActionLoading}>
-											{isActionLoading ? t('common.processing') : t('dashboard.confirmEnable2FA')}
-										</Button>
-										<Button
-											type="button"
-											variant="secondary"
-											size="sm"
-											onclick={resetActionState}
-											disabled={isActionLoading}
-										>
-											{t('common.cancel')}
-										</Button>
-									</div>
-								</form>
-							{/if}
-						{:else}
-							<div class="flex flex-wrap items-center gap-3">
-								{#if activeAction === 'none'}
-									<Button
-										variant="secondary"
-										size="sm"
-										onclick={() => {
-											activeAction = 'disable';
-											actionPassword = '';
-											feedbackError = '';
-										}}
-									>
-										{t('dashboard.disable2FA')}
-									</Button>
-								{/if}
-							</div>
-
-							{#if activeAction === 'disable'}
-								<form
-									onsubmit={handleDisable2FA}
-									class="space-y-3 rounded-lg border border-alarm-red/30 bg-paper p-4 dark:border-alarm-red/40 dark:bg-dark-surface"
-								>
-									<p class="text-xs font-semibold text-alarm-red">
-										{t('dashboard.confirmDisable2FATitle')}
-									</p>
-									<Input
-										id="disable-2fa-password"
-										label={t('dashboard.accountPasswordLabel')}
-										type="password"
-										autocomplete="current-password"
-										placeholder={t('dashboard.enterPasswordPlaceholder')}
-										required
-										bind:value={actionPassword}
-										disabled={isActionLoading}
-									/>
-									<div class="flex items-center gap-2 pt-1">
-										<Button type="submit" variant="dark" size="sm" disabled={isActionLoading}>
-											{isActionLoading ? t('common.processing') : t('dashboard.yesDisable')}
-										</Button>
-										<Button
-											type="button"
-											variant="secondary"
-											size="sm"
-											onclick={resetActionState}
-											disabled={isActionLoading}
-										>
-											{t('common.cancel')}
-										</Button>
-									</div>
-								</form>
-							{/if}
-						{/if}
-					</div>
-
-					<!-- Backup Codes -->
-					{#if backupCodes.length > 0}
-						<div
-							class="mt-6 rounded-lg border border-lime-voltage/40 bg-linen-mist/50 p-4 dark:border-lime-voltage/30 dark:bg-spruce/30"
-						>
-							<div class="flex items-center justify-between">
-								<h5 class="text-xs font-bold text-forest-ink dark:text-lime-voltage">
-									{t('dashboard.backupCodesTitle')}
-								</h5>
-								<button
-									type="button"
-									onclick={handleCopyCodes}
-									class="cursor-pointer text-xs font-bold text-forest-ink hover:underline dark:text-lime-voltage"
-								>
-									{copied ? t('dashboard.copied') : t('dashboard.copyAll')}
-								</button>
-							</div>
-							<div class="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-								{#each backupCodes as code (code)}
-									<div
-										class="rounded-lg border border-fog bg-paper px-2 py-1 text-center font-mono text-xs font-bold text-obsidian dark:border-dark-border dark:bg-dark-surface dark:text-paper"
-									>
-										{code}
-									</div>
-								{/each}
-							</div>
-
-							{#if totpURI}
-								<div class="mt-4 border-t border-forest-ink/10 pt-3 dark:border-white/10">
-									<p class="text-xs font-semibold text-forest-ink dark:text-lime-voltage">
-										{t('dashboard.authenticatorSetup')}
-									</p>
-									<p
-										class="mt-1 font-mono text-[11px] break-all text-slate dark:text-linen-mist/80"
-									>
-										{totpURI}
-									</p>
-								</div>
-							{/if}
-						</div>
-					{/if}
-				</Card>
-			</div>
-		{/if}
-	</div>
 </main>

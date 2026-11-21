@@ -342,6 +342,8 @@
 		"categoryHelp": "Budget allocation and remaining balance for each active category.",
 		"manageCategories": "Manage Categories",
 		"categoriesCount": "{{count}} Categories",
+		"showAllCategories": "Show All Categories ({{count}})",
+		"showLessCategories": "Show Less",
 		"noCategories": "No categories connected to this monthly period yet.",
 		"collected": "Saved",
 		"balanceRemaining": "Remaining Balance",
