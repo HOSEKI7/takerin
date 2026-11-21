@@ -67,10 +67,11 @@
 		freezeCategoryIds = [];
 	}
 
-	function stepPercentage(catIndex: number, delta: number) {
-		const current = categories[catIndex].percentage;
+	function stepPercentage(cat: CategoryFormState, delta: number) {
+		const raw = Number(cat.percentage);
+		const current = Number.isFinite(raw) ? raw : delta > 0 ? 0 : 2;
 		const nextVal = Math.min(100, Math.max(1, Math.round((current + delta) * 100) / 100));
-		categories[catIndex].percentage = nextVal;
+		cat.percentage = nextVal;
 	}
 
 	// Total percentage computed reactive state
@@ -513,7 +514,7 @@
 								aria-label={t('categories.freezeAria', { name: cat.name })}
 								onclick={() => openFreezeModal(cat)}
 								disabled={categories.length <= 1}
-								class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-alarm-red/30 bg-alarm-red/10 text-alarm-red transition hover:bg-alarm-red/20 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+								class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-alarm-red/30 bg-alarm-red/10 text-alarm-red transition hover:bg-alarm-red/20 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
 							>
 								<HugeiconsIcon icon={Delete02Icon} class="h-4 w-4" />
 							</button>
@@ -548,7 +549,7 @@
 											{formatRupiah(currentAllocation)}
 										</span>
 									</div>
-									<div class="flex flex-wrap items-center gap-x-2 text-[11px] text-slate dark:text-pebble">
+									<div class="flex flex-wrap items-center gap-x-2 text-xs text-slate dark:text-pebble">
 										<div>
 											<span>{t('categories.balanceLabel')}: </span>
 											<span
@@ -573,9 +574,9 @@
 									<button
 										type="button"
 										aria-label={t('categories.stepDownAria', { name: cat.name })}
-										onclick={() => stepPercentage(idx, -1)}
+										onclick={() => stepPercentage(cat, -1)}
 										disabled={cat.percentage <= 1}
-										class="flex h-8 w-8 sm:h-9 sm:w-9 cursor-pointer items-center justify-center rounded-lg border border-fog bg-paper text-charcoal shadow-xs transition hover:bg-fog/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:hover:bg-dark-border"
+										class="flex h-8 w-8 sm:h-9 sm:w-9 cursor-pointer items-center justify-center rounded-full border border-fog bg-paper text-charcoal transition hover:bg-fog/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:hover:bg-dark-border"
 									>
 										<HugeiconsIcon icon={MinusSignIcon} size={14} />
 									</button>
@@ -589,12 +590,13 @@
 											max="100"
 											step="0.5"
 											inputmode="decimal"
+											aria-label={t('categories.percentageLabel')}
 											bind:value={cat.percentage}
 											required
 											class="w-full rounded-lg border border-fog bg-paper py-1 pr-4.5 pl-1.5 text-center font-mono text-xs sm:text-sm font-bold text-obsidian transition focus:border-forest-ink focus:outline-none dark:border-dark-border dark:bg-dark-surface dark:text-paper"
 										/>
 										<span
-											class="pointer-events-none absolute top-1.5 right-1.5 text-[11px] font-semibold text-slate dark:text-pebble"
+											class="pointer-events-none absolute top-1.5 right-1.5 text-xs font-semibold text-slate dark:text-pebble"
 											>%</span
 										>
 									</div>
@@ -603,17 +605,17 @@
 									<button
 										type="button"
 										aria-label={t('categories.stepUpAria', { name: cat.name })}
-										onclick={() => stepPercentage(idx, 1)}
+										onclick={() => stepPercentage(cat, 1)}
 										disabled={cat.percentage >= 100}
-										class="flex h-8 w-8 sm:h-9 sm:w-9 cursor-pointer items-center justify-center rounded-lg border border-fog bg-paper text-charcoal shadow-xs transition hover:bg-fog/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:hover:bg-dark-border"
+										class="flex h-8 w-8 sm:h-9 sm:w-9 cursor-pointer items-center justify-center rounded-full border border-fog bg-paper text-charcoal transition hover:bg-fog/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-border dark:bg-dark-surface dark:text-paper dark:hover:bg-dark-border"
 									>
 										<HugeiconsIcon icon={PlusSignIcon} size={14} />
 									</button>
 								</div>
 							</div>
 
-							<!-- Full-Width Touch Slider Track -->
-							<div class="mt-2.5">
+							<!-- Full-Width Touch Slider Track with Touch Cushion -->
+							<div class="mt-2.5 py-1.5">
 								<input
 									type="range"
 									min="1"
@@ -623,7 +625,7 @@
 									aria-label={t('categories.sliderAria', { name: cat.name })}
 									class="h-2.5 sm:h-3 w-full cursor-pointer rounded-lg bg-fog/80 accent-forest-ink transition-all dark:bg-dark-surface dark:accent-lime-voltage"
 								/>
-								<div class="mt-0.5 flex justify-between text-[10px] font-medium text-slate/70 dark:text-pebble/70">
+								<div class="mt-1 flex justify-between text-xs font-medium text-slate/70 dark:text-pebble/70">
 									<span>1%</span>
 									<span>50%</span>
 									<span>100%</span>

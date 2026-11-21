@@ -207,14 +207,18 @@ describe('Categories Page UI & Stepper Controls (Issue #64)', () => {
 		frozenCategories: []
 	};
 
-	it('renders full-width slider track and fine 0.5% step for each category', () => {
-		const { html } = render(CategoriesPage, {
+	function renderPage(customData = {}) {
+		return render(CategoriesPage, {
 			props: {
-				data: mockPageData as any,
+				data: { ...mockPageData, ...customData } as any,
 				params: {} as any,
 				form: null
 			}
 		});
+	}
+
+	it('renders full-width slider track and fine 0.5% step for each category', () => {
+		const { html } = renderPage();
 
 		// Full-width slider check
 		expect(html).toContain('w-full cursor-pointer rounded-lg bg-fog/80 accent-forest-ink');
@@ -222,28 +226,18 @@ describe('Categories Page UI & Stepper Controls (Issue #64)', () => {
 		expect(html).toContain('aria-label="Geser persentase untuk Kebutuhan"');
 	});
 
-	it('renders micro stepper [-] and [+] buttons with semantic aria-labels', () => {
-		const { html } = render(CategoriesPage, {
-			props: {
-				data: mockPageData as any,
-				params: {} as any,
-				form: null
-			}
-		});
+	it('renders micro stepper [-] and [+] buttons with semantic aria-labels and pill shape', () => {
+		const { html } = renderPage();
 
-		// Semantic bilingual aria-labels
+		// Semantic bilingual aria-labels and rounded-full pill buttons
 		expect(html).toContain('aria-label="Kurangi 1% alokasi untuk Kebutuhan"');
 		expect(html).toContain('aria-label="Tambah 1% alokasi untuk Kebutuhan"');
+		expect(html).toMatch(/<button[^>]*aria-label="Kurangi 1% alokasi untuk Kebutuhan"[^>]*rounded-full/);
+		expect(html).toMatch(/<button[^>]*aria-label="Tambah 1% alokasi untuk Kebutuhan"[^>]*rounded-full/);
 	});
 
 	it('disables [-] stepper button when category percentage is at minimum (1%)', () => {
-		const { html } = render(CategoriesPage, {
-			props: {
-				data: mockPageData as any,
-				params: {} as any,
-				form: null
-			}
-		});
+		const { html } = renderPage();
 
 		// Tabungan has 1% percentage, so step down button must be disabled
 		expect(html).toMatch(
@@ -255,14 +249,15 @@ describe('Categories Page UI & Stepper Controls (Issue #64)', () => {
 		);
 	});
 
+	it('renders accessible label on the percentage numeric input', () => {
+		const { html } = renderPage();
+
+		// Input number must have accessible aria-label matching percentageLabel key
+		expect(html).toContain('aria-label="Persentase Alokasi (%)"');
+	});
+
 	it('prominently displays real-time Rupiah allocation above slider track', () => {
-		const { html } = render(CategoriesPage, {
-			props: {
-				data: mockPageData as any,
-				params: {} as any,
-				form: null
-			}
-		});
+		const { html } = renderPage();
 
 		// 50% of 10.000.000 is Rp 5.000.000
 		expect(html).toContain('Rp 5.000.000');
